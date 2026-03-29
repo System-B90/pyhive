@@ -8,6 +8,8 @@ jobs:
   update-readme:
     name: Update README with supported API versions
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repo
