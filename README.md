@@ -24,7 +24,39 @@ pip install PyHiveLMS
 
 ## Quickstart — working with convenience helpers
 
-The primary entry point is `HiveClient`. It accepts your Hive username, password and the base URL for your Hive instance. Use it as a context manager to ensure the underlying HTTP session is closed cleanly.
+The primary entry point is `HiveClient`. You can authenticate either via Hive SSO (recommended, no password in your code) or directly with a username and password.
+
+### Log in via Hive SSO (no password in code)
+
+`HiveClient.from_sso(...)` performs a browser-based login flow against the Hive SSO server. It will:
+
+- Print a URL to your terminal (and try to open it in your default browser) that takes you to the Hive SSO login page.
+- Start a small local HTTP server on `http://127.0.0.1:8765/sso/callback` to receive the OAuth redirect.
+- Exchange the authorization code for tokens and extract the Hive `api_token`.
+- Construct an authenticated `HiveClient` that uses this token under the hood.
+
+Before using SSO, configure your Hive SSO client with:
+
+- **Redirect URI**: `http://127.0.0.1:8765/sso/callback`
+- **Environment variables**:
+  - `HIVE_CLIENT_ID`
+  - `HIVE_CLIENT_SECRET` (if your SSO client is configured as a confidential client)
+
+Then create the client like this:
+
+```python
+from pyhive import HiveClient
+
+HIVE_URL = "https://hive.org"
+
+with HiveClient.from_sso(hive_url=HIVE_URL, verify=False) as client:
+    programs = list(client.get_programs())
+    print(programs)
+```
+
+### Log in with username/password
+
+You can also authenticate directly with your Hive username and password if you prefer:
 
 ### Create modules from a `Subject`
 

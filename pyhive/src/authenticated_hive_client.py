@@ -8,7 +8,7 @@ HTTP calls and an internal ``_AuthenticatedHiveClient`` which wraps an
 import functools
 import time
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, cast
 
 import httpx
 from httpx import HTTPStatusError
@@ -92,6 +92,7 @@ class AuthenticatedHiveClient:
     _access_token: str
     _session: httpx.Client
     username: str
+    _auth_strategy: Literal["password", "token_only"]
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -103,6 +104,7 @@ class AuthenticatedHiveClient:
         headers: dict[str, str] | None = None,
         verify: bool | str | None = None,
         proxy: Optional["ProxyTypes"],
+        existing_token: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Create an authenticated client.
@@ -133,7 +135,21 @@ class AuthenticatedHiveClient:
             base_url=hive_url,
             **client_kwargs,
         ).__enter__()
-        self._login(username, password)
+
+        # Decide how to authenticate: either via username/password (default)
+        # or by using an already-issued API token.
+        if existing_token is not None:
+            # Use the provided token directly; no login or refresh endpoint.
+            self._auth_strategy = "token_only"
+            self._access_token = existing_token
+            # No refresh token is available in this mode.
+            self._refresh_token = ""
+            self._session.headers.update(
+                {"Authorization": f"Bearer {self._access_token}"}
+            )
+        else:
+            self._auth_strategy = "password"
+            self._login(username, password)
 
     def _login(self, username: str, password: str) -> None:
         """Perform an authentication request and store access/refresh tokens.
@@ -156,7 +172,21 @@ class AuthenticatedHiveClient:
         """Refresh the access token using the stored refresh token.
 
         Updates the stored access and refresh tokens and the session header.
+
+        In ``password`` mode this calls the Hive API token refresh endpoint.
+        In ``token_only`` mode (when an existing token was supplied at
+        construction time) automatic refresh is not supported and a
+        ``RuntimeError`` is raised so callers can obtain a fresh token from
+        their SSO/web flow and recreate the client.
         """
+
+        if self._auth_strategy == "token_only":
+            msg = (
+                "Cannot refresh access token when using an existing API token. "
+                "Please acquire a new token from your SSO/web authentication "
+                "flow and create a new HiveClient instance."
+            )
+            raise RuntimeError(msg)
 
         response = self._session.post(
             "/api/core/token/refresh/",

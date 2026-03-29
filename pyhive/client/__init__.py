@@ -1,10 +1,24 @@
 """High-level Hive API client aggregator."""
 
+import base64
+import hashlib
+import os
+import secrets
+import webbrowser
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from types import TracebackType
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union, cast
+from urllib.parse import parse_qs, urlencode, urlparse
 
-from ..src.api_versions import (LATEST_API_VERSION, MIN_API_VERSION,
-                                SUPPORTED_API_VERSIONS)
+import httpx
+
+from pyhive.client.sso_utils import get_sso_token
+
+from ..src.api_versions import (
+    LATEST_API_VERSION,
+    MIN_API_VERSION,
+    SUPPORTED_API_VERSIONS,
+)
 from .assignment_responses import AssignmentResponsesClientMixin
 from .assignments import AssignmentClientMixin
 from .classes import ClassesClientMixin
@@ -21,6 +35,17 @@ from .version import VersionClientMixin
 if TYPE_CHECKING:
     from httpx import Timeout
     from httpx._types import ProxyTypes
+
+
+def _generate_pkce_pair() -> tuple[str, str]:
+    """Return ``(code_verifier, code_challenge)`` for PKCE with S256."""
+
+    # token_urlsafe produces URL-safe characters; take a slice to stay within
+    # the 43–128 character requirement for a code_verifier.
+    verifier = secrets.token_urlsafe(64)[:128]
+    digest = hashlib.sha256(verifier.encode("ascii")).digest()
+    challenge = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
+    return verifier, challenge
 
 
 class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
@@ -47,7 +72,7 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
         headers: Optional[dict[str, str]] = None,
         verify: Optional[Union[bool, str]] = None,
         proxy: Optional["ProxyTypes"] = None,
-        **kwargs,
+        **kwargs: object,
     ):
         super().__init__(
             *args,
@@ -59,6 +84,85 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
         )
         if not skip_version_check:
             self._api_version_check()
+
+    @classmethod
+    def from_api_token(
+        cls,
+        api_token: str,
+        hive_url: str,
+        *,
+        timeout: Optional[Union["Timeout", float]] = None,
+        headers: Optional[dict[str, str]] = None,
+        verify: Optional[Union[bool, str]] = None,
+        proxy: Optional["ProxyTypes"] = None,
+        skip_version_check: bool = False,
+        **kwargs: object,
+    ) -> "HiveClient":
+        """Construct a client using an existing Hive API token.
+
+        This is mainly intended for advanced integrations. In most user-facing
+        scenarios, prefer :meth:`from_sso`, which performs the browser-based
+        Hive SSO flow and then creates the client from the resulting token.
+
+        Automatic token refresh is *not* supported in this mode: if the token
+        expires, create a new :class:`HiveClient` with a freshly-issued token.
+        """
+
+        return cls(
+            "token-auth",  # placeholder username for repr/debugging
+            "unused",
+            hive_url,
+            timeout=timeout,
+            headers=headers,
+            verify=verify,
+            proxy=proxy,
+            skip_version_check=skip_version_check,
+            existing_token=api_token,
+            **kwargs,
+        )
+
+    @classmethod
+    def from_sso(
+        cls,
+        hive_url: str,
+        *,
+        timeout: Optional[Union["Timeout", float]] = None,
+        headers: Optional[dict[str, str]] = None,
+        verify: Optional[Union[bool, str]] = None,
+        proxy: Optional["ProxyTypes"] = None,
+        skip_version_check: bool = False,
+        **kwargs: object,
+    ) -> "HiveClient":
+        """
+        Instantiate a HiveClient using interactive browser-based SSO authentication.
+
+        Args:
+            hive_url (str): The base URL of the Hive server.
+            timeout (Optional[Union[Timeout, float]]): Request timeout configuration.
+            headers (Optional[dict[str, str]]): Additional headers to apply to the client.
+            verify (Optional[Union[bool, str]]): SSL verification requirements.
+            proxy (Optional[ProxyTypes]): Proxy configuration.
+            skip_version_check (bool): Bypass API version compatibility checking.
+            **kwargs (object): Additional client configuration parameters.
+
+        Returns:
+            HiveClient: An authenticated instance of the HiveClient.
+        """
+
+        # Trigger the browser-based OIDC flow
+        user_token = get_sso_token(hive_url=hive_url, verify=verify)
+
+        # Delegate to from_api_token to construct the actual client
+        return cls.from_api_token(
+            api_token=user_token,
+            hive_url=hive_url,
+            timeout=timeout,
+            headers=headers,
+            verify=verify,
+            proxy=proxy,
+            skip_version_check=skip_version_check,
+            **kwargs,
+        )
 
     def __repr__(self) -> str:
         """Return a short representation including username and hive_url.
