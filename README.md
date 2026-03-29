@@ -9,6 +9,7 @@ PyHive (package: `PyHiveLMS`) is a small, synchronous Python client for the Hive
 <!-- SUPPORTED_API_VERSIONS_START -->
 - `5.1.2`
 - `6.2.0`
+- `6.4.0`
 <!-- SUPPORTED_API_VERSIONS_END -->
 
 ## Install
