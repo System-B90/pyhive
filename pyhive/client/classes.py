@@ -47,7 +47,7 @@ class ClassesClientMixin(ClientCoreMixin):
             id__in=id__in,
             name=name,
             program__id__in=program__id__in,
-            type_=type_,
+            type=type_,
         )
 
     def get_class(

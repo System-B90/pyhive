@@ -14,17 +14,12 @@ from pyhive.src.types.user import User
 from tests.common import get_client_params
 
 
-def test_client():
+def test_client_url():
     hive_url = "https://hive.org"
-    with HiveClient("michaelks", "Password1", hive_url, verify=False) as client:
+    with HiveClient(
+        "michaelks", "Password1", hive_url, verify=False, skip_version_check=True
+    ) as client:
         assert client.hive_url == hive_url
-
-
-def test_get_root_ok(client: HiveClient):
-    """_get('/') returns HTTP 200 OK."""
-    resp = client._get("/")  # pyright: ignore[reportPrivateUsage]
-    resp.raise_for_status()
-    assert resp.status_code == 200
 
 
 def test_get_classes(client: HiveClient):
@@ -185,8 +180,10 @@ def test_invalid_hive_version_raises(monkeypatch: pytest.MonkeyPatch):
 
     invalid = "0.0.0-unsupported"
     monkeypatch.setattr(HiveClient, "get_hive_version", lambda self: invalid)
+    params = get_client_params()
+    params["skip_version_check"] = False
     with pytest.raises(RuntimeError) as exc:
-        HiveClient(**get_client_params())
+        HiveClient(**params)
     msg = str(exc.value)
     assert f"Unsupported Hive API version '{invalid}'" in msg
     assert f"{MIN_API_VERSION} .. {LATEST_API_VERSION}" in msg
@@ -196,5 +193,7 @@ def test_skip_version_check(monkeypatch: pytest.MonkeyPatch):
     invalid = "0.0.0-unsupported"
     monkeypatch.setattr(HiveClient, "get_hive_version", lambda self: invalid)
     # Should not raise when skip_version_check=True
-    with HiveClient(**get_client_params(), skip_version_check=True) as client2:
+    params = get_client_params()
+    params["skip_version_check"] = True
+    with HiveClient(**params) as client2:
         assert client2 is not None

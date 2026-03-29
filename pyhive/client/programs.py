@@ -12,8 +12,8 @@ from .client_shared import ClientCoreMixin
 from .utils import resolve_item_or_id
 
 if TYPE_CHECKING:
-    from ..src.types.class_ import Class, ClassLike
-    from ..src.types.user import User, UserLike
+    from ..src.types.class_ import ClassLike
+    from ..src.types.user import UserLike
 
 
 class ProgramClientMixin(ClientCoreMixin):

@@ -111,9 +111,9 @@ def test_get_exercises_from_program(client: HiveClient, large_program: Program):
             parent_module__parent_subject__parent_program__id__in=[large_program.id]
         )
     )
-    assert (
-        len(exercises) > 0 and len(expected_exercises) > 0
-    ), "No exercises found in large program!"
+    assert len(exercises) > 0 and len(expected_exercises) > 0, (
+        "No exercises found in large program!"
+    )
 
     assert len(exercises) == len(expected_exercises)
 

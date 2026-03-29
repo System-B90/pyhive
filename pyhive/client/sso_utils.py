@@ -24,7 +24,6 @@ REQUIRED_SCOPES = "openid profile clearance extended_profile api"
 HIVE_SSO_CLIENT_ID = "hive-local-sso-service"
 HIVE_SSO_CLIENT_SECRET = "hive-local-sso-secret"
 
-# Completely silence Werkzeug and Flask startup messages
 log = logging.getLogger("werkzeug")
 log.setLevel(logging.ERROR)
 flask_log = logging.getLogger("flask.app")
@@ -49,66 +48,20 @@ def _generate_pkce_pair() -> Tuple[str, str]:
     return verifier, challenge
 
 
-def _start_local_callback_server(
+def _exchange_code_for_token(
     hive_url: str,
-    client_id: str,
-    client_secret: str,
+    auth_code: str,
     code_verifier: str,
     verify: Optional[Union[bool, str]] = None,
 ) -> str:
-    app = flask.Flask(__name__)
-
-    # This prevents Flask from printing the banner when app.run is called
-    flask.cli.show_server_banner = lambda *args, **kwargs: None
-
-    state = {
-        "auth_code": None,
-        "error": None,
-        "error_desc": None,
-        "complete": False,
-    }
-
-    @app.route("/callback")
-    def callback():
-        state["error"] = flask.request.args.get("error")
-        state["error_desc"] = flask.request.args.get("error_description")
-        state["auth_code"] = flask.request.args.get("code")
-        state["complete"] = True
-
-        if state["error"]:
-            return (
-                f"<h1>Authentication Error</h1><p>{state['error']}: {state['error_desc']}</p>",
-                400,
-            )
-        return (
-            "<h1>Success</h1><p>Authentication successful! You may close this tab.</p>"
-        )
-
-    server_thread = Thread(
-        target=app.run,
-        kwargs={"port": LOCAL_SERVER_PORT, "debug": False, "use_reloader": False},
-    )
-    server_thread.daemon = True
-    server_thread.start()
-
-    while not state["complete"]:
-        time.sleep(0.2)
-
-    if state["error"]:
-        raise PermissionError(f"OIDC Error: {state['error']} - {state['error_desc']}")
-
-    if not state["auth_code"]:
-        raise RuntimeError("No authorization code returned from the SSO provider.")
-
     token_url = f"{hive_url}/sso/token/"
     payload = {
         "grant_type": "authorization_code",
-        "code": state["auth_code"],
+        "code": auth_code,
         "redirect_uri": f"http://localhost:{LOCAL_SERVER_PORT}/callback",
         "code_verifier": code_verifier,
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-
     ssl_verify = True if verify is None else verify
 
     with httpx.Client(verify=ssl_verify, follow_redirects=True) as client:
@@ -116,7 +69,7 @@ def _start_local_callback_server(
             token_url,
             data=payload,
             headers=headers,
-            auth=(client_id, client_secret),
+            auth=(HIVE_SSO_CLIENT_ID, HIVE_SSO_CLIENT_SECRET),
         )
         if response.status_code != 200:
             raise RuntimeError(
@@ -140,28 +93,73 @@ def _start_local_callback_server(
         return api_token
 
 
+def _start_local_callback_server(
+    hive_url: str,
+    code_verifier: str,
+    verify: Optional[Union[bool, str]] = None,
+) -> str:
+    app = flask.Flask(__name__)
+    flask.cli.show_server_banner = (  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
+        lambda *args, **kwargs: None  # # pyright: ignore[reportUnknownLambdaType]
+    )
+
+    state: Dict[str, Any] = {
+        "auth_code": None,
+        "error": None,
+        "error_desc": None,
+        "complete": False,
+    }
+
+    @app.route("/callback")
+    def callback():  # pyright: ignore[reportUnusedFunction] We use this as a Flask route handler
+        state["error"] = flask.request.args.get("error")
+        state["error_desc"] = flask.request.args.get("error_description")
+        state["auth_code"] = flask.request.args.get("code")
+        state["complete"] = True
+        if state["error"]:
+            return (
+                f"<h1>Auth Error</h1><p>{state['error']}: {state['error_desc']}</p>",
+                400,
+            )
+        return "<h1>Success</h1><p>Authentication successful!</p>"
+
+    server_thread = Thread(
+        target=app.run,
+        kwargs={"port": LOCAL_SERVER_PORT, "debug": False, "use_reloader": False},
+    )
+    server_thread.daemon = True
+    server_thread.start()
+
+    while not state["complete"]:
+        time.sleep(0.2)
+
+    if state["error"]:
+        raise PermissionError(f"OIDC Error: {state['error']} - {state['error_desc']}")
+
+    if not state["auth_code"]:
+        raise RuntimeError("No authorization code returned from the SSO provider.")
+
+    return _exchange_code_for_token(
+        hive_url=hive_url,
+        auth_code=state["auth_code"],
+        code_verifier=code_verifier,
+        verify=verify,
+    )
+
+
 def get_sso_token(hive_url: str, verify: Optional[Union[bool, str]] = None) -> str:
     verifier, challenge = _generate_pkce_pair()
-
-    redirect_uri = f"http://localhost:{LOCAL_SERVER_PORT}/callback"
     params = {
         "client_id": HIVE_SSO_CLIENT_ID,
         "response_type": "code",
         "scope": REQUIRED_SCOPES,
-        "redirect_uri": redirect_uri,
+        "redirect_uri": f"http://localhost:{LOCAL_SERVER_PORT}/callback",
         "code_challenge": challenge,
         "code_challenge_method": "S256",
     }
-
-    query_string = urllib.parse.urlencode(params)
-    sso_url = f"{hive_url}/sso/authorize?{query_string}"
-
-    webbrowser.open(sso_url)
-
+    webbrowser.open(f"{hive_url}/sso/authorize?{urllib.parse.urlencode(params)}")
     return _start_local_callback_server(
         hive_url=hive_url,
-        client_id=HIVE_SSO_CLIENT_ID,
-        client_secret=HIVE_SSO_CLIENT_SECRET,
         code_verifier=verifier,
         verify=verify,
     )

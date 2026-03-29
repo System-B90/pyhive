@@ -49,7 +49,7 @@ def test_create_students(client: HiveClient, mentor: User, program: Program):
             client.delete_user(existing)
 
         # Create fresh user
-        user:User|None = client.create_user(
+        user: User | None = client.create_user(
             username=student["username"],
             password=password,
             clearance=ClearanceEnum.HANICH,
@@ -102,9 +102,9 @@ def test_update_user(client: HiveClient, mentor: User, program: Program):
 
     try:
         NEW_LAST_NAME = "Smith"
-        assert (
-            user.last_name != NEW_LAST_NAME
-        ), "User's last name is already the updated one!"
+        assert user.last_name != NEW_LAST_NAME, (
+            "User's last name is already the updated one!"
+        )
         user.last_name = NEW_LAST_NAME
 
         updated_user = client.update_user(user)
@@ -146,9 +146,9 @@ def test_update_user_in_place(client: HiveClient, mentor: User, program: Program
 
     try:
         NEW_LAST_NAME = "Smith"
-        assert (
-            user.last_name != NEW_LAST_NAME
-        ), "User's last name is already the updated one!"
+        assert user.last_name != NEW_LAST_NAME, (
+            "User's last name is already the updated one!"
+        )
         user.last_name = NEW_LAST_NAME
 
         user_capture = user.to_dict()
@@ -162,8 +162,8 @@ def test_update_user_in_place(client: HiveClient, mentor: User, program: Program
                 # Expected to be unequal since the local capture is not validated
                 assert user_capture[key] != updated_user_capture[key]
                 continue
-            assert (
-                user_capture[key] == updated_user_capture[key]
-            ), f"Data mismatch for {key} of updated user post update!"
+            assert user_capture[key] == updated_user_capture[key], (
+                f"Data mismatch for {key} of updated user post update!"
+            )
     finally:
         user.delete()

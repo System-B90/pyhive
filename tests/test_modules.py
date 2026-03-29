@@ -1,3 +1,5 @@
+import random
+import time
 from typing import Any, Optional
 
 import pytest
@@ -16,20 +18,20 @@ def test_get(client: HiveClient) -> None:
     ), "Module in modules is not of a valid form!"
 
 
-@pytest.mark.usefixtures("client")
-def test_module_exercises(client: HiveClient) -> None:
-    for module in client.get_modules():
-        exercises = list(module.get_exercises())
-        assert len(exercises) > 0, "No exercises available to test!"
-        assert all(isinstance(exercise, Exercise) for exercise in exercises)
-        for exercise in exercises:
-            assert exercise.parent_module_id == module.id
-            assert exercise.parent_module_name == module.name
-            assert exercise.parent_module_order == module.order
-            assert exercise.parent_subject_id == module.parent_subject_id
-            assert exercise.parent_subject_name == module.parent_subject_name
-            assert exercise.parent_subject_symbol == module.parent_subject_symbol
-            assert exercise.parent_module.parent_subject == module.parent_subject
+@pytest.mark.usefixtures("module")
+def test_module_exercises(module: Module) -> None:
+    module.create_exercise(**EXERCISE_DATA_LIST[0])
+    exercises = list(module.get_exercises())
+    assert len(exercises) > 0, "No exercises available to test!"
+    assert all(isinstance(exercise, Exercise) for exercise in exercises)
+    for exercise in exercises:
+        assert exercise.parent_module_id == module.id
+        assert exercise.parent_module_name == module.name
+        assert exercise.parent_module_order == module.order
+        assert exercise.parent_subject_id == module.parent_subject_id
+        assert exercise.parent_subject_name == module.parent_subject_name
+        assert exercise.parent_subject_symbol == module.parent_subject_symbol
+        assert exercise.parent_module.parent_subject == module.parent_subject
 
 
 @pytest.mark.usefixtures("client")
@@ -77,20 +79,20 @@ def test_get_modules_by_subject_object(client: HiveClient):
 @pytest.mark.usefixtures("client")
 def test_get_modules_by_subject_program_id(client: HiveClient) -> None:
     all_subjects: list[Subject] = list(client.get_subjects())
-    assert (
-        len(all_subjects) > 0
-    ), "No subjects available for parent_subject__parent_program__id__in test."
+    assert len(all_subjects) > 0, (
+        "No subjects available for parent_subject__parent_program__id__in test."
+    )
     program_id = all_subjects[0].parent_program_id
-    assert (
-        program_id is not None
-    ), "No program_id found in subjects for module relationship test."
+    assert program_id is not None, (
+        "No program_id found in subjects for module relationship test."
+    )
     filtered: list[Module] = list(
         client.get_modules(parent_subject__parent_program__id__in=[program_id])
     )
     assert len(filtered) > 0, f"No modules found under parent program {program_id}"
-    assert all(
-        x.parent_subject.parent_program_id == program_id for x in filtered
-    ), "Mismatched module found under program search!"
+    assert all(x.parent_subject.parent_program_id == program_id for x in filtered), (
+        "Mismatched module found under program search!"
+    )
 
 
 @pytest.mark.usefixtures("client")
@@ -111,10 +113,15 @@ def test_get_modules_by_nonexistent_name(client: HiveClient):
 
 
 @pytest.mark.usefixtures("client")
-def test_get_modules_by_program(client: HiveClient, program: Program) -> None:
-    subject = client.create_subject("A", "AAA", program, "#000000")
+def test_get_modules_by_program(
+    client: HiveClient, program: Program, subject: Subject
+) -> None:
     for i in range(5):
-        client.create_module(f"TestModule{i}", subject, i)
+        client.create_module(
+            f"TestModule{i}{str(int(time.time()))[:3]}{random.randint(100, 999)}",
+            subject,
+            i,
+        )
 
     modules = list(client.get_modules(parent_program=program))
     assert len(modules) > 0, f"No modules found under {program}"
