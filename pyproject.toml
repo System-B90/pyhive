@@ -1,6 +1,6 @@
 [project]
 name = "PyHiveLMS"
-version = "1.2.1"
+version = "1.2.2"
 description = "Python bindings for Hive"
 authors = [
     { name = "Michael K. Steinberg", email = "m.kuper.steinberg@gmail.com" },
