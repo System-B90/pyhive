@@ -14,10 +14,13 @@ import time
 import urllib.parse
 import webbrowser
 from threading import Thread
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import flask
 import httpx
+
+if TYPE_CHECKING:
+    from . import HiveClient
 
 LOCAL_SERVER_PORT = 8180
 REQUIRED_SCOPES = "openid profile clearance extended_profile api"
@@ -163,3 +166,30 @@ def get_sso_token(hive_url: str, verify: Optional[Union[bool, str]] = None) -> s
         code_verifier=verifier,
         verify=verify,
     )
+
+
+def generate_sso_client_credentials(
+    client: "HiveClient",
+    service_name: str,
+    redirect_uris: Optional[List[str] | str] = None,
+) -> Dict[str, Any]:
+    # Normalize redirect_uris to a list
+    if isinstance(redirect_uris, str):
+        redirect_uris = [redirect_uris]
+
+    response = client.post(
+        "/sso/applications/",
+        data={
+            "name": service_name,
+            "redirect_uris": " ".join(redirect_uris if redirect_uris else []),
+        },
+    )
+    return {
+        "id": response["id"],
+        "name": response["name"],
+        "owner": response["owner"],
+        "redirect_uris": response["redirect_uris"],
+        "skip_authorization": response["skip_authorization"],
+        "client_id": response["client_id"],
+        "client_secret": response["client_secret"],
+    }

@@ -7,12 +7,12 @@ import secrets
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from types import TracebackType
-from typing import TYPE_CHECKING, Optional, Union, cast
+from typing import TYPE_CHECKING, List, Optional, Union, cast
 from urllib.parse import parse_qs, urlencode, urlparse
 
 import httpx
 
-from pyhive.client.sso_utils import get_sso_token
+from pyhive.client.sso_utils import generate_sso_client_credentials, get_sso_token
 
 from ..src.api_versions import (
     LATEST_API_VERSION,
@@ -214,3 +214,10 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
                     f"Please upgrade/downgrade the server or use a compatible client."
                 )
             )
+
+    def register_sso_service(
+        self,
+        service_name: str,
+        redirect_uris: Optional[List[str] | str] = None,
+    ) -> dict[str, str]:
+        return generate_sso_client_credentials(self, service_name, redirect_uris)
