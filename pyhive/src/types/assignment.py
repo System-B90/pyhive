@@ -6,7 +6,7 @@ Author: Michael K. Steinberg
 """
 
 import datetime
-from typing import TYPE_CHECKING, Any, Generator, Iterable, Self, TypeVar
+from typing import TYPE_CHECKING, Any, Iterable, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 

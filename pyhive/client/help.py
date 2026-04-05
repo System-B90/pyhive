@@ -3,7 +3,7 @@
 Provides listing and retrieval of Help request records via the Hive API.
 """
 
-from typing import TYPE_CHECKING, Any, Iterable, Optional, cast
+from typing import TYPE_CHECKING, Iterable, Optional
 
 import httpx
 

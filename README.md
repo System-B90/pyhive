@@ -98,6 +98,7 @@ Call methods directly on models for common domain operations.
 
 ```python
 with HiveClient("username", "password", "https://hive.org") as client:
+    # Create a new module in a subject
     subject = client.get_subjects(parent_program__id__in=[123])[0]
     new_module = subject.create_module(
         name="Limits and Continuity",
@@ -105,6 +106,23 @@ with HiveClient("username", "password", "https://hive.org") as client:
         segel_brief="Introduction to limits.",
     )
     print(new_module.id, new_module.name)
+    
+    # Create a new exercise in a module
+    new_exercise = new_module.create_exercise(
+        name="Derivative Rules",
+        order=1,
+        description="Practice basic derivative rules.",
+    )
+    print(new_exercise.id, new_exercise.name)
+    
+    # Create a new user
+    new_user = client.create_user(
+        username="student123",
+        email="student@example.com",
+        first_name="John",
+        last_name="Doe",
+    )
+    print(new_user.id, new_user.username)
 ```
 
 ## Common methods
@@ -128,9 +146,11 @@ Return values are typed model objects or generators of model objects.
 
 ## CLI
 
-PyHive includes a small CLI exposed as the `pyhive` console script.
+PyHive includes a CLI exposed as the `pyhive` console script with the following commands:
 
-- `pyhive versions` / `pyhive versions2`: display supported Hive API versions.
+- `pyhive versions`: Display supported Hive API versions.
+- `pyhive token`: Authenticate via SSO and output a valid access token.
+- `pyhive register <service_name> <redirect_uri>`: Register a new service with the Hive server and generate client keys.
 
 ## Testing
 
