@@ -1,16 +1,7 @@
 """High-level Hive API client aggregator."""
 
-import base64
-import hashlib
-import os
-import secrets
-import webbrowser
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from types import TracebackType
-from typing import TYPE_CHECKING, List, Optional, Union, cast
-from urllib.parse import parse_qs, urlencode, urlparse
-
-import httpx
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from pyhive.client.sso_utils import generate_sso_client_credentials, get_sso_token
 
@@ -35,17 +26,6 @@ from .version import VersionClientMixin
 if TYPE_CHECKING:
     from httpx import Timeout
     from httpx._types import ProxyTypes
-
-
-def _generate_pkce_pair() -> tuple[str, str]:
-    """Return ``(code_verifier, code_challenge)`` for PKCE with S256."""
-
-    # token_urlsafe produces URL-safe characters; take a slice to stay within
-    # the 43–128 character requirement for a code_verifier.
-    verifier = secrets.token_urlsafe(64)[:128]
-    digest = hashlib.sha256(verifier.encode("ascii")).digest()
-    challenge = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
-    return verifier, challenge
 
 
 class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
