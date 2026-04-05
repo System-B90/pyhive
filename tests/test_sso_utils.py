@@ -65,7 +65,7 @@ def test_exchange_code_for_token_missing_claim(httpx_mock):
         status_code=200,
     )
 
-    with pytest.raises(ValueError, match="does not contain the 'api_token' claim"):
+    with pytest.raises(ValueError, match=" does not contain a valid 'api_token' claim"):
         _exchange_code_for_token(hive_url, "code123", "verifier123")
 
 

@@ -4,8 +4,17 @@ Represents a logical course module within a subject, supporting serialization,
 lazy loading of parent subject, and retrieval of exercises.
 """
 
-from typing import (TYPE_CHECKING, Any, Generator, Iterable, Mapping, Optional,
-                    Self, TypeVar, cast)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generator,
+    Iterable,
+    Mapping,
+    Optional,
+    Self,
+    TypeVar,
+    cast,
+)
 
 from attrs import define, field
 

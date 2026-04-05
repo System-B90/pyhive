@@ -3,7 +3,7 @@
 Provides retrieval of queue records.
 """
 
-from typing import TYPE_CHECKING, Any, Optional, cast
+from typing import TYPE_CHECKING, Optional
 
 from pyhive.client.utils import resolve_item_or_id
 
@@ -24,8 +24,10 @@ class QueuesClientMixin(ClientCoreMixin):
         from ..client import HiveClient
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
+        data = self.get(f"/api/core/queues/{queue_id}/")
+        assert isinstance(data, dict)
         return Queue.from_dict(
-            cast(dict[str, Any], self.get(f"/api/core/queues/{queue_id}/")),
+            data,
             hive_client=self,
         )
 

@@ -1,12 +1,14 @@
 """Responses to assignments given to students."""
 
+from __future__ import annotations
 import datetime
-from typing import TYPE_CHECKING, Any, Generator, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Generator, Mapping, TypeVar, Union, cast
 
 from attrs import define, field
 from dateutil.parser import isoparse
 
 from .assignment import Assignment
+from .assignment_response_content import AssignmentResponseContent
 from .autocheck_status import AutoCheckStatus
 from .common import UNSET, Unset
 from .core_item import HiveCoreItem
@@ -14,7 +16,6 @@ from .enums.assignment_response_type_enum import AssignmentResponseTypeEnum
 
 if TYPE_CHECKING:
     from ...client import HiveClient
-    from .assignment_response_content import AssignmentResponseContent
     from .user import User
 
 
@@ -111,30 +112,32 @@ class AssignmentResponse(HiveCoreItem):
     @classmethod
     def from_dict(  # pylint: disable=too-many-locals, arguments-differ
         cls: type[T],
-        src_dict: dict[str, Any],
+        src_dict: Mapping[str, Any],
         assignment_id: int,
         hive_client: "HiveClient",
     ) -> T:
-        from .assignment_response_content import \
-            AssignmentResponseContent  # pylint: disable=import-outside-toplevel
+        from .assignment_response_content import AssignmentResponseContent  # pylint: disable=import-outside-toplevel
 
         d = dict(src_dict)
         id = d.pop("id")
 
         user_id = d.pop("user")
 
-        contents = []
+        contents: list[AssignmentResponseContent] = []
         _contents = d.pop("contents")
         if not isinstance(_contents, list):
             raise TypeError(
                 f"Assignment response contents must be a list, not {type(_contents)}"
             )
-        for contents_item_data in _contents:
-            contents_item = AssignmentResponseContent.from_dict(
-                contents_item_data,
-                assignment=assignment_id,
-                assignment_response_id=id,
-                hive_client=hive_client,
+        _contents_list = cast("list[object]", _contents)
+        for contents_item_data in _contents_list:
+            contents_item: AssignmentResponseContent = (
+                AssignmentResponseContent.from_dict(
+                    cast(dict[str, Any], contents_item_data),
+                    assignment=assignment_id,
+                    assignment_response_id=id,
+                    hive_client=hive_client,
+                )
             )
             contents.append(contents_item)
         date = isoparse(d.pop("date"))
@@ -147,11 +150,11 @@ class AssignmentResponse(HiveCoreItem):
                 return data
             if not isinstance(data, list):
                 raise TypeError(f"Autocheck statuses must be a list, not {type(data)}")
-            autocheck_statuses_type_0 = []
-            _autocheck_statuses_type_0 = data
+            autocheck_statuses_type_0: list[AutoCheckStatus] = []
+            _autocheck_statuses_type_0 = cast("list[object]", data)
             for autocheck_statuses_type_0_item_data in _autocheck_statuses_type_0:
                 autocheck_statuses_type_0_item = AutoCheckStatus.from_dict(
-                    autocheck_statuses_type_0_item_data,
+                    cast(dict[str, Any], autocheck_statuses_type_0_item_data),
                     hive_client=hive_client,
                 )
 

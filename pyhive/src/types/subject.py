@@ -1,7 +1,6 @@
 """Defines the Subject type and related functionality for the Hive API Python bindings."""
 
-from typing import (TYPE_CHECKING, Any, Generator, Iterable, Mapping, Self,
-                    TypeVar, cast)
+from typing import TYPE_CHECKING, Any, Generator, Iterable, Mapping, Self, TypeVar, cast
 
 from attrs import define, field
 

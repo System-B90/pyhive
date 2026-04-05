@@ -2,7 +2,7 @@
 
 import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Generator, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generator, Iterable, Self, TypeVar, cast
 
 from attrs import define, field
 from dateutil.parser import isoparse
@@ -140,7 +140,9 @@ class Assignment(HiveCoreItem):
         d = dict(src_dict)
 
         notifications = [
-            NotificationNested.from_dict(n, hive_client=hive_client)
+            NotificationNested.from_dict(
+                cast(dict[str, Any], n), hive_client=hive_client
+            )
             for n in d.pop("notifications", [])
         ]
 
@@ -199,16 +201,20 @@ class Assignment(HiveCoreItem):
     def __lt__(self, value: object) -> bool:
         if not isinstance(value, Assignment):
             return NotImplemented
+        if self.user.number is None or isinstance(self.user.number, Unset):
+            return NotImplemented
+        if value.user.number is None or isinstance(value.user.number, Unset):
+            return NotImplemented
         return self.user.number < value.user.number
 
-    def get_responses(self) -> Generator["AssignmentResponse", None, None]:
+    def get_responses(self) -> Iterable["AssignmentResponse"]:
         """Fetch all responses to this assignment.
         Responses include both student and mentor submissions, comments, WIP, ..."""
         return self.hive_client.get_assignment_responses(assignment=self.id)
 
-    def __iter__(self) -> Generator["Assignment", None, None]:
+    def __iter__(self) -> Generator["AssignmentResponse", None, None]:
         """Allow iteration over this Assignment to yield its responses."""
         yield from self.get_responses()
 
 
-AssignmentLike = TypeVar("AssignmentLike", Assignment, int)
+AssignmentLike = Assignment | int

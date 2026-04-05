@@ -31,7 +31,9 @@ def _retry_on_bad_gateway(func: F) -> F:
     """
 
     @functools.wraps(func)
-    def wrapper(self: "AuthenticatedHiveClient", *args: Any, **kwargs: Any):
+    def wrapper(
+        self: "AuthenticatedHiveClient", *args: Any, **kwargs: Any
+    ) -> httpx.Response:
         delay = INITIAL_BACKOFF_SECONDS
         if MAX_RETRIES_ON_SERVER_ERRORS <= 0:
             raise ValueError("MAX_RETRIES_ON_SERVER_ERRORS must be greater than 0")
@@ -58,7 +60,9 @@ def _refresh_token_on_unauthorized(func: F) -> F:
     """
 
     @functools.wraps(func)
-    def wrapper(self: "AuthenticatedHiveClient", *args: Any, **kwargs: Any):
+    def wrapper(
+        self: "AuthenticatedHiveClient", *args: Any, **kwargs: Any
+    ) -> httpx.Response:
         response = func(self, *args, **kwargs)
         if response.status_code == httpx.codes.UNAUTHORIZED.value:
             self._refresh_access_token()  # pylint: disable=protected-access
@@ -253,7 +257,10 @@ class AuthenticatedHiveClient:
         This calls the decorated ``_get`` helper and returns its JSON body.
         """
 
-        return self._get(endpoint, params).json()
+        response = self._get(endpoint, params).json()
+        if not isinstance(response, (dict, list)):
+            raise TypeError("Expected JSON object or list from GET response")
+        return response
 
     def post(self, endpoint: str, data: dict[Any, Any]) -> dict[str, Any]:
         """High-level POST that returns parsed JSON from the response.
@@ -270,17 +277,23 @@ class AuthenticatedHiveClient:
             if exc.response.status_code == 400:
                 try:
                     error_json = exc.response.json()
-                except Exception: # pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-except
                     error_json = exc.response.text
                 raise ValueError(f"HTTP 400 Error: {error_json}") from exc
             # Otherwise, re-raise the original HTTP error
             raise
-        return resp.json()
+        data = resp.json()
+        if not isinstance(data, dict):
+            raise TypeError("Expected JSON object from POST response")
+        return data
 
-    def delete(self, endpoint: str, force: bool = False) -> None: # pylint: disable=unused-argument
+    def delete(self, endpoint: str, force: bool = False) -> None:  # pylint: disable=unused-argument
         response = self._delete(endpoint)
         if response.status_code != httpx.codes.NO_CONTENT.value:  # 204 No response body
             raise RuntimeError("Failed to delete!")
 
     def put(self, endpoint: str, data: dict[Any, Any]) -> dict[Any, Any]:
-        return self._put(endpoint, data).json()
+        data = self._put(endpoint, data).json()
+        if not isinstance(data, dict):
+            raise TypeError("Expected JSON object from PUT response")
+        return data

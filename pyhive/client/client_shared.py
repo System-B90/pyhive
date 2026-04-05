@@ -3,7 +3,7 @@
 - ``ClientCoreMixin``: base class that provides ``_get_core_items`` used by resource mixins.
 """
 
-from typing import Any, Iterable, Optional, Sequence
+from typing import Any, Iterable, Optional
 
 import httpx
 
@@ -32,9 +32,9 @@ class ClientCoreMixin(AuthenticatedHiveClient):
             | list[str]
             | list[int]
             | list[bool]
-            | Sequence[str]
-            | Sequence[int]
-            | Sequence[bool]
+            | Iterable[str]
+            | Iterable[int]
+            | Iterable[bool]
         ),
     ) -> Iterable[CoreItemTypeT]:
         """Yield typed items from a list endpoint with optional query parameters.
@@ -64,17 +64,17 @@ class ClientCoreMixin(AuthenticatedHiveClient):
         data = self.get(endpoint, params=query_params)
 
         # Non-paginated: assume the payload is the items list (or empty)
-        if not (
-            isinstance(data, dict)  # pyright: ignore[reportUnnecessaryIsInstance]
-            and "results" in data
-        ):
-            assert isinstance(
-                data, list
-            ), "Returned data is neither paginated nor the results themselves!"
+        if isinstance(data, list):
             items: list[dict[str, Any]] = data
             yield from (
                 item_type.from_dict(x, **extra_ctor_params, hive_client=self)
                 for x in items
+            )
+            return
+
+        if not isinstance(data, dict) or "results" not in data:
+            raise TypeError(
+                "Returned data is neither paginated nor the results themselves!"
             )
 
         # Paginated: follow "next" links and yield all pages
@@ -82,13 +82,19 @@ class ClientCoreMixin(AuthenticatedHiveClient):
             assert isinstance(data, dict)
             page = data
             while True:
-                items: list[dict[str, Any]] = page.get("results", [])
+                raw_items = page.get("results", [])
+                items: list[dict[str, Any]]
+                if isinstance(raw_items, list):
+                    items = raw_items
+                else:
+                    items = []
                 for x in items:
                     yield item_type.from_dict(x, **extra_ctor_params, hive_client=self)
                 next_url = page.get("next")
                 if not next_url:
                     break
-                page = self.get(next_url)
-                assert isinstance(page, dict)
+                next_page = self.get(next_url)
+                assert isinstance(next_page, dict)
+                page = next_page
 
-        return _paginate()
+        yield from _paginate()

@@ -1,10 +1,9 @@
 """Base class for Hive core items."""
 
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Self
+from __future__ import annotations
 
-if TYPE_CHECKING:
-    from ...client import HiveClient
+from collections.abc import Mapping
+from typing import Any, Self
 
 
 class HiveCoreItem:
@@ -15,8 +14,6 @@ class HiveCoreItem:
         raise NotImplementedError
 
     @classmethod
-    def from_dict(
-        cls, src_dict: Mapping[str, Any], hive_client: "HiveClient"
-    ) -> Self:  # noqa: D102
+    def from_dict(cls, src_dict: Mapping[str, Any], *args: Any, **kwargs: Any) -> Self:  # noqa: D102
         """Deserialize a HiveCoreItem instance from a mapping."""
         raise NotImplementedError

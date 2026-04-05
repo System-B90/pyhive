@@ -31,8 +31,7 @@ class QueueItem(HiveCoreItem):
     continue_on_redo: Unset | bool = UNSET
 
     def to_dict(self) -> dict[str, Any]:
-        from .exercise import \
-            Exercise  # pylint: disable=import-outside-toplevel
+        from .exercise import Exercise  # pylint: disable=import-outside-toplevel
         from .queue import Queue  # pylint: disable=import-outside-toplevel
 
         return {
@@ -59,8 +58,7 @@ class QueueItem(HiveCoreItem):
 
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any], hive_client: "HiveClient") -> Self:
-        from .exercise import \
-            Exercise  # pylint: disable=import-outside-toplevel
+        from .exercise import Exercise  # pylint: disable=import-outside-toplevel
         from .queue import Queue  # pylint: disable=import-outside-toplevel
 
         d = dict(src_dict)

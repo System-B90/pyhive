@@ -1,7 +1,6 @@
 from pyhive.client import HiveClient
 from pyhive.src.types.common import Unset
 from pyhive.types import Class, Subject
-from tests.common import get_client_params
 
 
 def test_get_classes(client: "HiveClient"):

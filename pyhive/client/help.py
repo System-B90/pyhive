@@ -3,7 +3,7 @@
 Provides listing and retrieval of Help request records via the Hive API.
 """
 
-from typing import TYPE_CHECKING, Any, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Iterable, Optional, cast
 
 from ..src.types.enums.help_type_enum import HelpTypeEnum
 from ..src.types.enums.visibility_enum import VisibilityEnum
@@ -88,8 +88,10 @@ class HelpClientMixin(ClientCoreMixin):
         from ..client import HiveClient
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
+        data = self.get(f"/api/core/help/{help_id}/")
+        assert isinstance(data, dict)
         return Help.from_dict(
-            self.get(f"/api/core/help/{help_id}/"),
+            data,
             hive_client=self,
         )
 
@@ -110,8 +112,10 @@ class HelpClientMixin(ClientCoreMixin):
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
         parent_id = resolve_item_or_id(help_id)
+        data = self.get(f"/api/core/help/{parent_id}/responses/{response_id}/")
+        assert isinstance(data, dict)
         return HelpResponse.from_dict(
-            self.get(f"/api/core/help/{parent_id}/responses/{response_id}/"),
+            data,
             hive_client=self,
         )
 
@@ -127,12 +131,12 @@ class HelpClientMixin(ClientCoreMixin):
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
         parent_id = resolve_item_or_id(help_id)
-        response = self._session.get(  # type: ignore[attr-defined]
+        response = self._session.get(
             f"/api/core/help/{parent_id}/responses/{response_id}/student_files/"
         )
         response.raise_for_status()
-        data = response.json()
-        return data if isinstance(data, list) else []
+        data: object = response.json()
+        return cast(list[dict[str, Any]], data) if isinstance(data, list) else []
 
     def create_help_request(
         self,

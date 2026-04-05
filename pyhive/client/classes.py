@@ -4,7 +4,7 @@ Class resource mixin for HiveClient.
 Provides listing and retrieval of Class records from the Hive API. Use only as a mixin for the main HiveClient.
 """
 
-from typing import TYPE_CHECKING, Iterable, Optional, Sequence
+from typing import TYPE_CHECKING, Iterable, Optional
 
 from ..src.types.class_ import Class
 from ..src.types.enums.class_type_enum import ClassTypeEnum
@@ -114,7 +114,7 @@ class ClassesClientMixin(ClientCoreMixin):
         self,
         class_: Class,
         *,
-        users_from_classes: Optional[Sequence["ClassLike"]] = None,
+        users_from_classes: Optional[Iterable["ClassLike"]] = None,
     ) -> Class:
         from ..client import HiveClient
 
@@ -141,7 +141,7 @@ class ClassesClientMixin(ClientCoreMixin):
         return Class.from_dict(data, hive_client=self)
 
     def import_users_to_class(
-        self, to_class: "ClassLike", from_classes: Sequence["ClassLike"]
+        self, to_class: "ClassLike", from_classes: Iterable["ClassLike"]
     ) -> Class:
         to_class_data = (
             to_class if isinstance(to_class, Class) else self.get_class(to_class)

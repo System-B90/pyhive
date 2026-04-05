@@ -20,7 +20,7 @@ dependencies = [
 readme = "README.md"
 
 [project.optional-dependencies]
-dev = ["pytest>=9.0.2", "pytest-httpx>=0.36.0"]
+dev = ["pytest>=9.0.2", "pytest-httpx>=0.36.0", "types-python-dateutil>=0.1.0"]
 
 [project.scripts]
 pyhive = "pyhive.cli.main:main"

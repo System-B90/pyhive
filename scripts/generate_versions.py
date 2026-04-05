@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Generate supported API versions file"""
+
 import tomllib
 from pathlib import Path
 
-from hatchling.builders.hooks.plugin.interface import \
-    BuildHookInterface  # pylint disable=import-error
+from hatchling.builders.hooks.plugin.interface import (
+    BuildHookInterface,
+)  # pylint disable=import-error
 
 
 class GenerateVersionsBuildHook(BuildHookInterface):

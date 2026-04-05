@@ -109,8 +109,7 @@ class AssignmentResponseContent(HiveCoreItem):
     @property
     def content(self) -> "str | int | list[str | int]":
         """Lazily parse and return the content based on the field type."""
-        from .enums.form_field_type_enum import \
-            FormFieldTypeEnum  # pylint: disable=import-outside-toplevel
+        from .enums.form_field_type_enum import FormFieldTypeEnum  # pylint: disable=import-outside-toplevel
 
         if self._content is None:
             if self.field.type_ is FormFieldTypeEnum.NUMBER:
@@ -118,14 +117,22 @@ class AssignmentResponseContent(HiveCoreItem):
             elif self.field.type_ is FormFieldTypeEnum.TEXT:
                 self._content = str(self.raw_content)
             elif self.field.type_ is FormFieldTypeEnum.MULTIPLE:
-                self._content = self.field.choices[int(self.raw_content)]
+                choices = self.field.choices
+                if not isinstance(choices, list):
+                    raise ValueError(
+                        "Expected a list of choices for MULTIPLE field type"
+                    )
+                self._content = choices[int(self.raw_content)]
             elif self.field.type_ is FormFieldTypeEnum.MULTIRESPONSE:
-                self._content = list(
-                    self.field.choices[int(i)] for i in self.raw_content.split(",")
-                )
+                choices = self.field.choices
+                if not isinstance(choices, list):
+                    raise ValueError(
+                        "Expected a list of choices for MULTIRESPONSE field type"
+                    )
+                self._content = [choices[int(i)] for i in self.raw_content.split(",")]
             else:
                 raise ValueError(f"Unsupported form field type: {self.field.type_}")
         return self._content
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.content)

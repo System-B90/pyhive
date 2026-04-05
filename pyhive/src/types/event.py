@@ -86,8 +86,7 @@ class Event(HiveCoreItem):
 
     @classmethod
     def from_dict(cls, src_dict: Mapping[str, Any], hive_client: "HiveClient") -> Self:
-        from .event_attendees_type_0_item import \
-            EventAttendeesType0Item  # pylint: disable=import-outside-toplevel
+        from .event_attendees_type_0_item import EventAttendeesType0Item  # pylint: disable=import-outside-toplevel
 
         d = dict(src_dict)
 
@@ -100,9 +99,18 @@ class Event(HiveCoreItem):
         def _parse_optional_list(data: object) -> None | list[EventAttendeesType0Item]:
             if data is None:
                 return None
+            if not isinstance(data, list):
+                raise TypeError
+            data_list = cast("list[object]", data)
             try:
-                return [EventAttendeesType0Item.from_dict(item, hive_client=hive_client) for item in data]
-            except Exception: # pylint: disable=broad-except
+                return [
+                    EventAttendeesType0Item.from_dict(
+                        cast(dict[str, Any], item),
+                        hive_client=hive_client,
+                    )
+                    for item in data_list
+                ]
+            except Exception:  # pylint: disable=broad-except
                 return cast("None | list[EventAttendeesType0Item]", data)
 
         def _parse_optional_unset_str(data: object) -> None | Unset | str:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Dynamically update readme file in CI"""
+
 import re
 from pathlib import Path
 

@@ -14,7 +14,7 @@ import time
 import urllib.parse
 import webbrowser
 from threading import Thread
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union, cast
 
 import flask
 import httpx
@@ -33,7 +33,7 @@ flask_log = logging.getLogger("flask.app")
 flask_log.setLevel(logging.ERROR)
 
 
-def _decode_jwt_payload(jwt_string: str) -> Dict[str, Any]:
+def _decode_jwt_payload(jwt_string: str) -> dict[str, Any]:
     parts = jwt_string.split(".")
     if len(parts) != 3:
         raise ValueError("Invalid JWT structure returned by OIDC provider.")
@@ -41,7 +41,10 @@ def _decode_jwt_payload(jwt_string: str) -> Dict[str, Any]:
     payload_b64 = parts[1]
     payload_b64 += "=" * ((4 - len(payload_b64) % 4) % 4)
     payload_bytes = base64.urlsafe_b64decode(payload_b64)
-    return json.loads(payload_bytes.decode("utf-8"))
+    payload = json.loads(payload_bytes.decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("JWT payload must be a JSON object")
+    return cast(dict[str, Any], payload)
 
 
 def _generate_pkce_pair() -> Tuple[str, str]:
@@ -79,7 +82,9 @@ def _exchange_code_for_token(
                 f"Token exchange failed (HTTP {response.status_code}): {response.text}"
             )
 
-        token_data = response.json()
+        token_data: dict[str, Any] = response.json()
+        if not isinstance(token_data, dict):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise RuntimeError("Token response did not return a JSON object")
         id_token = token_data.get("id_token")
 
         if not id_token:
@@ -87,10 +92,9 @@ def _exchange_code_for_token(
 
         profile_data = _decode_jwt_payload(id_token)
         api_token = profile_data.get("api_token")
-
-        if not api_token:
+        if not isinstance(api_token, str):
             raise ValueError(
-                "The ID token does not contain the 'api_token' claim. Verify scopes and Hive server configuration."
+                "The ID token does not contain a valid 'api_token' claim. Verify scopes and Hive server configuration."
             )
 
         return api_token
@@ -106,7 +110,7 @@ def _start_local_callback_server(
         lambda *args, **kwargs: None  # # pyright: ignore[reportUnknownLambdaType]
     )
 
-    state: Dict[str, Any] = {
+    state: dict[str, Any] = {
         "auth_code": None,
         "error": None,
         "error_desc": None,
@@ -114,7 +118,7 @@ def _start_local_callback_server(
     }
 
     @app.route("/callback")
-    def callback():  # pyright: ignore[reportUnusedFunction] We use this as a Flask route handler
+    def callback() -> str | tuple[str, int]:  # pyright: ignore[reportUnusedFunction] We use this as a Flask route handler
         state["error"] = flask.request.args.get("error")
         state["error_desc"] = flask.request.args.get("error_description")
         state["auth_code"] = flask.request.args.get("code")
@@ -172,7 +176,7 @@ def generate_sso_client_credentials(
     client: "HiveClient",
     service_name: str,
     redirect_uris: Optional[List[str] | str] = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     # Normalize redirect_uris to a list
     if isinstance(redirect_uris, str):
         redirect_uris = [redirect_uris]

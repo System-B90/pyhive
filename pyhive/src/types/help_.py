@@ -87,8 +87,7 @@ class Help(HiveCoreItem):
 
         # Import locally to avoid circular imports at module import time.
         # Keep the import local but silence pylint's import-outside-toplevel.
-        from .exercise import \
-            Exercise  # pylint: disable=import-outside-toplevel
+        from .exercise import Exercise  # pylint: disable=import-outside-toplevel
 
         # Keep the attribute name `id` as generated; silence redefined-builtin warning.
         id = self.id  # pylint: disable=redefined-builtin
@@ -168,10 +167,8 @@ class Help(HiveCoreItem):
         """
 
         # Local imports to avoid runtime import cycles; keep but silence pylint.
-        from .help_response_segel_nested import \
-            HelpResponseSegelNested  # pylint: disable=import-outside-toplevel
-        from .notification_nested import \
-            NotificationNested  # pylint: disable=import-outside-toplevel
+        from .help_response_segel_nested import HelpResponseSegelNested  # pylint: disable=import-outside-toplevel
+        from .notification_nested import NotificationNested  # pylint: disable=import-outside-toplevel
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -210,14 +207,16 @@ class Help(HiveCoreItem):
 
         responses = [
             HelpResponseSegelNested.from_dict(
-                responses_item_data, hive_client=hive_client
+                cast(dict[str, Any], responses_item_data),
+                hive_client=hive_client,
             )
             for responses_item_data in d.pop("responses")
         ]
 
         notifications: list[NotificationNested] = [
             NotificationNested.from_dict(
-                notifications_item_data, hive_client=hive_client
+                cast(dict[str, Any], notifications_item_data),
+                hive_client=hive_client,
             )
             for notifications_item_data in d.pop("notifications")
         ]

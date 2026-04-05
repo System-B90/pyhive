@@ -44,7 +44,11 @@ class NotificationNested(HiveCoreItem):
             A `User` instance or `None` if not available.
 
         """
-        if self._from_user is None and not isinstance(self.from_user_id, Unset) and self.from_user_id is not None:
+        if (
+            self._from_user is None
+            and not isinstance(self.from_user_id, Unset)
+            and self.from_user_id is not None
+        ):
             self._from_user = self.hive_client.get_user(self.from_user_id)
         return self._from_user
 

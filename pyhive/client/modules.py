@@ -110,4 +110,4 @@ class ModuleClientMixin(ClientCoreMixin):
         )
 
     def delete_module(self, module: "ModuleLike") -> None:
-        self.delete(f"/api/core/course/modules/{ resolve_item_or_id(module)}/")
+        self.delete(f"/api/core/course/modules/{resolve_item_or_id(module)}/")

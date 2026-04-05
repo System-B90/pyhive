@@ -66,20 +66,27 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
 
     def __init__(
         self,
-        *args,
+        username: str,
+        password: str,
+        hive_url: str,
+        *,
         skip_version_check: bool = False,
         timeout: Optional[Union["Timeout", float]] = None,
         headers: Optional[dict[str, str]] = None,
         verify: Optional[Union[bool, str]] = None,
         proxy: Optional["ProxyTypes"] = None,
+        existing_token: str | None = None,
         **kwargs: object,
     ):
         super().__init__(
-            *args,
+            username,
+            password,
+            hive_url,
             timeout=timeout,
             headers=headers,
             verify=verify,
             proxy=proxy,
+            existing_token=existing_token,
             **kwargs,
         )
         if not skip_version_check:
