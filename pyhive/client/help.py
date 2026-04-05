@@ -3,7 +3,9 @@
 Provides listing and retrieval of Help request records via the Hive API.
 """
 
-from typing import TYPE_CHECKING, Any, Iterable, Optional
+from typing import TYPE_CHECKING, Iterable, Optional
+
+import httpx
 
 from ..src.types.enums.help_type_enum import HelpTypeEnum
 from ..src.types.enums.visibility_enum import VisibilityEnum
@@ -88,8 +90,10 @@ class HelpClientMixin(ClientCoreMixin):
         from ..client import HiveClient
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
+        data = self.get(f"/api/core/help/{help_id}/")
+        assert isinstance(data, dict)
         return Help.from_dict(
-            self.get(f"/api/core/help/{help_id}/"),
+            data,
             hive_client=self,
         )
 
@@ -110,29 +114,30 @@ class HelpClientMixin(ClientCoreMixin):
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
         parent_id = resolve_item_or_id(help_id)
+        data = self.get(
+            f"/api/core/help/{parent_id}/responses/{response_id}/",
+        )
+        assert isinstance(data, dict)
         return HelpResponse.from_dict(
-            self.get(f"/api/core/help/{parent_id}/responses/{response_id}/"),
+            data,
             hive_client=self,
         )
 
-    def get_help_response_student_files(
+    def get_help_response_student_file(
         self, help_id: "HelpLike", response_id: int
-    ) -> list[dict[str, Any]]:
-        """Return files attached to a specific help response (raw JSON list).
-
-        Some servers may not accept the default JSON Accept header for this endpoint;
-        in such cases we fall back gracefully and return an empty list.
-        """
+    ) -> bytes | None:
+        """Return the file attached to a specific help response"""
         from ..client import HiveClient
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
         parent_id = resolve_item_or_id(help_id)
-        response = self._session.get(  # type: ignore[attr-defined]
+        response = self._session.get(
             f"/api/core/help/{parent_id}/responses/{response_id}/student_files/"
         )
+        if response.status_code == httpx.codes.NOT_FOUND.value:
+            return None
         response.raise_for_status()
-        data = response.json()
-        return data if isinstance(data, list) else []
+        return response.content
 
     def create_help_request(
         self,

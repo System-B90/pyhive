@@ -1,223 +1,50 @@
-"""High-level Hive API client aggregator."""
+"""Hive API Client module."""
 
-import base64
-import hashlib
-import os
-import secrets
-import webbrowser
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from types import TracebackType
-from typing import TYPE_CHECKING, List, Optional, Union, cast
-from urllib.parse import parse_qs, urlencode, urlparse
+from .client import HiveClient  # re-export
 
-import httpx
+# Rebuild Pydantic models to resolve forward references
+from ..src.types.assignment import Assignment
+from ..src.types.assignment_response import AssignmentResponse
+from ..src.types.assignment_response_content import AssignmentResponseContent
+from ..src.types.autocheck_status import AutoCheckStatus
+from ..src.types.class_ import Class
+from ..src.types.event import Event
+from ..src.types.event_attendees_type_0_item import EventAttendeesType0Item
+from ..src.types.event_color import EventColor
+from ..src.types.exercise import Exercise
+from ..src.types.form_field import FormField
+from ..src.types.help_ import Help
+from ..src.types.help_response import HelpResponse
+from ..src.types.help_response_segel_nested import HelpResponseSegelNested
+from ..src.types.module import Module
+from ..src.types.notification_nested import NotificationNested
+from ..src.types.program import Program
+from ..src.types.queue import Queue
+from ..src.types.queue_item import QueueItem
+from ..src.types.subject import Subject
+from ..src.types.tag import Tag
+from ..src.types.user import User
 
-from pyhive.client.sso_utils import generate_sso_client_credentials, get_sso_token
+Assignment.model_rebuild()
+AssignmentResponse.model_rebuild()
+AssignmentResponseContent.model_rebuild()
+AutoCheckStatus.model_rebuild()
+Class.model_rebuild()
+Event.model_rebuild()
+EventAttendeesType0Item.model_rebuild()
+EventColor.model_rebuild()
+Exercise.model_rebuild()
+FormField.model_rebuild()
+Help.model_rebuild()
+HelpResponse.model_rebuild()
+HelpResponseSegelNested.model_rebuild()
+Module.model_rebuild()
+NotificationNested.model_rebuild()
+Program.model_rebuild()
+Queue.model_rebuild()
+QueueItem.model_rebuild()
+Subject.model_rebuild()
+Tag.model_rebuild()
+User.model_rebuild()
 
-from ..src.api_versions import (
-    LATEST_API_VERSION,
-    MIN_API_VERSION,
-    SUPPORTED_API_VERSIONS,
-)
-from .assignment_responses import AssignmentResponsesClientMixin
-from .assignments import AssignmentClientMixin
-from .classes import ClassesClientMixin
-from .exercises import ExerciseClientMixin
-from .fields import FieldsClientMixin
-from .help import HelpClientMixin
-from .modules import ModuleClientMixin
-from .programs import ProgramClientMixin
-from .queues import QueuesClientMixin
-from .subjects import SubjectClientMixin
-from .users import UserClientMixin
-from .version import VersionClientMixin
-
-if TYPE_CHECKING:
-    from httpx import Timeout
-    from httpx._types import ProxyTypes
-
-
-def _generate_pkce_pair() -> tuple[str, str]:
-    """Return ``(code_verifier, code_challenge)`` for PKCE with S256."""
-
-    # token_urlsafe produces URL-safe characters; take a slice to stay within
-    # the 43–128 character requirement for a code_verifier.
-    verifier = secrets.token_urlsafe(64)[:128]
-    digest = hashlib.sha256(verifier.encode("ascii")).digest()
-    challenge = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
-    return verifier, challenge
-
-
-class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
-    ProgramClientMixin,
-    SubjectClientMixin,
-    ModuleClientMixin,
-    ExerciseClientMixin,
-    AssignmentClientMixin,
-    UserClientMixin,
-    ClassesClientMixin,
-    FieldsClientMixin,
-    AssignmentResponsesClientMixin,
-    QueuesClientMixin,
-    HelpClientMixin,
-    VersionClientMixin,
-):
-    """Aggregated HTTP client for accessing Hive API resources."""
-
-    def __init__(
-        self,
-        *args,
-        skip_version_check: bool = False,
-        timeout: Optional[Union["Timeout", float]] = None,
-        headers: Optional[dict[str, str]] = None,
-        verify: Optional[Union[bool, str]] = None,
-        proxy: Optional["ProxyTypes"] = None,
-        **kwargs: object,
-    ):
-        super().__init__(
-            *args,
-            timeout=timeout,
-            headers=headers,
-            verify=verify,
-            proxy=proxy,
-            **kwargs,
-        )
-        if not skip_version_check:
-            self._api_version_check()
-
-    @classmethod
-    def from_api_token(
-        cls,
-        api_token: str,
-        hive_url: str,
-        *,
-        timeout: Optional[Union["Timeout", float]] = None,
-        headers: Optional[dict[str, str]] = None,
-        verify: Optional[Union[bool, str]] = None,
-        proxy: Optional["ProxyTypes"] = None,
-        skip_version_check: bool = False,
-        **kwargs: object,
-    ) -> "HiveClient":
-        """Construct a client using an existing Hive API token.
-
-        This is mainly intended for advanced integrations. In most user-facing
-        scenarios, prefer :meth:`from_sso`, which performs the browser-based
-        Hive SSO flow and then creates the client from the resulting token.
-
-        Automatic token refresh is *not* supported in this mode: if the token
-        expires, create a new :class:`HiveClient` with a freshly-issued token.
-        """
-
-        return cls(
-            "token-auth",  # placeholder username for repr/debugging
-            "unused",
-            hive_url,
-            timeout=timeout,
-            headers=headers,
-            verify=verify,
-            proxy=proxy,
-            skip_version_check=skip_version_check,
-            existing_token=api_token,
-            **kwargs,
-        )
-
-    @classmethod
-    def from_sso(
-        cls,
-        hive_url: str,
-        *,
-        timeout: Optional[Union["Timeout", float]] = None,
-        headers: Optional[dict[str, str]] = None,
-        verify: Optional[Union[bool, str]] = None,
-        proxy: Optional["ProxyTypes"] = None,
-        skip_version_check: bool = False,
-        **kwargs: object,
-    ) -> "HiveClient":
-        """
-        Instantiate a HiveClient using interactive browser-based SSO authentication.
-
-        Args:
-            hive_url (str): The base URL of the Hive server.
-            timeout (Optional[Union[Timeout, float]]): Request timeout configuration.
-            headers (Optional[dict[str, str]]): Additional headers to apply to the client.
-            verify (Optional[Union[bool, str]]): SSL verification requirements.
-            proxy (Optional[ProxyTypes]): Proxy configuration.
-            skip_version_check (bool): Bypass API version compatibility checking.
-            **kwargs (object): Additional client configuration parameters.
-
-        Returns:
-            HiveClient: An authenticated instance of the HiveClient.
-        """
-
-        # Trigger the browser-based OIDC flow
-        user_token = get_sso_token(hive_url=hive_url, verify=verify)
-
-        # Delegate to from_api_token to construct the actual client
-        return cls.from_api_token(
-            api_token=user_token,
-            hive_url=hive_url,
-            timeout=timeout,
-            headers=headers,
-            verify=verify,
-            proxy=proxy,
-            skip_version_check=skip_version_check,
-            **kwargs,
-        )
-
-    def __repr__(self) -> str:
-        """Return a short representation including username and hive_url.
-
-        The representation intentionally omits secrets.
-        """
-
-        return f"HiveClient({self.username!r}, input(), {self.hive_url!r})"
-
-    def __enter__(self) -> "HiveClient":
-        """Enter context manager and return this client instance.
-
-        The underlying :class:`httpx.Client` is managed by this object's
-        lifecycle; entering the context returns the authenticated client so
-        callers can perform API calls.
-        """
-        return self
-
-    def __exit__(
-        self,
-        type_: type[BaseException] | None,
-        value: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        """Exit the context and close the underlying httpx session.
-
-        This delegates to the managed :class:`httpx.Client`'s ``__exit__``
-        method to ensure resources are released.
-        """
-
-        self._session.__exit__(type_, value, traceback)
-
-    def _api_version_check(self) -> None:
-        """Validate that the Hive server API version is supported.
-
-        Fetches the server version via ``get_hive_version`` and verifies it is present
-        in ``SUPPORTED_API_VERSIONS``. If unsupported, raises a RuntimeError with
-        guidance to align the client and server versions.
-
-        Raises:
-            RuntimeError: If the server API version is not supported by this client.
-        """
-        version_str = self.get_hive_version()
-        if version_str not in SUPPORTED_API_VERSIONS:
-            supported_range = f"{MIN_API_VERSION} .. {LATEST_API_VERSION}"
-            raise RuntimeError(
-                (
-                    f"Unsupported Hive API version '{version_str}'. Supported versions: {supported_range}. "
-                    f"Please upgrade/downgrade the server or use a compatible client."
-                )
-            )
-
-    def register_sso_service(
-        self,
-        service_name: str,
-        redirect_uris: Optional[List[str] | str] = None,
-    ) -> dict[str, str]:
-        return generate_sso_client_credentials(self, service_name, redirect_uris)
+__all__ = ["HiveClient"]

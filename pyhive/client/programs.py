@@ -52,8 +52,10 @@ class ProgramClientMixin(ClientCoreMixin):
         from ..client import HiveClient
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
+        data = self.get(f"/api/core/course/programs/{program_id}/")
+        assert isinstance(data, dict)
         return Program.from_dict(
-            self.get(f"/api/core/course/programs/{program_id}/"),
+            data,
             hive_client=self,
         )
 

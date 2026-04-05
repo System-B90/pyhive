@@ -3,7 +3,7 @@
 Provides listing and retrieval of user records from the management API.
 """
 
-from typing import TYPE_CHECKING, Any, Iterable, Optional, cast
+from typing import TYPE_CHECKING, Iterable, Optional
 
 from pyhive.src.types.enums.gender_enum import GenderEnum
 from pyhive.src.types.enums.status_enum import StatusEnum
@@ -57,8 +57,10 @@ class UserClientMixin(ClientCoreMixin):
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
 
+        data = self.get(f"/api/core/management/users/{user_id}/")
+        assert isinstance(data, dict)
         return User.from_dict(
-            cast(dict[str, Any], self.get(f"/api/core/management/users/{user_id}/")),
+            data,
             hive_client=self,
         )
 
@@ -101,11 +103,13 @@ class UserClientMixin(ClientCoreMixin):
         # Try matching full user name
         users_matching_full_name = list(
             filter(
-                lambda user: name
-                in (
-                    f"{user.first_name} {user.last_name}",
-                    user.display_name,
-                    user.username,
+                lambda user: (
+                    name
+                    in (
+                        f"{user.first_name} {user.last_name}",
+                        user.display_name,
+                        user.username,
+                    )
                 ),
                 all_users,
             )
@@ -157,12 +161,14 @@ class UserClientMixin(ClientCoreMixin):
         if name is not None:
             students_perfect_match = list(
                 filter(
-                    lambda student: name
-                    in (
-                        student.first_name,
-                        student.last_name,
-                        student.display_name,
-                        f"{student.first_name} {student.last_name}",
+                    lambda student: (
+                        name
+                        in (
+                            student.first_name,
+                            student.last_name,
+                            student.display_name,
+                            f"{student.first_name} {student.last_name}",
+                        )
                     ),
                     students_matching_number,
                 )
@@ -175,7 +181,7 @@ class UserClientMixin(ClientCoreMixin):
 
         return students_perfect_match[0] if len(students_perfect_match) == 1 else None
 
-    def create_user( # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
+    def create_user(  # pylint: disable=too-many-arguments, too-many-locals, too-many-branches
         self,
         username: str,
         password: str,
@@ -258,7 +264,7 @@ class UserClientMixin(ClientCoreMixin):
             or payload.get("teacher", False)
         ):
             raise TypeError(
-                "A user which is not a HANICH must not be associated with a program, nor have a number, nor be a teacher!" # pylint: disable=line-too-long
+                "A user which is not a HANICH must not be associated with a program, nor have a number, nor be a teacher!"  # pylint: disable=line-too-long
             )
         if payload.get("clearance", None) == ClearanceEnum.HANICH and (
             any(payload.get(k, None) is None for k in ("number", "program"))
@@ -295,7 +301,7 @@ class UserClientMixin(ClientCoreMixin):
         disable_queue: Optional[bool] = None,
         disable_user_queue: Optional[bool] = None,
         override_queue: Optional["QueueLike"] = None,
-    ):
+    ) -> User:
         return self.create_user(
             username=username,
             password=password,
@@ -325,13 +331,12 @@ class UserClientMixin(ClientCoreMixin):
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
 
-        return User.from_dict(
-            self.put(
-                f"/api/core/management/users/{resolve_item_or_id(user)}/",
-                user.to_dict(),
-            ),
-            hive_client=self,
+        response = self.put(
+            f"/api/core/management/users/{resolve_item_or_id(user)}/",
+            user.to_dict(),
         )
+        assert isinstance(response, dict)
+        return User.from_dict(response, hive_client=self)
 
     def set_users_queue(self, user: "UserLike", queue: "QueueLike") -> User:
         full_user = user if isinstance(user, User) else self.get_user(user)

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "PyHiveLMS"
-version = "1.2.3"
+version = "1.3.0"
 description = "Python bindings for Hive"
 authors = [
     { name = "Michael K. Steinberg", email = "m.kuper.steinberg@gmail.com" },
@@ -16,11 +16,12 @@ dependencies = [
     "attrs>=25.4.0",
     "typer==0.20.0",
     "flask>=3.1.3",
+    "pydantic==2.12.5",
 ]
 readme = "README.md"
 
 [project.optional-dependencies]
-dev = ["pytest>=9.0.2", "pytest-httpx>=0.36.0"]
+dev = ["pytest>=9.0.2", "pytest-httpx>=0.36.0", "types-python-dateutil>=0.1.0"]
 
 [project.scripts]
 pyhive = "pyhive.cli.main:main"

@@ -1,9 +1,13 @@
-"""Defines the Subject type and related functionality for the Hive API Python bindings."""
+"""
+Name: subject.py
+Purpose: Defines the Subject type and related functionality for the Hive API Python bindings.
+Created: 2026-04-05
+Author: Michael K. Steinberg
+"""
 
-from typing import (TYPE_CHECKING, Any, Generator, Iterable, Mapping, Self,
-                    TypeVar, cast)
+from typing import Annotated,TYPE_CHECKING, Any, Iterable, Self, TypeVar
 
-from attrs import define, field
+from pydantic import Field, PrivateAttr
 
 from .core_item import HiveCoreItem
 from .enums.sync_status_enum import SyncStatusEnum
@@ -13,10 +17,7 @@ if TYPE_CHECKING:
     from .module import Module
     from .program import Program
 
-T = TypeVar("T", bound="Subject")
 
-
-@define
 class Subject(HiveCoreItem):
     """Represents a Subject in the Hive system.
 
@@ -34,36 +35,21 @@ class Subject(HiveCoreItem):
 
     """
 
-    hive_client: "HiveClient"
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     id: int
     symbol: str
-    parent_program_id: int
+    parent_program_id: int = Field(alias="parent_program")
     color: str
     name: str
     parent_program_name: str
     sync_status: SyncStatusEnum
-    sync_message: str | None
+    sync_message: str | None = Field(default=None)
     segel_path: str
     segel_brief: str
-    _parent_program: "Program | None" = field(init=False, default=None)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Serialize the Subject to a dictionary."""
-        return {
-            "id": self.id,
-            "symbol": self.symbol,
-            "parent_program": self.parent_program_id,
-            "color": self.color,
-            "name": self.name,
-            "parent_program_name": self.parent_program_name,
-            "sync_status": self.sync_status.value,
-            "sync_message": self.sync_message,
-            "segel_path": self.segel_path,
-            "segel_brief": self.segel_brief,
-        }
+    _parent_program: "Program | None" = PrivateAttr(default=None)
 
     @classmethod
-    def from_dict(cls, src_dict: Mapping[str, Any], hive_client: "HiveClient") -> Self:
+    def from_dict(cls, src_dict: dict[str, Any], hive_client: "HiveClient") -> Self:
         """Deserialize a Subject from a dictionary.
 
         Args:
@@ -74,19 +60,9 @@ class Subject(HiveCoreItem):
             A Subject instance.
 
         """
-        return cls(
-            hive_client=hive_client,
-            id=src_dict["id"],
-            symbol=src_dict["symbol"],
-            parent_program_id=src_dict["parent_program"],
-            color=src_dict["color"],
-            name=src_dict["name"],
-            parent_program_name=src_dict["parent_program_name"],
-            sync_status=SyncStatusEnum(src_dict["sync_status"]),
-            sync_message=cast("str | None", src_dict.get("sync_message")),
-            segel_path=src_dict["segel_path"],
-            segel_brief=src_dict["segel_brief"],
-        )
+        data = dict(src_dict)
+        data["hive_client"] = hive_client
+        return cls.model_validate(data)
 
     @property
     def parent_program(self) -> "Program":
@@ -144,10 +120,6 @@ class Subject(HiveCoreItem):
             return NotImplemented
         return self.symbol < value.symbol
 
-    def __iter__(self) -> Generator["Module", None, None]:
-        """Allow iteration over this Subject to yield its modules."""
-        yield from self.get_modules()
-
     def __hash__(self) -> int:
         return hash(
             (
@@ -170,4 +142,5 @@ class Subject(HiveCoreItem):
         )
 
 
+T = TypeVar("T", bound="Subject")
 SubjectLike = TypeVar("SubjectLike", Subject, int)

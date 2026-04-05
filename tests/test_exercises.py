@@ -93,11 +93,11 @@ def test_exercises_conflict(
 
 def test_get_exercises_from_program(client: HiveClient, large_program: Program):
     exercises: list[Exercise] = []
-    for subject in large_program:
+    for subject in large_program.get_subjects():
         assert isinstance(subject, Subject)
-        for module in subject:
+        for module in subject.get_modules():
             assert isinstance(module, Module)
-            for exercise in module:
+            for exercise in module.get_exercises():
                 assert isinstance(exercise, Exercise)
                 assert exercise.parent_module == module
                 assert exercise.parent_module.parent_subject == subject

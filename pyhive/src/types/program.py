@@ -1,15 +1,15 @@
-"""Model definition for the Hive Program entity.
-
-Represents an educational program, including checker configuration,
-sync status, and automatic handling flags.
+"""
+Name: program.py
+Purpose: Model definition for the Hive Program entity.
+Created: 2026-04-05
+Author: Michael K. Steinberg
 """
 
-from collections.abc import Generator, Mapping
-from typing import TYPE_CHECKING, Any, Iterable, Self, TypeVar
+from collections.abc import Iterable
+from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
 
-from attrs import define, field
+from pydantic import Field, PrivateAttr
 
-from .common import UNSET, Unset
 from .core_item import HiveCoreItem
 from .enums.sync_status_enum import SyncStatusEnum
 from .subject import Subject
@@ -19,12 +19,10 @@ if TYPE_CHECKING:
     from .class_ import Class
     from .user import User
 
-T = TypeVar("T", bound="Program")
 
-
-@define
 class Program(HiveCoreItem):
-    """Course Program entity.
+    """
+    Course Program entity.
 
     Attributes:
         id: Unique identifier.
@@ -42,129 +40,81 @@ class Program(HiveCoreItem):
         auto_toilet_count: Number of auto toilets to assign.
         hanich_classes_only: Restrict hanich to classes only.
         hanich_schedule: Whether hanich gets scheduled.
-
     """
 
-    hive_client: "HiveClient"
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     id: int
     name: str
-    checker_id: int
+    checker_id: int = Field(alias="checker")
     sync_status: SyncStatusEnum
-    sync_message: None | str
-    default_class_id: None | Unset | int
 
-    auto_toilet: Unset | bool = UNSET
-    hanich_raise_hand: Unset | bool = UNSET
-    auto_schedule: Unset | bool = UNSET
-    auto_room: Unset | bool = UNSET
-    hanich_day_only: Unset | bool = UNSET
-    hanich_work_name: Unset | bool = UNSET
-    auto_toilet_count: Unset | int = UNSET
-    hanich_classes_only: Unset | bool = UNSET
-    hanich_schedule: Unset | bool = UNSET
+    sync_message: str | None = Field(default=None)
+    default_class_id: int | None = Field(default=None, alias="default_class")
 
-    _checker: "User | None" = field(init=False, default=None)
-    _default_class: "Class | None" = field(init=False, default=None)
+    auto_toilet: bool | None = Field(default=None)
+    hanich_raise_hand: bool | None = Field(default=None)
+    auto_schedule: bool | None = Field(default=None)
+    auto_room: bool | None = Field(default=None)
+    hanich_day_only: bool | None = Field(default=None)
+    hanich_work_name: bool | None = Field(default=None)
+    auto_toilet_count: int | None = Field(default=None)
+    hanich_classes_only: bool | None = Field(default=None)
+    hanich_schedule: bool | None = Field(default=None)
+
+    _checker: "User | None" = PrivateAttr(default=None)
+    _default_class: "Class | None" = PrivateAttr(default=None)
 
     def __str__(self) -> str:
         return f"<Program[{self.id}] {self.name}>"
 
     @property
     def checker(self) -> "User":
-        """Lazily loads and returns the checker (staff member)."""
+        """
+        Lazily loads and returns the checker (staff member).
+
+        Returns:
+            User: The associated checker entity.
+        """
         if self._checker is None:
             self._checker = self.hive_client.get_user(self.checker_id)
         return self._checker
 
     @property
     def default_class(self) -> "Class | None":
-        """Lazily loads the default class, if set."""
-        if (
-            self._default_class is None
-            and not isinstance(self.default_class_id, Unset)
-            and self.default_class_id is not None
-        ):
+        """
+        Lazily loads the default class, if set.
+
+        Returns:
+            Class | None: The associated default class entity, or None if not set.
+        """
+        if self._default_class is None and self.default_class_id is not None:
             self._default_class = self.hive_client.get_class(self.default_class_id)
         return self._default_class
 
     def get_subjects(self) -> Iterable[Subject]:
-        """Returns all subjects belonging to this program."""
-        return self.hive_client.get_subjects(parent_program__id__in=[self.id])
-
-    def to_dict(self) -> dict[str, Any]:
-        field_dict: dict[str, Any] = {
-            "id": self.id,
-            "name": self.name,
-            "checker": self.checker_id,
-            "sync_status": self.sync_status.value,
-            "sync_message": self.sync_message,
-        }
-
-        if not isinstance(self.default_class_id, Unset):
-            field_dict["default_class"] = self.default_class_id
-        if not isinstance(self.auto_toilet, Unset):
-            field_dict["auto_toilet"] = self.auto_toilet
-        if not isinstance(self.hanich_raise_hand, Unset):
-            field_dict["hanich_raise_hand"] = self.hanich_raise_hand
-        if not isinstance(self.auto_schedule, Unset):
-            field_dict["auto_schedule"] = self.auto_schedule
-        if not isinstance(self.auto_room, Unset):
-            field_dict["auto_room"] = self.auto_room
-        if not isinstance(self.hanich_day_only, Unset):
-            field_dict["hanich_day_only"] = self.hanich_day_only
-        if not isinstance(self.hanich_work_name, Unset):
-            field_dict["hanich_work_name"] = self.hanich_work_name
-        if not isinstance(self.auto_toilet_count, Unset):
-            field_dict["auto_toilet_count"] = self.auto_toilet_count
-        if not isinstance(self.hanich_classes_only, Unset):
-            field_dict["hanich_classes_only"] = self.hanich_classes_only
-        if not isinstance(self.hanich_schedule, Unset):
-            field_dict["hanich_schedule"] = self.hanich_schedule
-
-        return field_dict
-
-    @classmethod
-    def from_dict(cls, src_dict: Mapping[str, Any], hive_client: "HiveClient") -> Self:
-        """Create an instance of the class from a dictionary representation.
-
-        Args:
-            src_dict (Mapping[str, Any]): The source dictionary containing the data to populate the instance.
-            hive_client (HiveClient): An instance of HiveClient to associate with the created object.
+        """
+        Returns all subjects belonging to this program.
 
         Returns:
-            Self: An instance of the class populated with data from src_dict.
-
-        Notes:
-            - Handles optional and unset fields using the _parse_optional helper.
-            - Converts the 'sync_status' field to a SyncStatusEnum.
-            - Pops fields from the dictionary to avoid duplication.
-
+            Iterable[Subject]: An iterable collection of subject models.
         """
-        d = dict(src_dict)
+        return self.hive_client.get_subjects(parent_program__id__in=[self.id])
 
-        def _parse_optional(data: object) -> Any:
-            if data is None or isinstance(data, Unset):
-                return data
-            return data
+    @classmethod
+    def from_dict(cls, src_dict: dict[str, Any], hive_client: "HiveClient") -> Self:
+        """
+        Deserializes a Program instance from a dictionary payload.
 
-        return cls(
-            id=d.pop("id"),
-            name=d.pop("name"),
-            checker_id=d.pop("checker"),
-            sync_status=SyncStatusEnum(d.pop("sync_status")),
-            sync_message=_parse_optional(d.pop("sync_message")),
-            default_class_id=_parse_optional(d.pop("default_class", UNSET)),
-            auto_toilet=d.pop("auto_toilet", UNSET),
-            hanich_raise_hand=d.pop("hanich_raise_hand", UNSET),
-            auto_schedule=d.pop("auto_schedule", UNSET),
-            auto_room=d.pop("auto_room", UNSET),
-            hanich_day_only=d.pop("hanich_day_only", UNSET),
-            hanich_work_name=d.pop("hanich_work_name", UNSET),
-            auto_toilet_count=d.pop("auto_toilet_count", UNSET),
-            hanich_classes_only=d.pop("hanich_classes_only", UNSET),
-            hanich_schedule=d.pop("hanich_schedule", UNSET),
-            hive_client=hive_client,
-        )
+        Args:
+            src_dict (dict[str, Any]): The raw dictionary from the API response.
+            hive_client (HiveClient): The client instance for deferred network operations.
+
+        Returns:
+            Self: An instantiated and validated Program model.
+        """
+        data = dict(src_dict)
+        data["hive_client"] = hive_client
+        return cls.model_validate(data)
 
     def __eq__(self, value: object) -> bool:
         if not isinstance(value, Program):
@@ -175,11 +125,13 @@ class Program(HiveCoreItem):
             and self.name == value.name
         )
 
-    def __iter__(self) -> Generator["Subject", None, None]:
-        """Allow iteration over this Program to yield its subjects."""
-        yield from self.get_subjects()
-
     def delete(self) -> None:
+        """
+        Deletes the program using the underlying HiveClient.
+
+        Returns:
+            None
+        """
         self.hive_client.delete_program(self.id)
 
     def create_subject(
@@ -189,6 +141,18 @@ class Program(HiveCoreItem):
         color: str,
         segel_brief: str = "",
     ) -> Subject:
+        """
+        Creates a new subject associated with this program.
+
+        Args:
+            symbol (str): The subject's symbolic identifier.
+            name (str): The display name of the subject.
+            color (str): The UI color code for the subject.
+            segel_brief (str, optional): Briefing context for the staff. Defaults to "".
+
+        Returns:
+            Subject: The newly created subject model.
+        """
         return self.hive_client.create_subject(
             symbol=symbol, name=name, program=self, color=color, segel_brief=segel_brief
         )

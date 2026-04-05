@@ -1,10 +1,13 @@
-"""AssignmentResponseContent type definition."""
+"""
+Name: assignment_response_content.py
+Purpose: AssignmentResponseContent type definition.
+Created: 2026-04-05
+Author: Michael K. Steinberg
+"""
 
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
-from attrs import define
-from attrs import field as _attrs_field
+from pydantic import Field, PrivateAttr
 
 from .core_item import HiveCoreItem
 
@@ -14,73 +17,62 @@ if TYPE_CHECKING:
     from .assignment_response import AssignmentResponse
     from .form_field import FormField
 
-T = TypeVar("T", bound="AssignmentResponseContent")
 
-
-@define
 class AssignmentResponseContent(HiveCoreItem):
     """
     Attributes:
-        content (str):
-        field_id (int):
+        raw_content: The raw content string from the response payload.
+        field_id: ID of the associated form field.
     """
 
-    hive_client: "HiveClient"
-    assignment_id: int
-    assignment_response_id: int
-    raw_content: str
-    field_id: int
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
+    assignment_id: int = Field(exclude=True)
+    assignment_response_id: int = Field(exclude=True)
+    raw_content: Annotated[str, Field(alias="content")]
+    field_id: int = Field(alias="field")
 
-    # Lazy-loaded objects
-    _content: "str | int | list[str | int] | None" = _attrs_field(
-        init=False, default=None
-    )
-    _field: "FormField | None" = _attrs_field(init=False, default=None)
-    _assignment: "Assignment | None" = _attrs_field(init=False, default=None)
-    _assignment_response: "AssignmentResponse | None" = _attrs_field(
-        init=False, default=None
-    )
-
-    def to_dict(self) -> dict[str, Any]:
-        raw_content = self.raw_content
-
-        field_id = self.field_id
-
-        field_dict: dict[str, Any] = {}
-        field_dict.update(
-            {
-                "content": raw_content,
-                "field": field_id,
-            }
-        )
-
-        return field_dict
+    _content: "str | int | list[str | int] | None" = PrivateAttr(default=None)
+    _field: "FormField | None" = PrivateAttr(default=None)
+    _assignment: "Assignment | None" = PrivateAttr(default=None)
+    _assignment_response: "AssignmentResponse | None" = PrivateAttr(default=None)
 
     @classmethod
-    def from_dict(  # pylint: disable=arguments-differ
-        cls: type[T],
-        src_dict: Mapping[str, Any],
+    def from_dict(
+        cls,
+        src_dict: dict[str, Any],
         assignment: "AssignmentLike",
         assignment_response_id: int,
         hive_client: "HiveClient",
-    ) -> T:
-        d = dict(src_dict)
-        raw_content = d.pop("content")
-        field_id = d.pop("field")
+    ) -> Self:
+        """
+        Deserializes an AssignmentResponseContent instance from a dictionary payload.
 
-        return cls(
-            hive_client=hive_client,
-            assignment_id=(
-                assignment.id if isinstance(assignment, HiveCoreItem) else assignment
-            ),
-            assignment_response_id=assignment_response_id,
-            raw_content=raw_content,
-            field_id=field_id,
-        )
+        Args:
+            src_dict (dict[str, Any]): The raw dictionary from the API response.
+            assignment (AssignmentLike): The parent assignment object or its ID.
+            assignment_response_id (int): The ID of the parent assignment response.
+            hive_client (HiveClient): The client instance for deferred network operations.
+
+        Returns:
+            Self: An instantiated and validated AssignmentResponseContent model.
+        """
+        data = dict(src_dict)
+        data["hive_client"] = hive_client
+        data["assignment_response_id"] = assignment_response_id
+
+        # Extracts the ID cleanly whether passed an int or an Assignment object
+        data["assignment_id"] = getattr(assignment, "id", assignment)
+
+        return cls.model_validate(data)
 
     @property
     def field(self) -> "FormField":
-        """Lazily load and return the field this assignment belongs to."""
+        """
+        Lazily load and return the field this assignment belongs to.
+
+        Returns:
+            FormField: The associated form field.
+        """
         if self._field is None:
             self._field = self.hive_client.get_exercise_field(
                 exercise=self.assignment.exercise_id, field_id=self.field_id
@@ -89,7 +81,12 @@ class AssignmentResponseContent(HiveCoreItem):
 
     @property
     def assignment(self) -> "Assignment":
-        """Lazily load and return the assignment this content belongs to."""
+        """
+        Lazily load and return the assignment this content belongs to.
+
+        Returns:
+            Assignment: The associated assignment entity.
+        """
         if self._assignment is None:
             self._assignment = self.hive_client.get_assignment(
                 assignment_id=self.assignment_id
@@ -98,7 +95,12 @@ class AssignmentResponseContent(HiveCoreItem):
 
     @property
     def assignment_response(self) -> "AssignmentResponse":
-        """Lazily load and return the assignment response this content belongs to."""
+        """
+        Lazily load and return the assignment response this content belongs to.
+
+        Returns:
+            AssignmentResponse: The associated assignment response entity.
+        """
         if self._assignment_response is None:
             self._assignment_response = self.hive_client.get_assignment_response(
                 assignment=self.assignment_id,
@@ -108,9 +110,16 @@ class AssignmentResponseContent(HiveCoreItem):
 
     @property
     def content(self) -> "str | int | list[str | int]":
-        """Lazily parse and return the content based on the field type."""
-        from .enums.form_field_type_enum import \
-            FormFieldTypeEnum  # pylint: disable=import-outside-toplevel
+        """
+        Lazily parse and return the content based on the field type.
+
+        Returns:
+            str | int | list[str | int]: The dynamically typed content value.
+
+        Raises:
+            ValueError: If the choice lists are missing or the field type is unsupported.
+        """
+        from .enums.form_field_type_enum import FormFieldTypeEnum
 
         if self._content is None:
             if self.field.type_ is FormFieldTypeEnum.NUMBER:
@@ -118,14 +127,27 @@ class AssignmentResponseContent(HiveCoreItem):
             elif self.field.type_ is FormFieldTypeEnum.TEXT:
                 self._content = str(self.raw_content)
             elif self.field.type_ is FormFieldTypeEnum.MULTIPLE:
-                self._content = self.field.choices[int(self.raw_content)]
+                choices = self.field.choices
+                if not isinstance(choices, list):
+                    raise ValueError(
+                        "Expected a list of choices for MULTIPLE field type"
+                    )
+                self._content = choices[int(self.raw_content)]
             elif self.field.type_ is FormFieldTypeEnum.MULTIRESPONSE:
-                self._content = list(
-                    self.field.choices[int(i)] for i in self.raw_content.split(",")
-                )
+                choices = self.field.choices
+                if not isinstance(choices, list):
+                    raise ValueError(
+                        "Expected a list of choices for MULTIRESPONSE field type"
+                    )
+                self._content = [choices[int(i)] for i in self.raw_content.split(",")]
             else:
                 raise ValueError(f"Unsupported form field type: {self.field.type_}")
         return self._content
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.content)
+
+
+AssignmentResponseContentLike = TypeVar(
+    "AssignmentResponseContentLike", AssignmentResponseContent, int
+)
