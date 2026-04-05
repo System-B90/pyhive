@@ -125,15 +125,6 @@ class Program(HiveCoreItem):
             and self.name == value.name
         )
 
-    def iter_subjects(self) -> Generator[Subject, None, None]:
-        """
-        Allows iteration over this Program to yield its subjects.
-
-        Yields:
-            Generator[Subject, None, None]: A generator producing Subject instances.
-        """
-        yield from self.get_subjects()
-
     def delete(self) -> None:
         """
         Deletes the program using the underlying HiveClient.

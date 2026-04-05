@@ -1,6 +1,6 @@
 ## PyHive — Hive API client for Python
 
-PyHive (package: `PyHiveLMS`) is a lightweight synchronous Python client for the Hive LMS API.
+PyHive (package: `PyHiveLMS`) is a lightweight synchronous Python client for the Hive LMS API, featuring Pydantic V2-based models for type safety and validation.
 
 It provides:
 
@@ -79,7 +79,7 @@ exercise_fields = client.get_exercise_fields(exercise)
 
 ### Type hints
 
-Public model classes are available from `pyhive.types` for type-safe code and editor completion.
+Public model classes are available from `pyhive.types` for type-safe code and editor completion. All models are Pydantic V2 BaseModel subclasses with automatic validation and serialization.
 
 ```python
 from pyhive import HiveClient

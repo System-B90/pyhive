@@ -28,4 +28,4 @@ class HiveCoreItem(BaseModel):
         Returns:
             dict[str, Any]: The payload formatted for API requests.
         """
-        return self.model_dump(by_alias=True, exclude_unset=True)
+        return self.model_dump(mode="json", by_alias=True, exclude_unset=True)

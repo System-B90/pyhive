@@ -46,8 +46,8 @@ class Help(HiveCoreItem):
     id: int
     user_id: int = Field(alias="user")
     checker_id: int | None = Field(default=None, alias="checker")
-    checker_first_name: str
-    checker_last_name: str
+    checker_first_name: str | None = Field(default=None)
+    checker_last_name: str | None = Field(default=None)
     is_subscribed: bool
     help_type: HelpTypeEnum
     help_status: HelpStatusEnum
@@ -76,6 +76,13 @@ class Help(HiveCoreItem):
         """
         data = dict(src_dict)
         data["hive_client"] = hive_client
+        for response in data.get("responses", []):
+            if isinstance(response, dict):
+                response["hive_client"] = hive_client
+
+        for notification in data.get("notifications", []):
+            if isinstance(notification, dict):
+                notification["hive_client"] = hive_client
         return cls.model_validate(data)
 
     @property

@@ -93,7 +93,9 @@ class ClientCoreMixin(AuthenticatedHiveClient):
                 next_url = page.get("next")
                 if not next_url:
                     break
-                next_page = self.get(next_url)
+                next_page = self.get(
+                    next_url, follow_redirects=True
+                )  # Sometimes our query parameters are not exactly in the format Hive wants, so we are redirected with rectified parameters
                 assert isinstance(next_page, dict)
                 page = next_page
 

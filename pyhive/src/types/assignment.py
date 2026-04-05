@@ -52,8 +52,8 @@ class Assignment(HiveCoreItem):
     id: int
     user_id: int = Field(alias="user")
     checker_id: int | None = Field(alias="checker")
-    checker_first_name: str
-    checker_last_name: str
+    checker_first_name: str | None = Field(default=None)
+    checker_last_name: str | None = Field(default=None)
     is_subscribed: bool
     exercise_id: int = Field(alias="exercise")
     assignment_status: AssignmentStatusEnum
@@ -128,10 +128,6 @@ class Assignment(HiveCoreItem):
         """Fetch all responses to this assignment.
         Responses include both student and mentor submissions, comments, WIP, ..."""
         return self.hive_client.get_assignment_responses(assignment=self.id)
-
-    def __iter__(self) -> Generator["AssignmentResponse", None, None]:
-        """Allow iteration over this Assignment to yield its responses."""
-        yield from self.get_responses()
 
 
 T = TypeVar("T", bound="Assignment")

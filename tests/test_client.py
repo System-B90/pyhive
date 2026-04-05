@@ -1,5 +1,5 @@
 import re
-from typing import Literal
+from typing import Any, Literal
 
 import pytest
 
@@ -130,9 +130,9 @@ def test_get_assignment_response_by_id(client: HiveClient):
         {"user__mentor__id__in": [1], "for_mentees_of": 1},
     ],
 )
-def test_assignments_conflict_mentor_filters(client: HiveClient, kwargs):
+def test_assignments_conflict_mentor_filters(client: HiveClient, kwargs: Any):
     with pytest.raises(AssertionError):
-        list(client.get_assignments(**kwargs))
+        list(client.get_assignments(**kwargs))  # pyright: ignore[reportArgumentType]
 
 
 @pytest.mark.parametrize(
@@ -163,10 +163,10 @@ def test_assignments_conflicts(
             list(client.get_assignments(**{arg1: item, arg2: getattr(item, "id") + 1}))
     elif name == "user_id":
         with pytest.raises(AssertionError):
-            list(client.get_assignments(**{arg1: [5], arg2: 1}))
+            list(client.get_assignments(**{arg1: [5], arg2: 1}))  # pyright: ignore[reportUnknownArgumentType]
     else:  # user_classes
         with pytest.raises(AssertionError):
-            list(client.get_assignments(**{arg1: 1, arg2: [1, 2]}))
+            list(client.get_assignments(**{arg1: 1, arg2: [1, 2]}))  # pyright: ignore[reportUnknownArgumentType]
 
 
 def test_get_hive_version(client: HiveClient):
@@ -179,7 +179,7 @@ def test_invalid_hive_version_raises(monkeypatch: pytest.MonkeyPatch):
     from pyhive.src.api_versions import LATEST_API_VERSION, MIN_API_VERSION
 
     invalid = "0.0.0-unsupported"
-    monkeypatch.setattr(HiveClient, "get_hive_version", lambda self: invalid)
+    monkeypatch.setattr(HiveClient, "get_hive_version", lambda self: invalid)  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
     params = get_client_params()
     params["skip_version_check"] = False
     with pytest.raises(RuntimeError) as exc:
@@ -191,7 +191,7 @@ def test_invalid_hive_version_raises(monkeypatch: pytest.MonkeyPatch):
 
 def test_skip_version_check(monkeypatch: pytest.MonkeyPatch):
     invalid = "0.0.0-unsupported"
-    monkeypatch.setattr(HiveClient, "get_hive_version", lambda self: invalid)
+    monkeypatch.setattr(HiveClient, "get_hive_version", lambda self: invalid)  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
     # Should not raise when skip_version_check=True
     params = get_client_params()
     params["skip_version_check"] = True

@@ -205,7 +205,10 @@ class AuthenticatedHiveClient:
 
     @_with_retries_and_token_refresh
     def _get(
-        self, endpoint: str, params: httpx.QueryParams | None = None
+        self,
+        endpoint: str,
+        params: httpx.QueryParams | None = None,
+        follow_redirects: bool = False,
     ) -> httpx.Response:
         """Low-level GET that returns an :class:`httpx.Response`.
 
@@ -213,7 +216,10 @@ class AuthenticatedHiveClient:
         """
 
         return self._session.get(
-            endpoint, params=params, headers={"Accept": "application/json"}
+            endpoint,
+            params=params,
+            headers={"Accept": "application/json"},
+            follow_redirects=follow_redirects,
         )
 
     @_with_retries_and_token_refresh
@@ -250,14 +256,17 @@ class AuthenticatedHiveClient:
         return self._session.put(endpoint, json=data)
 
     def get(
-        self, endpoint: str, params: httpx.QueryParams | None = None
+        self,
+        endpoint: str,
+        params: httpx.QueryParams | None = None,
+        follow_redirects: bool = False,
     ) -> dict[str, Any] | list[Any]:
         """High-level GET that returns parsed JSON from the response.
 
         This calls the decorated ``_get`` helper and returns its JSON body.
         """
 
-        response = self._get(endpoint, params).json()
+        response = self._get(endpoint, params, follow_redirects=follow_redirects).json()
         if not isinstance(response, (dict, list)):
             raise TypeError("Expected JSON object or list from GET response")
         return response

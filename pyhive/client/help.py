@@ -5,6 +5,8 @@ Provides listing and retrieval of Help request records via the Hive API.
 
 from typing import TYPE_CHECKING, Any, Iterable, Optional, cast
 
+import httpx
+
 from ..src.types.enums.help_type_enum import HelpTypeEnum
 from ..src.types.enums.visibility_enum import VisibilityEnum
 from ..src.types.exercise import ExerciseLike
@@ -112,21 +114,19 @@ class HelpClientMixin(ClientCoreMixin):
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
         parent_id = resolve_item_or_id(help_id)
-        data = self.get(f"/api/core/help/{parent_id}/responses/{response_id}/")
+        data = self.get(
+            f"/api/core/help/{parent_id}/responses/{response_id}/",
+        )
         assert isinstance(data, dict)
         return HelpResponse.from_dict(
             data,
             hive_client=self,
         )
 
-    def get_help_response_student_files(
+    def get_help_response_student_file(
         self, help_id: "HelpLike", response_id: int
-    ) -> list[dict[str, Any]]:
-        """Return files attached to a specific help response (raw JSON list).
-
-        Some servers may not accept the default JSON Accept header for this endpoint;
-        in such cases we fall back gracefully and return an empty list.
-        """
+    ) -> bytes | None:
+        """Return the file attached to a specific help response"""
         from ..client import HiveClient
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
@@ -134,9 +134,10 @@ class HelpClientMixin(ClientCoreMixin):
         response = self._session.get(
             f"/api/core/help/{parent_id}/responses/{response_id}/student_files/"
         )
+        if response.status_code == httpx.codes.NOT_FOUND.value:
+            return None
         response.raise_for_status()
-        data: object = response.json()
-        return cast(list[dict[str, Any]], data) if isinstance(data, list) else []
+        return response.content
 
     def create_help_request(
         self,
