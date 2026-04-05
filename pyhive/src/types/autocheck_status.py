@@ -6,7 +6,7 @@ Author: Michael K. Steinberg
 """
 
 import datetime
-from typing import TYPE_CHECKING, Any, Self, TypeVar
+from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
 
 from pydantic import Field
 
@@ -35,7 +35,7 @@ class AutoCheckStatus(HiveCoreItem):
 
     """
 
-    hive_client: "HiveClient" = Field(exclude=True, repr=False)
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     id: int
     time: datetime.datetime
     action: ActionEnum

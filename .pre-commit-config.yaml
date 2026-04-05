@@ -1,6 +1,16 @@
 repos:
   - repo: local
     hooks:
+      - id: ruff
+        name: ruff
+        entry: ruff
+        language: system
+        types: [python]
+        require_serial: true
+        args:
+          - check
+          - ./pyhive/
+
       - id: pylint
         name: pylint
         entry: pylint

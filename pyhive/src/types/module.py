@@ -6,7 +6,7 @@ Author: Michael K. Steinberg
 """
 
 from collections.abc import Generator, Iterable
-from typing import TYPE_CHECKING, Any, Self, TypeVar
+from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
@@ -38,7 +38,7 @@ class Module(HiveCoreItem):
         segel_path: Network path accessible to staff.
     """
 
-    hive_client: "HiveClient" = Field(exclude=True, repr=False)
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     id: int
     name: str
     parent_subject_id: int = Field(alias="parent_subject")

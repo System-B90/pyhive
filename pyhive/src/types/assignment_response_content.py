@@ -5,7 +5,7 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-from typing import TYPE_CHECKING, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
@@ -25,10 +25,10 @@ class AssignmentResponseContent(HiveCoreItem):
         field_id: ID of the associated form field.
     """
 
-    hive_client: "HiveClient" = Field(exclude=True, repr=False)
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     assignment_id: int = Field(exclude=True)
     assignment_response_id: int = Field(exclude=True)
-    raw_content: str = Field(alias="content")
+    raw_content: Annotated[str, Field(alias="content")]
     field_id: int = Field(alias="field")
 
     _content: "str | int | list[str | int] | None" = PrivateAttr(default=None)

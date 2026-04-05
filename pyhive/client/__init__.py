@@ -1,3 +1,5 @@
+"""Hive API Client module."""
+
 from .client import HiveClient  # re-export
 
 # Rebuild Pydantic models to resolve forward references

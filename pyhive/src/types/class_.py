@@ -5,7 +5,7 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-from typing import TYPE_CHECKING, Any, Self, TypeVar
+from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
 from pydantic import Field, PrivateAttr
 
 from .core_item import HiveCoreItem
@@ -23,7 +23,7 @@ class Class(HiveCoreItem):
     """
 
     # Excluded from serialization, prevents network coupling in the data payload
-    hive_client: "HiveClient" = Field(exclude=True, repr=False)
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
 
     id: int
     name: str

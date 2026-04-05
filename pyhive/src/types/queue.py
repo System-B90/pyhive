@@ -5,7 +5,7 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-from typing import TYPE_CHECKING, Any, Self, TypeVar
+from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
@@ -27,7 +27,7 @@ class Queue(HiveCoreItem):
     objects using the supplied ``hive_client``.
     """
 
-    hive_client: "HiveClient" = Field(exclude=True, repr=False)
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     id: int
     name: str
     user_name: str | None

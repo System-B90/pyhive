@@ -7,7 +7,7 @@ Author: Michael K. Steinberg
 
 import datetime
 from collections.abc import Generator
-from typing import TYPE_CHECKING, Any, Self, TypeVar
+from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
@@ -37,7 +37,7 @@ class AssignmentResponse(HiveCoreItem):
         segel_only (bool | None): Flag to restrict visibility to staff.
     """
 
-    hive_client: "HiveClient" = Field(exclude=True, repr=False)
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     assignment_id: int = Field(exclude=True)
     id: int
     user_id: int = Field(alias="user")

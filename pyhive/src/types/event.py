@@ -6,7 +6,7 @@ Author: Michael K. Steinberg
 """
 
 import datetime
-from typing import TYPE_CHECKING, Any, Self, TypeVar
+from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
 
 from pydantic import Field
 
@@ -36,7 +36,7 @@ class Event(HiveCoreItem):
 
     """
 
-    hive_client: "HiveClient" = Field(exclude=True, repr=False)
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     start: datetime.datetime
     end: datetime.datetime
     title: str | None

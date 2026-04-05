@@ -6,7 +6,7 @@ Author: Michael K. Steinberg
 """
 
 import datetime
-from typing import TYPE_CHECKING, Any, Iterable, Self, TypeVar
+from typing import Annotated,TYPE_CHECKING, Any, Iterable, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
@@ -73,7 +73,7 @@ class User(HiveCoreItem):
 
     """
 
-    hive_client: "HiveClient" = Field(exclude=True, repr=False)
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     id: int
     display_name: str
     clearance: ClearanceEnum

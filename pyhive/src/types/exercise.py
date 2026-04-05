@@ -6,7 +6,7 @@ Author: Michael K. Steinberg
 """
 
 from collections.abc import Generator, Iterable
-from typing import TYPE_CHECKING, Any, Self, TypeVar
+from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
@@ -55,7 +55,7 @@ class Exercise(HiveCoreItem):
         segel_brief: Optional brief description.
     """
 
-    hive_client: "HiveClient" = Field(exclude=True, repr=False)
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     id: int
     name: str
     parent_module_id: int = Field(alias="parent_module")

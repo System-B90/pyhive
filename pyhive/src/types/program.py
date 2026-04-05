@@ -6,7 +6,7 @@ Author: Michael K. Steinberg
 """
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, Self, TypeVar
+from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
@@ -42,7 +42,7 @@ class Program(HiveCoreItem):
         hanich_schedule: Whether hanich gets scheduled.
     """
 
-    hive_client: "HiveClient" = Field(exclude=True, repr=False)
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     id: int
     name: str
     checker_id: int = Field(alias="checker")
