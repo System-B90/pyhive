@@ -118,7 +118,8 @@ def _start_local_callback_server(
     }
 
     @app.route("/callback")
-    def callback() -> str | tuple[str, int]:  # pyright: ignore[reportUnusedFunction] We use this as a Flask route handler
+    def callback() -> str | tuple[str, int]:  # pyright: ignore[reportUnusedFunction]
+        # We use this as a Flask route handler
         state["error"] = flask.request.args.get("error")
         state["error_desc"] = flask.request.args.get("error_description")
         state["auth_code"] = flask.request.args.get("code")

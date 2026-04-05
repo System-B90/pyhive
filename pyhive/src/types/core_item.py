@@ -1,19 +1,31 @@
-"""Base class for Hive core items."""
+"""
+Name: core_item.py
+Purpose: Defines the base Pydantic model for Hive core items.
+Created: 2026-04-05
+Author: Michael K. Steinberg
+"""
 
-from __future__ import annotations
-
-from collections.abc import Mapping
-from typing import Any, Self
+from typing import Any
+from pydantic import BaseModel, ConfigDict
 
 
-class HiveCoreItem:
-    """Base class for Hive core items."""
+class HiveCoreItem(BaseModel):
+    """
+    Base Pydantic model for Hive core items.
+    Standardizes configuration and default serialization behavior.
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        validate_assignment=True,
+    )
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialize this HiveCoreItem instance to a plain dictionary."""
-        raise NotImplementedError
+        """
+        Serializes the instance to a dictionary, omitting unset fields.
 
-    @classmethod
-    def from_dict(cls, src_dict: Mapping[str, Any], *args: Any, **kwargs: Any) -> Self:  # noqa: D102
-        """Deserialize a HiveCoreItem instance from a mapping."""
-        raise NotImplementedError
+        Returns:
+            dict[str, Any]: The payload formatted for API requests.
+        """
+        return self.model_dump(by_alias=True, exclude_unset=True)

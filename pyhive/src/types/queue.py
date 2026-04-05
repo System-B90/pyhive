@@ -1,16 +1,14 @@
-"""Queue model for the Hive API (auto-generated).
-
-This module contains the :class:`Queue` dataclass which represents a
-queue entry returned by the Hive API. The class provides simple
-serialization helpers and lazily-resolved relationship properties.
+"""
+Name: queue.py
+Purpose: Queue model for the Hive API (auto-generated).
+Created: 2026-04-05
+Author: Michael K. Steinberg
 """
 
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Self, TypeVar
 
-from attrs import define, field
+from pydantic import Field, PrivateAttr
 
-from .common import UNSET, Unset
 from .core_item import HiveCoreItem
 
 if TYPE_CHECKING:
@@ -20,10 +18,7 @@ if TYPE_CHECKING:
     from .subject import Subject
     from .user import User
 
-T = TypeVar("T", bound="Queue")
 
-
-@define
 class Queue(HiveCoreItem):
     """Queue model representing a student/program/module queue entry.
 
@@ -32,59 +27,29 @@ class Queue(HiveCoreItem):
     objects using the supplied ``hive_client``.
     """
 
-    hive_client: "HiveClient"
+    hive_client: "HiveClient" = Field(exclude=True, repr=False)
     id: int
     name: str
-    user_name: None | str
-    subject_id: None | int
-    subject_name: None | str
-    subject_color: None | str
-    subject_symbol: None | str
-    module_name: None | str
-    module_order: None | str
+    user_name: str | None
+    subject_id: int | None
+    subject_name: str | None
+    subject_color: str | None
+    subject_symbol: str | None
+    module_name: str | None
+    module_order: str | None
     program_id: int
     program_name: str
-    description: None | Unset | str = UNSET
+    description: str | None = Field(default=None)
+    module_id: int | None = Field(default=None)
+    user_id: int | None = Field(default=None)
 
-    module_id: None | Unset | int = UNSET
-    user_id: None | Unset | int = UNSET
-
-    _user: "User | None" = field(init=False, default=None)
-    _module: "Module | None" = field(init=False, default=None)
-    _subject: "Subject | None" = field(init=False, default=None)
-    _program: "Program | None" = field(init=False, default=None)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Return a JSON-serializable dictionary of this Queue.
-
-        The returned mapping only includes optional keys when they are not
-        :data:`UNSET`.
-        """
-        return {
-            "id": self.id,
-            "name": self.name,
-            "user_id": self.user_id,
-            "user_name": self.user_name,
-            "subject_id": self.subject_id,
-            "subject_name": self.subject_name,
-            "subject_color": self.subject_color,
-            "subject_symbol": self.subject_symbol,
-            "module_id": self.module_id,
-            "module_name": self.module_name,
-            "module_order": self.module_order,
-            "program_id": self.program_id,
-            "program_name": self.program_name,
-            **(
-                {"description": self.description}
-                if self.description is not UNSET
-                else {}
-            ),
-            **({"module": self.module} if self.module is not UNSET else {}),
-            **({"user": self.user} if self.user_id is not UNSET else {}),
-        }
+    _user: "User | None" = PrivateAttr(default=None)
+    _module: "Module | None" = PrivateAttr(default=None)
+    _subject: "Subject | None" = PrivateAttr(default=None)
+    _program: "Program | None" = PrivateAttr(default=None)
 
     @classmethod
-    def from_dict(cls, src_dict: Mapping[str, Any], hive_client: "HiveClient") -> Self:
+    def from_dict(cls, src_dict: dict[str, Any], hive_client: "HiveClient") -> Self:
         """Create a :class:`Queue` instance from a mapping (typically parsed JSON).
 
         Args:
@@ -94,28 +59,9 @@ class Queue(HiveCoreItem):
         Returns:
             A populated :class:`Queue` instance.
         """
-        d = dict(src_dict)
-
-        def _optional(data: object) -> Any:
-            return data if not isinstance(data, Unset) else UNSET
-
-        return cls(
-            hive_client=hive_client,
-            id=d.pop("id"),
-            name=d.pop("name"),
-            user_id=cast("None | int", d.pop("user_id")),
-            user_name=cast("None | str", d.pop("user_name")),
-            subject_id=cast("None | int", d.pop("subject_id")),
-            subject_name=cast("None | str", d.pop("subject_name")),
-            subject_color=cast("None | str", d.pop("subject_color")),
-            subject_symbol=cast("None | str", d.pop("subject_symbol")),
-            module_id=cast("None | int", d.pop("module_id")),
-            module_name=cast("None | str", d.pop("module_name")),
-            module_order=cast("None | str", d.pop("module_order")),
-            program_id=d.pop("program_id"),
-            program_name=d.pop("program_name"),
-            description=_optional(d.pop("description", UNSET)),
-        )
+        data = dict(src_dict)
+        data["hive_client"] = hive_client
+        return cls.model_validate(data)
 
     @property
     def user(self) -> "User | None":
@@ -153,4 +99,5 @@ class Queue(HiveCoreItem):
         self.hive_client.delete_queue(self.id)
 
 
+T = TypeVar("T", bound="Queue")
 QueueLike = TypeVar("QueueLike", Queue, int)

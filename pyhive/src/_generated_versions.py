@@ -1,3 +1,5 @@
+"""Generated supported API version constants."""
+
 SUPPORTED_API_VERSIONS = ["5.1.2", "6.2.0", "6.4.0"]
 MIN_API_VERSION = SUPPORTED_API_VERSIONS[0]
 LATEST_API_VERSION = SUPPORTED_API_VERSIONS[-1]

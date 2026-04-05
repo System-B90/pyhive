@@ -1,23 +1,22 @@
-"""AutoCheckStatus type definition."""
+"""
+Name: autocheck_status.py
+Purpose: AutoCheckStatus type definition.
+Created: 2026-04-05
+Author: Michael K. Steinberg
+"""
 
 import datetime
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Self, TypeVar
 
-from attrs import define
-from dateutil.parser import isoparse
+from pydantic import Field
 
-from .common import UNSET, Unset
 from .core_item import HiveCoreItem
 from .enums.action_enum import ActionEnum
 
 if TYPE_CHECKING:
     from ...client import HiveClient
 
-T = TypeVar("T", bound="AutoCheckStatus")
 
-
-@define
 class AutoCheckStatus(HiveCoreItem):
     """
 
@@ -32,64 +31,21 @@ class AutoCheckStatus(HiveCoreItem):
             * `Sending` - Sending
             * `Error` - Error
             * `Success` - Success
-        payload (Union[None, Unset, str]):
+        payload (str | None):
 
     """
 
-    hive_client: "HiveClient"
+    hive_client: "HiveClient" = Field(exclude=True, repr=False)
     id: int
     time: datetime.datetime
     action: ActionEnum
-    payload: Union[None, Unset, str] = UNSET
-
-    def to_dict(self) -> dict[str, Any]:
-        id = self.id
-        time = self.time.isoformat()
-        action = self.action.value
-        payload: Union[None, Unset, str]
-
-        if isinstance(self.payload, Unset):
-            payload = UNSET
-        else:
-            payload = self.payload
-        field_dict: dict[str, Any] = {}
-        field_dict.update(
-            {
-                "id": id,
-                "time": time,
-                "action": action,
-            }
-        )
-
-        if payload is not UNSET:
-            field_dict["payload"] = payload
-
-        return field_dict
+    payload: str | None = Field(default=None)
 
     @classmethod
-    def from_dict(
-        cls: type[T],
-        src_dict: Mapping[str, Any],
-        hive_client: "HiveClient",
-    ) -> T:
-        d = dict(src_dict)
-        id = d.pop("id")
-        time = isoparse(d.pop("time"))
-        action = ActionEnum(d.pop("action"))
+    def from_dict(cls, src_dict: dict[str, Any], hive_client: "HiveClient") -> Self:
+        data = dict(src_dict)
+        data["hive_client"] = hive_client
+        return cls.model_validate(data)
 
-        def _parse_payload(data: object) -> Union[None, Unset, str]:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(Union[None, Unset, str], data)
 
-        payload = _parse_payload(d.pop("payload", UNSET))
-
-        return cls(
-            hive_client=hive_client,
-            id=id,
-            time=time,
-            action=action,
-            payload=payload,
-        )
+T = TypeVar("T", bound="AutoCheckStatus")
