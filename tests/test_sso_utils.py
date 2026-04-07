@@ -5,24 +5,13 @@ Created: 2026-03-29
 Author: Michael K. Steinberg
 """
 
-import base64
-import json
 import pytest
 from unittest.mock import patch
 from pyhive.client.sso_utils import (
-    _decode_jwt_payload,
     _generate_pkce_pair,
     _exchange_code_for_token,
     get_sso_token,
 )
-
-
-def test_decode_jwt_payload_valid():
-    payload = {"sub": "123", "api_token": "test_token"}
-    payload_b64 = (
-        base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
-    )
-    assert _decode_jwt_payload(f"a.{payload_b64}.b")["api_token"] == "test_token"
 
 
 def test_generate_pkce_pair():
@@ -33,39 +22,57 @@ def test_generate_pkce_pair():
 
 def test_exchange_code_for_token_success(httpx_mock):
     hive_url = "https://hive.example.com"
-    id_payload = (
-        base64.urlsafe_b64encode(json.dumps({"api_token": "sk_123"}).encode())
-        .decode()
-        .rstrip("=")
-    )
 
     httpx_mock.add_response(
         method="POST",
         url=f"{hive_url}/api/core/sso/token/",
-        json={"id_token": f"a.{id_payload}.b"},
+        json={"access_token": "opaque_dot_token_123", "id_token": "mock_id_token"},
+        status_code=200,
+    )
+
+    httpx_mock.add_response(
+        method="POST",
+        url=f"{hive_url}/api/core/sso/exchange/",
+        json={"access_token": "jwt_simplejwt_123", "refresh_token": "mock_refresh"},
         status_code=200,
     )
 
     token = _exchange_code_for_token(hive_url, "code123", "verifier123")
-    assert token == "sk_123"
+    assert token == "jwt_simplejwt_123"
 
 
-def test_exchange_code_for_token_missing_claim(httpx_mock):
+def test_exchange_code_for_token_missing_opaque_token(httpx_mock):
     hive_url = "https://hive.example.com"
-    id_payload = (
-        base64.urlsafe_b64encode(json.dumps({"sub": "user"}).encode())
-        .decode()
-        .rstrip("=")
-    )
 
     httpx_mock.add_response(
         method="POST",
         url=f"{hive_url}/api/core/sso/token/",
-        json={"id_token": f"a.{id_payload}.b"},
+        json={"id_token": "mock_id_token"},
         status_code=200,
     )
 
-    with pytest.raises(ValueError, match=" does not contain a valid 'api_token' claim"):
+    with pytest.raises(ValueError, match="did not contain an 'access_token'"):
+        _exchange_code_for_token(hive_url, "code123", "verifier123")
+
+
+def test_exchange_code_for_token_missing_jwt_token(httpx_mock):
+    hive_url = "https://hive.example.com"
+
+    httpx_mock.add_response(
+        method="POST",
+        url=f"{hive_url}/api/core/sso/token/",
+        json={"access_token": "opaque_dot_token_123"},
+        status_code=200,
+    )
+
+    httpx_mock.add_response(
+        method="POST",
+        url=f"{hive_url}/api/core/sso/exchange/",
+        json={"refresh_token": "mock_refresh"},
+        status_code=200,
+    )
+
+    with pytest.raises(ValueError, match="did not contain a valid JWT 'access_token'"):
         _exchange_code_for_token(hive_url, "code123", "verifier123")
 
 

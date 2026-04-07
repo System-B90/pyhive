@@ -7,14 +7,13 @@ Author: Michael K. Steinberg
 
 import base64
 import hashlib
-import json
 import logging
 import secrets
 import time
 import urllib.parse
 import webbrowser
 from threading import Thread
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 import flask
 import httpx
@@ -31,20 +30,6 @@ log = logging.getLogger("werkzeug")
 log.setLevel(logging.ERROR)
 flask_log = logging.getLogger("flask.app")
 flask_log.setLevel(logging.ERROR)
-
-
-def _decode_jwt_payload(jwt_string: str) -> dict[str, Any]:
-    parts = jwt_string.split(".")
-    if len(parts) != 3:
-        raise ValueError("Invalid JWT structure returned by OIDC provider.")
-
-    payload_b64 = parts[1]
-    payload_b64 += "=" * ((4 - len(payload_b64) % 4) % 4)
-    payload_bytes = base64.urlsafe_b64decode(payload_b64)
-    payload = json.loads(payload_bytes.decode("utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError("JWT payload must be a JSON object")
-    return cast(dict[str, Any], payload)
 
 
 def _generate_pkce_pair() -> Tuple[str, str]:
@@ -85,19 +70,37 @@ def _exchange_code_for_token(
         token_data: dict[str, Any] = response.json()
         if not isinstance(token_data, dict):  # pyright: ignore[reportUnnecessaryIsInstance]
             raise RuntimeError("Token response did not return a JSON object")
-        id_token = token_data.get("id_token")
 
-        if not id_token:
-            raise ValueError("Token response did not contain an 'id_token'.")
+        opaque_access_token = token_data.get("access_token")
 
-        profile_data = _decode_jwt_payload(id_token)
-        api_token = profile_data.get("api_token")
-        if not isinstance(api_token, dict) or "access_token" not in api_token:
-            raise ValueError(
-                "The ID token does not contain a valid 'api_token' claim. Verify scopes and Hive server configuration."
+        if not opaque_access_token:
+            raise ValueError("Token response did not contain an 'access_token'.")
+
+        exchange_url = f"{hive_url}/api/core/sso/exchange/"
+        exchange_headers = {
+            "Authorization": f"Bearer {opaque_access_token}",
+            "Content-Type": "application/json",
+        }
+
+        exchange_response = client.post(
+            exchange_url,
+            headers=exchange_headers,
+        )
+
+        if exchange_response.status_code != 200:
+            raise RuntimeError(
+                f"SSO Token Exchange failed (HTTP {exchange_response.status_code}): {exchange_response.text}"
             )
 
-        return api_token.get("access_token")
+        exchange_data: dict[str, Any] = exchange_response.json()
+        jwt_access_token = exchange_data.get("access_token")
+
+        if not jwt_access_token:
+            raise ValueError(
+                "Exchange response did not contain a valid JWT 'access_token'."
+            )
+
+        return str(jwt_access_token)
 
 
 def _start_local_callback_server(
@@ -107,7 +110,7 @@ def _start_local_callback_server(
 ) -> str:
     app = flask.Flask(__name__)
     flask.cli.show_server_banner = (  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
-        lambda *args, **kwargs: None  # # pyright: ignore[reportUnknownLambdaType]
+        lambda *args, **kwargs: None  # pyright: ignore[reportUnknownLambdaType]
     )
 
     state: dict[str, Any] = {
@@ -119,7 +122,6 @@ def _start_local_callback_server(
 
     @app.route("/callback")
     def callback() -> str | tuple[str, int]:  # pyright: ignore[reportUnusedFunction]
-        # We use this as a Flask route handler
         state["error"] = flask.request.args.get("error")
         state["error_desc"] = flask.request.args.get("error_description")
         state["auth_code"] = flask.request.args.get("code")
@@ -180,7 +182,6 @@ def generate_sso_client_credentials(
     service_name: str,
     redirect_uris: Optional[List[str] | str] = None,
 ) -> dict[str, Any]:
-    # Normalize redirect_uris to a list
     if isinstance(redirect_uris, str):
         redirect_uris = [redirect_uris]
 
