@@ -6,6 +6,7 @@ Author: Michael K. Steinberg
 """
 
 import base64
+from datetime import datetime, timezone
 import hashlib
 import logging
 import secrets
@@ -33,6 +34,12 @@ flask_log.setLevel(logging.ERROR)
 
 
 def _generate_pkce_pair() -> Tuple[str, str]:
+    """
+    Generates a cryptographically secure PKCE verifier and challenge pair.
+
+    Returns:
+        Tuple[str, str]: A tuple containing the code verifier and the S256 code challenge.
+    """
     verifier = secrets.token_urlsafe(64)
     sha256_hash = hashlib.sha256(verifier.encode("ascii")).digest()
     challenge = base64.urlsafe_b64encode(sha256_hash).decode("ascii").rstrip("=")
@@ -44,7 +51,27 @@ def _exchange_code_for_token(
     auth_code: str,
     code_verifier: str,
     verify: Optional[Union[bool, str]] = None,
-) -> str:
+) -> Tuple[str, str, datetime]:
+    """
+    Exchanges an OAuth2 authorization code for a SimpleJWT token pair via the Hive SSO exchange endpoint.
+
+    Args:
+        hive_url (str): The base URL of the Hive server.
+        auth_code (str): The authorization code returned from the initial OIDC login flow.
+        code_verifier (str): The PKCE code verifier string generated prior to authorization.
+        verify (Optional[Union[bool, str]]): SSL verification configuration for the HTTP client.
+            Can be a boolean to enable/disable verification, or a string path to a CA bundle. Defaults to None.
+
+    Returns:
+        Tuple[str, str, datetime]: A tuple containing the JWT access token, the JWT refresh token,
+            and a timezone-aware UTC datetime object representing the access token's expiration.
+
+    Raises:
+        RuntimeError: If the HTTP request for the token exchange or the SSO token exchange fails,
+            or if the response is not valid JSON.
+        ValueError: If the required opaque token is missing from the initial response, or if the
+            JWT access token, refresh token, or expiration timestamp are missing from the exchange response.
+    """
     token_url = f"{hive_url}/api/core/sso/token/"
     payload = {
         "grant_type": "authorization_code",
@@ -94,20 +121,43 @@ def _exchange_code_for_token(
 
         exchange_data: dict[str, Any] = exchange_response.json()
         jwt_access_token = exchange_data.get("access_token")
+        jwt_refresh_token = exchange_data.get("refresh_token")
+        expires_at_timestamp = exchange_data.get("expires_at")
 
-        if not jwt_access_token:
+        if (
+            not jwt_access_token
+            or not jwt_refresh_token
+            or expires_at_timestamp is None
+        ):
             raise ValueError(
-                "Exchange response did not contain a valid JWT 'access_token'."
+                "Exchange response is missing 'access_token', 'refresh_token', or 'expires_at'."
             )
 
-        return str(jwt_access_token)
+        expires_at_dt = datetime.fromtimestamp(expires_at_timestamp, tz=timezone.utc)
+
+        return str(jwt_access_token), str(jwt_refresh_token), expires_at_dt
 
 
 def _start_local_callback_server(
     hive_url: str,
     code_verifier: str,
     verify: Optional[Union[bool, str]] = None,
-) -> str:
+) -> Tuple[str, str, datetime]:
+    """
+    Spins up a temporary local Flask server to catch the OIDC callback, then exchanges the code.
+
+    Args:
+        hive_url (str): The base URL of the Hive server.
+        code_verifier (str): The PKCE code verifier generated for this login session.
+        verify (Optional[Union[bool, str]]): SSL verification configuration for the HTTP client. Defaults to None.
+
+    Returns:
+        Tuple[str, str, datetime]: The JWT access token, refresh token, and expiration datetime.
+
+    Raises:
+        PermissionError: If the OIDC flow returns an error in the callback state.
+        RuntimeError: If no authorization code is present in the successful callback.
+    """
     app = flask.Flask(__name__)
     flask.cli.show_server_banner = (  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
         lambda *args, **kwargs: None  # pyright: ignore[reportUnknownLambdaType]
@@ -157,7 +207,19 @@ def _start_local_callback_server(
     )
 
 
-def get_sso_token(hive_url: str, verify: Optional[Union[bool, str]] = None) -> str:
+def get_sso_token(
+    hive_url: str, verify: Optional[Union[bool, str]] = None
+) -> Tuple[str, str, datetime]:
+    """
+    Orchestrates the local Single Sign-On flow by opening a browser and catching the callback.
+
+    Args:
+        hive_url (str): The base URL of the Hive server.
+        verify (Optional[Union[bool, str]]): SSL verification configuration. Defaults to None.
+
+    Returns:
+        Tuple[str, str, datetime]: The JWT access token, refresh token, and expiration datetime.
+    """
     verifier, challenge = _generate_pkce_pair()
     params = {
         "client_id": HIVE_SSO_CLIENT_ID,
@@ -182,6 +244,17 @@ def generate_sso_client_credentials(
     service_name: str,
     redirect_uris: Optional[List[str] | str] = None,
 ) -> dict[str, Any]:
+    """
+    Programmatically generates OAuth2 client credentials in Hive for a new external service.
+
+    Args:
+        client (HiveClient): An authenticated HiveClient instance.
+        service_name (str): The name of the service requesting credentials.
+        redirect_uris (Optional[List[str] | str]): A list of authorized redirect URIs. Defaults to None.
+
+    Returns:
+        dict[str, Any]: A dictionary containing the newly generated application's client_id, client_secret, and details.
+    """
     if isinstance(redirect_uris, str):
         redirect_uris = [redirect_uris]
 

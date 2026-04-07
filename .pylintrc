@@ -19,6 +19,7 @@ disable =
     R0801,  # duplicate-code
     fixme,  # TODO / FIXME comments
     import-outside-toplevel,
+    broad-exception-caught,
     cyclic-import, # Known issue with false positives (https://github.com/pylint-dev/pylint/issues/5168)
     missing-function-docstring, # Temporary disablement for test functions
     too-many-arguments, # Temporary disablement

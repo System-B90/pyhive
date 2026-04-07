@@ -1,7 +1,7 @@
 """High-level Hive API client aggregator."""
 
 from types import TracebackType
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List, Literal, Optional, Union
 
 from pyhive.client.sso_utils import generate_sso_client_credentials, get_sso_token
 
@@ -56,6 +56,8 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
         verify: Optional[Union[bool, str]] = None,
         proxy: Optional["ProxyTypes"] = None,
         existing_token: str | None = None,
+        auth_strategy: Literal["sso", "cache"] | None = None,
+        refresh_token: Optional[str] = None,
         **kwargs: object,
     ):
         super().__init__(
@@ -67,6 +69,8 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
             verify=verify,
             proxy=proxy,
             existing_token=existing_token,
+            auth_strategy=auth_strategy,
+            refresh_token=refresh_token,
             **kwargs,
         )
         if not skip_version_check:
@@ -78,11 +82,13 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
         api_token: str,
         hive_url: str,
         *,
+        refresh_token: Optional[str] = None,
         timeout: Optional[Union["Timeout", float]] = None,
         headers: Optional[dict[str, str]] = None,
         verify: Optional[Union[bool, str]] = None,
         proxy: Optional["ProxyTypes"] = None,
         skip_version_check: bool = False,
+        auth_strategy: Literal["sso", "cache"] | None = None,
         **kwargs: object,
     ) -> "HiveClient":
         """Construct a client using an existing Hive API token.
@@ -105,6 +111,8 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
             proxy=proxy,
             skip_version_check=skip_version_check,
             existing_token=api_token,
+            refresh_token=refresh_token,
+            auth_strategy=auth_strategy,
             **kwargs,
         )
 
@@ -141,13 +149,15 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
 
         # Delegate to from_api_token to construct the actual client
         return cls.from_api_token(
-            api_token=user_token,
+            api_token=user_token[0],
+            refresh_token=user_token[1],
             hive_url=hive_url,
             timeout=timeout,
             headers=headers,
             verify=verify,
             proxy=proxy,
             skip_version_check=skip_version_check,
+            auth_strategy="sso",
             **kwargs,
         )
 

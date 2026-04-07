@@ -96,7 +96,7 @@ class AuthenticatedHiveClient:
     _access_token: str
     _session: httpx.Client
     username: str
-    _auth_strategy: Literal["password", "token_only"]
+    _auth_strategy: Literal["password", "sso", "token_only", "cache"]
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -109,6 +109,8 @@ class AuthenticatedHiveClient:
         verify: bool | str | None = None,
         proxy: Optional["ProxyTypes"],
         existing_token: str | None = None,
+        auth_strategy: Literal["sso", "cache"] | None = None,
+        refresh_token: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Create an authenticated client.
@@ -143,14 +145,21 @@ class AuthenticatedHiveClient:
         # Decide how to authenticate: either via username/password (default)
         # or by using an already-issued API token.
         if existing_token is not None:
-            # Use the provided token directly; no login or refresh endpoint.
-            self._auth_strategy = "token_only"
             self._access_token = existing_token
-            # No refresh token is available in this mode.
-            self._refresh_token = ""
             self._session.headers.update(
                 {"Authorization": f"Bearer {self._access_token}"}
             )
+            if auth_strategy in ("sso", "cache"):
+                assert refresh_token is not None, (
+                    "Using SSO but no refresh token was given!"
+                )
+                self._auth_strategy = auth_strategy
+                self._refresh_token = refresh_token
+            else:
+                # Use the provided token directly; no login or refresh endpoint.
+                self._auth_strategy = "token_only"
+                # No refresh token is available in this mode.
+                self._refresh_token = ""
         else:
             self._auth_strategy = "password"
             self._login(username, password)
