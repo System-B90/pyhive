@@ -60,7 +60,7 @@ def _exchange_code_for_token(
     code_verifier: str,
     verify: Optional[Union[bool, str]] = None,
 ) -> str:
-    token_url = f"{hive_url}/sso/token/"
+    token_url = f"{hive_url}/api/core/sso/token/"
     payload = {
         "grant_type": "authorization_code",
         "code": auth_code,
@@ -92,12 +92,12 @@ def _exchange_code_for_token(
 
         profile_data = _decode_jwt_payload(id_token)
         api_token = profile_data.get("api_token")
-        if not isinstance(api_token, str):
+        if not isinstance(api_token, dict) or "access_token" not in api_token:
             raise ValueError(
                 "The ID token does not contain a valid 'api_token' claim. Verify scopes and Hive server configuration."
             )
 
-        return api_token
+        return api_token.get("access_token")
 
 
 def _start_local_callback_server(
@@ -165,7 +165,9 @@ def get_sso_token(hive_url: str, verify: Optional[Union[bool, str]] = None) -> s
         "code_challenge": challenge,
         "code_challenge_method": "S256",
     }
-    webbrowser.open(f"{hive_url}/sso/authorize?{urllib.parse.urlencode(params)}")
+    webbrowser.open(
+        f"{hive_url}/api/core/sso/authorize?{urllib.parse.urlencode(params)}"
+    )
     return _start_local_callback_server(
         hive_url=hive_url,
         code_verifier=verifier,
@@ -183,7 +185,7 @@ def generate_sso_client_credentials(
         redirect_uris = [redirect_uris]
 
     response = client.post(
-        "/sso/applications/",
+        "/api/core/sso/applications/",
         data={
             "name": service_name,
             "redirect_uris": " ".join(redirect_uris if redirect_uris else []),

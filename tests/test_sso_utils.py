@@ -41,7 +41,7 @@ def test_exchange_code_for_token_success(httpx_mock):
 
     httpx_mock.add_response(
         method="POST",
-        url=f"{hive_url}/sso/token/",
+        url=f"{hive_url}/api/core/sso/token/",
         json={"id_token": f"a.{id_payload}.b"},
         status_code=200,
     )
@@ -60,7 +60,7 @@ def test_exchange_code_for_token_missing_claim(httpx_mock):
 
     httpx_mock.add_response(
         method="POST",
-        url=f"{hive_url}/sso/token/",
+        url=f"{hive_url}/api/core/sso/token/",
         json={"id_token": f"a.{id_payload}.b"},
         status_code=200,
     )
