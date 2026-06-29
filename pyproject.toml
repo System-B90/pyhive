@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "PyHiveLMS"
-version = "1.4.0"
+version = "1.5.0"
 description = "Python bindings for Hive"
 authors = [
     { name = "Michael K. Steinberg", email = "m.kuper.steinberg@gmail.com" },
@@ -23,6 +23,7 @@ readme = "README.md"
 
 [project.optional-dependencies]
 dev = ["pytest>=9.0.2", "pytest-httpx>=0.36.0", "types-python-dateutil>=0.1.0"]
+codegen = ["datamodel-code-generator[http]>=0.66", "pyyaml>=6.0"]
 
 [project.scripts]
 pyhive = "pyhive.cli.cli:main"
@@ -37,7 +38,7 @@ packages = ["pyhive"]
 path = "scripts/generate_versions.py"
 
 [tool.api_versions]
-supported = ["5.1.2", "6.2.0", "6.4.0"]
+supported = ["5.1.2", "6.2.0", "6.4.0", "7.1.0"]
 
 [tool.ruff.lint]
 ignore = [

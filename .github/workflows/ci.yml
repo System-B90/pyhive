@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master, dev]
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install "datamodel-code-generator[http]" ruff mypy pytest pyyaml
+
+      - name: Ruff
+        run: ruff check pyhive/ tools/
+
+      - name: Mypy (generated core layer)
+        run: mypy pyhive/src/types/_generated/
+
+      - name: Codegen unit tests
+        run: pytest tools/hive_codegen/tests -q
+
+      - name: Import smoke test
+        run: python -c "import pyhive, pyhive.types as t; print('OK', len(t.__all__), 'public types')"

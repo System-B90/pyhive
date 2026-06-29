@@ -5,16 +5,14 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-import datetime
 from collections.abc import Generator
-from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
+from ._generated.models import AssignmentResponse as _AssignmentResponseBase
 from .assignment_response_content import AssignmentResponseContent
 from .autocheck_status import AutoCheckStatus
-from .core_item import HiveCoreItem
-from .enums.assignment_response_type_enum import AssignmentResponseTypeEnum
 
 if TYPE_CHECKING:
     from ...client import HiveClient
@@ -22,34 +20,19 @@ if TYPE_CHECKING:
     from .user import User
 
 
-class AssignmentResponse(HiveCoreItem):
-    """
-    Attributes:
-        id (int): Unique identifier.
-        user_id (int): ID of the user submitting the response.
-        contents (list[AssignmentResponseContent]): List of content parts.
-        date (datetime.datetime): Timestamp of the response.
-        response_type (AssignmentResponseTypeEnum): Type of response (e.g., Submission, Comment).
-        autocheck_statuses (list[AutoCheckStatus] | None): Optional autocheck evaluations.
-        file_name (str | None): Optional file name for attachments.
-        dear_student (bool | None): Flag for salutation inclusion. Default: True.
-        hide_checker_name (bool | None): Flag to anonymize the checker.
-        segel_only (bool | None): Flag to restrict visibility to staff.
+class AssignmentResponse(_AssignmentResponseBase):
+    """A response to an assignment.
+
+    Scalar fields are inherited from the generated base. ``contents`` and
+    ``autocheck_statuses`` are overridden to PyHive's curated nested types, and
+    ``assignment_id`` is an injected (non-spec) field carrying parent context.
     """
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     assignment_id: int = Field(exclude=True)
-    id: int
-    user_id: int = Field(alias="user")
     contents: list[AssignmentResponseContent]
-    date: datetime.datetime
-    response_type: AssignmentResponseTypeEnum
-
     autocheck_statuses: list[AutoCheckStatus] | None = Field(default=None)
-    file_name: str | None = Field(default=None)
     dear_student: bool | None = Field(default=True)
-    hide_checker_name: bool | None = Field(default=None)
-    segel_only: bool | None = Field(default=None)
 
     _user: "User | None" = PrivateAttr(default=None)
     _assignment: "Assignment | None" = PrivateAttr(default=None)

@@ -5,41 +5,20 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-import datetime
-from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field
 
-from .core_item import HiveCoreItem
-from .enums.action_enum import ActionEnum
+from ._generated.models import Status as _AutoCheckStatusBase
 
 if TYPE_CHECKING:
     from ...client import HiveClient
 
 
-class AutoCheckStatus(HiveCoreItem):
-    """
-
-    Attributes:
-        id (int):
-        time (datetime.datetime):
-        action (ActionEnum):
-            * `Handling` - Handling
-            * `No Check` - Nocheck
-            * `Built` - Built
-            * `Finished` - Finished
-            * `Sending` - Sending
-            * `Error` - Error
-            * `Success` - Success
-        payload (str | None):
-
-    """
+class AutoCheckStatus(_AutoCheckStatusBase):
+    """An autocheck status entry. Data fields inherited from the generated ``Status`` base."""
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
-    id: int
-    time: datetime.datetime
-    action: ActionEnum
-    payload: str | None = Field(default=None)
 
     @classmethod
     def from_dict(cls, src_dict: dict[str, Any], hive_client: "HiveClient") -> Self:

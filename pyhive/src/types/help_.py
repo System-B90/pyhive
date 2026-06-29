@@ -5,58 +5,33 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
-from .core_item import HiveCoreItem
-from .enums.help_status_enum import HelpStatusEnum
-from .enums.help_type_enum import HelpTypeEnum
-from .enums.visibility_enum import VisibilityEnum
+from ._generated.models import Help as _HelpBase
+from .help_response_segel_nested import HelpResponseSegelNested
+from .notification_nested import NotificationNested
 
 if TYPE_CHECKING:
     from ...client import HiveClient
     from .exercise import Exercise
-    from .help_response_segel_nested import HelpResponseSegelNested
-    from .notification_nested import NotificationNested
     from .user import User
 
 
-class Help(HiveCoreItem):
-    """
-    A student's help request.
+class Help(_HelpBase):
+    """A student's help request.
 
-    Attributes:
-        id: Unique identifier.
-        user_id: ID of the user requesting help.
-        checker_id: ID of the assigned checker, if any.
-        checker_first_name: First name of the checker.
-        checker_last_name: Last name of the checker.
-        is_subscribed: Whether the user is subscribed to updates.
-        help_type: Categorical type of the request.
-        help_status: Current resolution status.
-        for_exercise_id: ID of the associated exercise, if any.
-        responses: List of nested response objects.
-        notifications: List of nested notification objects.
-        title: Optional title of the request.
-        visibility: Optional visibility restriction.
+    Scalar/FK fields are inherited from the generated base; the nested
+    ``responses`` and ``notifications`` are overridden to PyHive's curated nested
+    types and have ``hive_client`` injected in :meth:`from_dict`.
     """
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
-    id: int
-    user_id: int = Field(alias="user")
-    checker_id: int | None = Field(default=None, alias="checker")
-    checker_first_name: str | None = Field(default=None)
-    checker_last_name: str | None = Field(default=None)
-    is_subscribed: bool
-    help_type: HelpTypeEnum
-    help_status: HelpStatusEnum
+    # Spec serialises for_exercise as a nested Exercise; PyHive exposes the FK id.
     for_exercise_id: int | None = Field(default=None, alias="for_exercise")
     responses: list["HelpResponseSegelNested"]
     notifications: list["NotificationNested"]
-
-    title: str | None = Field(default=None)
-    visibility: VisibilityEnum | None = Field(default=None)
 
     _user: "User | None" = PrivateAttr(default=None)
     _checker: "User | None" = PrivateAttr(default=None)

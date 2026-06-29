@@ -1,17 +1,10 @@
-"""Enumeration for assignment statuses (auto-generated)."""
+"""Re-export of :class:`AssignmentStatusEnum` from the auto-generated enum layer.
 
-from enum import Enum
+The enum definition lives in ``pyhive/src/types/_generated/enums.py`` and is
+regenerated from Hive's OpenAPI spec on each release. This thin module keeps
+the historical import path stable.
+"""
 
+from .._generated.enums import AssignmentStatusEnum
 
-class AssignmentStatusEnum(str, Enum):
-    """The status of an assignment."""
-
-    AUTOCHECKED = "AutoChecked"
-    DONE = "Done"
-    NEW = "New"
-    REDO = "Redo"
-    SUBMITTED = "Submitted"
-    WORK_IN_PROGRESS = "Work In Progress"
-
-    def __str__(self) -> str:
-        return str(self.value)
+__all__ = ["AssignmentStatusEnum"]

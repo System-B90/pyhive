@@ -5,28 +5,20 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field
 
-from .core_item import HiveCoreItem
+from ._generated.models import Tag as _TagBase
 
 if TYPE_CHECKING:
     from ...client import HiveClient
 
 
-class Tag(HiveCoreItem):
-    """Attributes:
-    id (int):
-    name (str):
-    color (str):
-
-    """
+class Tag(_TagBase):
+    """A Hive tag (id, name, color). Data fields are inherited from the generated base."""
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
-    id: int
-    name: str
-    color: str
 
     @classmethod
     def from_dict(cls, src_dict: dict[str, Any], hive_client: "HiveClient") -> Self:

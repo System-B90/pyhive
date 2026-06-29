@@ -1,15 +1,10 @@
-"""Enumeration for user clearance levels."""
+"""Re-export of :class:`ClearanceEnum` from the auto-generated enum layer.
 
-from enum import IntEnum
+The enum definition lives in ``pyhive/src/types/_generated/enums.py`` and is
+regenerated from Hive's OpenAPI spec on each release. This thin module keeps
+the historical import path stable.
+"""
 
+from .._generated.enums import ClearanceEnum
 
-class ClearanceEnum(IntEnum):
-    """Enumeration of user clearance levels in the Hive system."""
-
-    HANICH = 1
-    CHECKER = 2
-    SEGEL = 3
-    ADMIN = 5
-
-    def __str__(self) -> str:
-        return str(self.value)
+__all__ = ["ClearanceEnum"]

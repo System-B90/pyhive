@@ -1,18 +1,10 @@
-"""Enumeration of possible action states for auto-tests."""
+"""Re-export of :class:`ActionEnum` from the auto-generated enum layer.
 
-from enum import Enum
+The enum definition lives in ``pyhive/src/types/_generated/enums.py`` and is
+regenerated from Hive's OpenAPI spec on each release. This thin module keeps
+the historical import path stable.
+"""
 
+from .._generated.enums import ActionEnum
 
-class ActionEnum(str, Enum):
-    """Enumeration of possible action states for auto-tests."""
-
-    BUILT = "Built"
-    ERROR = "Error"
-    FINISHED = "Finished"
-    HANDLING = "Handling"
-    NO_CHECK = "No Check"
-    SENDING = "Sending"
-    SUCCESS = "Success"
-
-    def __str__(self) -> str:
-        return str(self.value)
+__all__ = ["ActionEnum"]

@@ -20,4 +20,5 @@ repos:
         args:
           - ./pyhive/
           - --ignore-patterns=_generated_.*\.py
-        exclude: ^tests/
+          - --ignore-paths=.*/_generated(/.*)?
+        exclude: ^(tests/|tools/)

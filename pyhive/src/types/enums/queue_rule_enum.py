@@ -1,15 +1,10 @@
-"""Enumeration for exercise Queue Rules."""
+"""Re-export of :class:`QueueRuleEnum` from the auto-generated enum layer.
 
-from enum import Enum
+The enum definition lives in ``pyhive/src/types/_generated/enums.py`` and is
+regenerated from Hive's OpenAPI spec on each release. This thin module keeps
+the historical import path stable.
+"""
 
+from .._generated.enums import QueueRuleEnum
 
-class QueueRuleEnum(str, Enum):
-    """Enumeration for exercise Queue Rules."""
-
-    CHOOSE = "Choose"
-    WAIT_FOR_AUTOCHECKS = "Wait For AutoChecks"
-    WAIT_FOR_DONE = "Wait For Done"
-    WAIT_FOR_SUBMITTED = "Wait For Submitted"
-
-    def __str__(self) -> str:
-        return str(self.value)
+__all__ = ["QueueRuleEnum"]
