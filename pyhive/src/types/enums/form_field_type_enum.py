@@ -1,15 +1,10 @@
-"""Enumeration for form field types (auto-generated)."""
+"""Re-export of :class:`FormFieldTypeEnum` from the auto-generated enum layer.
 
-from enum import Enum
+The enum definition lives in ``pyhive/src/types/_generated/enums.py`` and is
+regenerated from Hive's OpenAPI spec on each release. This thin module keeps
+the historical import path stable.
+"""
 
+from .._generated.enums import FormFieldTypeEnum
 
-class FormFieldTypeEnum(str, Enum):
-    """Enumeration of possible form field types."""
-
-    MULTIPLE = "multiple"
-    MULTIRESPONSE = "multiResponse"
-    NUMBER = "number"
-    TEXT = "text"
-
-    def __str__(self) -> str:
-        return str(self.value)
+__all__ = ["FormFieldTypeEnum"]

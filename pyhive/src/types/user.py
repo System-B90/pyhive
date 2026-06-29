@@ -5,15 +5,11 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-import datetime
-from typing import Annotated,TYPE_CHECKING, Any, Iterable, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Iterable, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
-from .core_item import HiveCoreItem
-from .enums.clearance_enum import ClearanceEnum
-from .enums.gender_enum import GenderEnum
-from .enums.status_enum import StatusEnum
+from ._generated.models import CourseUser as _UserBase
 
 if TYPE_CHECKING:
     from ...client import HiveClient
@@ -23,91 +19,20 @@ if TYPE_CHECKING:
     from .queue import Queue, QueueLike
 
 
-class User(HiveCoreItem):
-    """Hive management course user.
-
-    Attributes:
-    id (int):
-    display_name (str):
-    clearance (ClearanceEnum):
-        * `1` - Hanich
-        * `2` - Checker
-        * `3` - Segel
-        * `5` - Admin
-    gender (GenderEnum):
-        * `Male` - Male
-        * `Female` - Female
-        * `NonBinary` - Nonbinary
-    current_assignment (int | None):
-    current_assignment_options (list[int]):
-    mentee_ids (list[int]):
-    username (str): Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.
-    status (StatusEnum):
-        * `Present` - Present
-        * `Raised Hand` - Raisedhand
-        * `Toilet Request` - Toiletrequest
-        * `Toilet` - Toilet
-        * `Personal Talk` - Personaltalk
-        * `Work Talk` - Worktalk
-        * `Medical` - Medical
-        * `Prayer` - Prayer
-        * `Room` - Room
-        * `Home` - Home
-    status_date (datetime.datetime):
-    avatar_filename (str | None):
-    number (int | None):
-    program (int | None):
-    checkers_brief (str | None):
-    mentor (int | None):
-    classes (list[int] | None):
-    first_name (str | None):
-    last_name (str | None):
-    queue (int | None):
-    disable_queue (bool | None):
-    user_queue (int | None):
-    disable_user_queue (bool | None):
-    override_queue (int | None):
-    confirmed (bool | None):
-    teacher (bool | None):
-    hostname (str | None):
-
-    """
+class User(_UserBase):
+    """Hive management course user. Data fields are inherited from the generated
+    ``CourseUser`` base; this layer adds lazy relations and helpers."""
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
-    id: int
-    display_name: str
-    clearance: ClearanceEnum
-    gender: GenderEnum
-    current_assignment_id: int | None = Field(default=None, alias="current_assignment")
+
     _current_assignment: "Assignment | None" = PrivateAttr(default=None)
-    current_assignment_options: list[int]
-    mentee_ids: list[int] = Field(alias="mentees")
     _mentees: "list[User] | None" = PrivateAttr(default=None)
-    username: str
-    status: StatusEnum
-    status_date: datetime.datetime
-    avatar_filename: str | None = Field(default=None)
-    number: int | None = Field(default=None)
-    program_id: int | None = Field(default=None, alias="program")
     _program: "Program | None" = PrivateAttr(default=None)
-    checkers_brief: str | None = Field(default=None)
-    mentor_id: int | None = Field(default=None, alias="mentor")
     _mentor: "User | None" = PrivateAttr(default=None)
-    class_ids: list[int] | None = Field(default=None, alias="classes")
     _classes: "list[Class] | None" = PrivateAttr(default=None)
-    first_name: str | None = Field(default=None)
-    last_name: str | None = Field(default=None)
-    queue_id: int | None = Field(default=None, alias="queue")
     _queue: "Queue | None" = PrivateAttr(default=None)
-    disable_queue: bool | None = Field(default=None)
-    user_queue_id: int | None = Field(default=None, alias="user_queue")
     _user_queue: "Queue | None" = PrivateAttr(default=None)
-    disable_user_queue: bool | None = Field(default=None)
-    override_queue_id: int | None = Field(default=None, alias="override_queue")
     _override_queue: "Queue | None" = PrivateAttr(default=None)
-    confirmed: bool | None = Field(default=None)
-    teacher: bool | None = Field(default=None)
-    hostname: str | None = Field(default=None)
 
     @classmethod
     def from_dict(cls, src_dict: dict[str, Any], hive_client: "HiveClient") -> Self:

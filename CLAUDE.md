@@ -64,6 +64,16 @@ Public methods (`get`, `post`, `put`, `delete`) parse JSON and return typed dict
 2. Add it to `HiveClient`'s MRO in `pyhive/client/client.py`.
 3. Export new Pydantic models from `pyhive/types.py`.
 
+### Auto-generation from Hive's OpenAPI spec
+
+PyHive's typed core is **auto-generated** from Hive's spec (`api/core.yaml`) by `tools/hive_codegen` (see `tools/hive_codegen/README.md`). The model layer is split:
+
+- `pyhive/src/types/_generated/` — `enums.py`, `models.py`, `manifest.json`. **Regenerated every Hive release; never hand-edit.** Built with datamodel-code-generator, driven by `tools/hive_codegen/codegen.toml`.
+- `pyhive/src/types/<resource>.py` — curated subclasses (`class Exercise(_ExerciseBase): ...`) that add `hive_client`, lazy relations, convenience methods and the occasional field override. New spec fields/enum values flow into the base and are inherited automatically.
+- `pyhive/src/types/enums/<enum>.py` — thin re-exports of the generated enums (keeping historical import paths). `event_type_enum.py` is hand-written (dropped from the spec).
+
+`.github/workflows/sync-hive.yml` regenerates on a `repository_dispatch` from Hive's release, opens a PR, and auto-merges when drift is purely additive (breaking changes are labelled `needs-manual-review`). Regenerate locally with `python -m hive_codegen sync --spec ../Hive/api/core.yaml --repo-root .`. When editing curated models, only add ergonomics/overrides — never re-declare a field already provided by the generated base unless intentionally overriding it.
+
 ### Generator-based list endpoints
 
 All list methods return generators. Callers must `list(...)` or iterate explicitly. Never buffer entire results internally in the SDK.

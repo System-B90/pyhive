@@ -5,13 +5,11 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-import datetime
-from typing import Annotated, TYPE_CHECKING, Any, Iterable, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Iterable, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
-from .core_item import HiveCoreItem
-from .enums.assignment_status_enum import AssignmentStatusEnum
+from ._generated.models import Assignment as _AssignmentBase
 from .notification_nested import NotificationNested
 
 if TYPE_CHECKING:
@@ -21,53 +19,16 @@ if TYPE_CHECKING:
     from .user import User
 
 
-class Assignment(HiveCoreItem):
+class Assignment(_AssignmentBase):
     """Represents a student's assignment for an exercise.
 
-    Attributes:
-        hive_client: Reference to the Hive API client.
-        id: Unique assignment ID.
-        user_id: ID of the assigned student.
-        checker_id: ID of the assigned checker, or None.
-        checker_first_name: First name of the checker.
-        checker_last_name: Last name of the checker.
-        is_subscribed: Whether the student is subscribed to updates.
-        exercise_id: ID of the exercise.
-        assignment_status: Current state of the assignment.
-        patbas: Whether it's a PATBAS assignment.
-        notifications: List of related notifications.
-        last_staff_updated: Timestamp of the last staff update.
-        work_time: Total work time in minutes.
-        student_assignment_status: The student's view of the assignment status.
-        description: Optional text description.
-        submission_count: Total number of submissions.
-        total_check_count: Number of total checks.
-        manual_check_count: Number of manual checks.
-        flagged: Whether the assignment is flagged for review.
-        timer: Optional timer state string.
-
+    Scalar and FK fields are inherited from the generated base. The nested
+    ``notifications`` field is overridden to use PyHive's curated
+    ``NotificationNested`` (with its lazy ``from_user`` relation).
     """
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
-    id: int
-    user_id: int = Field(alias="user")
-    checker_id: int | None = Field(alias="checker")
-    checker_first_name: str | None = Field(default=None)
-    checker_last_name: str | None = Field(default=None)
-    is_subscribed: bool
-    exercise_id: int = Field(alias="exercise")
-    assignment_status: AssignmentStatusEnum
-    patbas: bool
     notifications: list["NotificationNested"]
-    last_staff_updated: datetime.datetime
-    work_time: int
-    student_assignment_status: AssignmentStatusEnum | None = Field(default=None)
-    description: str | None = Field(default=None)
-    submission_count: int | None = Field(default=None)
-    total_check_count: int | None = Field(default=None)
-    manual_check_count: int | None = Field(default=None)
-    flagged: bool | None = Field(default=None)
-    timer: str | None = Field(default=None)
 
     # Lazy-loaded objects
     _user: "User | None" = PrivateAttr(default=None)

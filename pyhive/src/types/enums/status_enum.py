@@ -1,21 +1,10 @@
-"""StatusEnum class representing various user statuses."""
+"""Re-export of :class:`StatusEnum` from the auto-generated enum layer.
 
-from enum import Enum
+The enum definition lives in ``pyhive/src/types/_generated/enums.py`` and is
+regenerated from Hive's OpenAPI spec on each release. This thin module keeps
+the historical import path stable.
+"""
 
+from .._generated.enums import StatusEnum
 
-class StatusEnum(str, Enum):
-    """Enumeration of user statuses."""
-
-    HOME = "Home"
-    MEDICAL = "Medical"
-    PERSONAL_TALK = "Personal Talk"
-    PRAYER = "Prayer"
-    PRESENT = "Present"
-    RAISED_HAND = "Raised Hand"
-    ROOM = "Room"
-    TOILET = "Toilet"
-    TOILET_REQUEST = "Toilet Request"
-    WORK_TALK = "Work Talk"
-
-    def __str__(self) -> str:
-        return str(self.value)
+__all__ = ["StatusEnum"]

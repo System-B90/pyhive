@@ -1,18 +1,10 @@
-"""Enumeration for help request types (auto-generated)."""
+"""Re-export of :class:`HelpTypeEnum` from the auto-generated enum layer.
 
-from enum import Enum
+The enum definition lives in ``pyhive/src/types/_generated/enums.py`` and is
+regenerated from Hive's OpenAPI spec on each release. This thin module keeps
+the historical import path stable.
+"""
 
+from .._generated.enums import HelpTypeEnum
 
-class HelpTypeEnum(str, Enum):
-    """Enumeration of possible help request types."""
-
-    CHAT = "Chat"
-    ERROR = "Error"
-    EXERCISE = "Exercise"
-    MEDICAL = "Medical"
-    MUSIC = "Music"
-    OTHER = "Other"
-    REQUEST = "Request"
-
-    def __str__(self) -> str:
-        return str(self.value)
+__all__ = ["HelpTypeEnum"]

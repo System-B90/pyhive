@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
-from .core_item import HiveCoreItem
+from ._generated.models import AssignmentResponseContent as _AssignmentResponseContentBase
 
 if TYPE_CHECKING:
     from ...client import HiveClient
@@ -18,18 +18,16 @@ if TYPE_CHECKING:
     from .form_field import FormField
 
 
-class AssignmentResponseContent(HiveCoreItem):
-    """
-    Attributes:
-        raw_content: The raw content string from the response payload.
-        field_id: ID of the associated form field.
+class AssignmentResponseContent(_AssignmentResponseContentBase):
+    """A single content part of an assignment response.
+
+    ``raw_content`` and ``field_id`` are inherited from the generated base;
+    ``assignment_id`` / ``assignment_response_id`` are injected parent context.
     """
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
     assignment_id: int = Field(exclude=True)
     assignment_response_id: int = Field(exclude=True)
-    raw_content: Annotated[str, Field(alias="content")]
-    field_id: int = Field(alias="field")
 
     _content: "str | int | list[str | int] | None" = PrivateAttr(default=None)
     _field: "FormField | None" = PrivateAttr(default=None)
