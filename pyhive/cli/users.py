@@ -8,7 +8,7 @@ Author: Michael K. Steinberg
 from typing import Any
 
 import click
-import typer
+from typer import Option, echo, secho, colors, Argument  # pyright: ignore[reportUnknownVariableType]
 
 from pyhive.cli.base import PyHiveTyper
 from pyhive.cli.formatter import (
@@ -25,8 +25,8 @@ user_app = PyHiveTyper(help="Manage Hive users.")
 
 @user_app.command(name="list")
 def list_users(
-    hive_url: str = typer.Option("https://hive.org", help="Target Hive server URL"),
-    verify: bool = typer.Option(False, help="Verify SSL certificates"),
+    hive_url: str = Option("https://hive.org", help="Target Hive server URL"),
+    verify: bool = Option(False, help="Verify SSL certificates"),
 ) -> None:
     """
     Retrieve a list of users from the Hive server.
@@ -45,7 +45,7 @@ def list_users(
         users = sorted([x.to_dict() for x in client.get_users()], key=lambda x: x["id"])
 
         def text_output() -> None:
-            typer.secho(f"\nFound {len(users)} users:", fg=typer.colors.GREEN)
+            secho(f"\nFound {len(users)} users:", fg=colors.GREEN)
             print_formatted_list(
                 data=users,
                 template="- [{id}]  ({number})  {username}",
@@ -63,33 +63,33 @@ def list_users(
 
 @user_app.command(name="create")
 def create_user(
-    username: str = typer.Argument(..., help="Username for the new account"),
-    password: str = typer.Option(
+    username: str = Argument(..., help="Username for the new account"),
+    password: str = Option(
         ..., prompt=True, hide_input=True, help="Password for the account"
     ),
-    clearance: str = typer.Option(
+    clearance: str = Option(
         ...,
         help="Clearance level for the user.",
         click_type=click.Choice(list(ClearanceEnum.__members__), case_sensitive=False),
     ),
-    gender: str = typer.Option(
+    gender: str = Option(
         ...,
         help="Gender of the user.",
         click_type=click.Choice(list(GenderEnum.__members__), case_sensitive=False),
     ),
-    status: str = typer.Option(
+    status: str = Option(
         StatusEnum.PRESENT.name,
         help="Initial user status.",
         click_type=click.Choice(list(StatusEnum.__members__), case_sensitive=False),
     ),
-    number: int | None = typer.Option(None, help="Identification number"),
-    first_name: str | None = typer.Option(None, help="User's first name"),
-    last_name: str | None = typer.Option(None, help="User's last name"),
-    avatar_filename: str | None = typer.Option(None, help="Avatar filename"),
-    teacher: bool | None = typer.Option(None, help="Set teacher status"),
-    confirmed: bool | None = typer.Option(None, help="Set confirmed status"),
-    hive_url: str = typer.Option("https://hive.org", help="Target Hive server URL"),
-    verify: bool = typer.Option(False, help="Verify SSL certificates"),
+    number: int | None = Option(None, help="Identification number"),
+    first_name: str | None = Option(None, help="User's first name"),
+    last_name: str | None = Option(None, help="User's last name"),
+    avatar_filename: str | None = Option(None, help="Avatar filename"),
+    teacher: bool | None = Option(None, help="Set teacher status"),
+    confirmed: bool | None = Option(None, help="Set confirmed status"),
+    hive_url: str = Option("https://hive.org", help="Target Hive server URL"),
+    verify: bool = Option(False, help="Verify SSL certificates"),
 ) -> None:
     """
     Create a new user on the Hive server using Enum names for selection.
@@ -133,10 +133,10 @@ def create_user(
         user_data: dict[str, Any] = getattr(user, "model_dump", lambda: vars(user))()
 
         def text_output() -> None:
-            typer.secho("\nUser successfully created!", fg=typer.colors.GREEN)
-            typer.echo(f"ID: {getattr(user, 'id', 'N/A')}")
-            typer.echo(f"Username: {user.username}")
-            typer.echo(f"Clearance: {user.clearance.name}")
+            secho("\nUser successfully created!", fg=colors.GREEN)
+            echo(f"ID: {getattr(user, 'id', 'N/A')}")
+            echo(f"Username: {user.username}")
+            echo(f"Clearance: {user.clearance.name}")
 
         print_result({"user": user_data, "status": "created"}, text_output)
 
@@ -149,9 +149,9 @@ def create_user(
 
 @user_app.command(name="delete")
 def delete_user(
-    user_id: int = typer.Argument(..., help="ID of the user to delete"),
-    hive_url: str = typer.Option("https://hive.org", help="Target Hive server URL"),
-    verify: bool = typer.Option(False, help="Verify SSL certificates"),
+    user_id: int = Argument(..., help="ID of the user to delete"),
+    hive_url: str = Option("https://hive.org", help="Target Hive server URL"),
+    verify: bool = Option(False, help="Verify SSL certificates"),
 ) -> None:
     """
     Delete an existing user from the Hive server.
@@ -178,9 +178,7 @@ def delete_user(
             raise ValueError(f"User {user_id} could not be deleted or does not exist.")
 
         def text_output() -> None:
-            typer.secho(
-                f"\nUser '{user_id}' successfully deleted.", fg=typer.colors.GREEN
-            )
+            secho(f"\nUser '{user_id}' successfully deleted.", fg=colors.GREEN)
 
         print_result({"deleted_user_id": user_id, "status": "success"}, text_output)
 

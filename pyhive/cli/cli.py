@@ -63,7 +63,7 @@ def show_version() -> None:
         None
     """
     try:
-        version_str: str = importlib.metadata.version("pyhive")
+        version_str: str = importlib.metadata.version("PyHiveLMS")
     except importlib.metadata.PackageNotFoundError:
         version_str = "unknown"
 
