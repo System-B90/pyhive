@@ -247,4 +247,4 @@ class _AuthenticatedHiveClient:
         The representation intentionally omits secrets.
         """
 
-        return f"HiveClient({self.username!r}, input(), {self.hive_url!r})"
+        return f"HiveClient({self.username!r}, '***', {self.hive_url!r})"
