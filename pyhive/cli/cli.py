@@ -21,7 +21,7 @@ from pyhive.cli.users import user_app
 from pyhive.client.sso_utils import get_sso_token
 from pyhive.src._generated_versions import SUPPORTED_API_VERSIONS
 
-app = PyHiveTyper(help="PyHive CLI", rich_markup_mode="rich")
+app = PyHiveTyper(help="PyHive CLI", rich_markup_mode="rich", no_args_is_help=True)
 
 # Mount the user management subparser
 app.add_typer(user_app, name="users")
@@ -39,19 +39,7 @@ def main_callback(
         None, "--token", "-t", help="Hive access token for authentication"
     ),
 ) -> None:
-    """
-    Global CLI options configuration.
-
-    Args:
-        use_json (bool): Flag to enable JSON output across all commands.
-        username (str | None): Username for API requests.
-        password (str | None): Password for API requests.
-        access_token (str | None): Access token for API requests.
-        cache_token (bool): Flag to cache the generated token locally.
-
-    Returns:
-        None
-    """
+    """Store root-level auth credentials into global CLI state."""
     state.username = username
     state.password = password
     state.access_token = access_token

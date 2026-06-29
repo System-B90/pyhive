@@ -70,11 +70,8 @@ def get_hive_client(hive_url: str, verify: bool) -> HiveClient:
             verify=verify,
         )
 
-    if getattr(state, "cache_token", False):
-        token: str | None = getattr(
-            client,
-            "_access_token",
-        )
+    if state.cache_token:
+        token: str | None = client._access_token  # pylint: disable=protected-access
         if token:
             try:
                 keyring.set_password(KEYRING_SERVICE, KEYRING_ACCOUNT, token)
