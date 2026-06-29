@@ -17,13 +17,24 @@ from pyhive.cli.base import PyHiveTyper
 from pyhive.cli.formatter import print_error_and_exit, print_info, print_result
 from pyhive.cli.state import state
 from pyhive.cli.client_factory import get_hive_client
+from pyhive.cli.assignments import assignment_app
+from pyhive.cli.classes import class_app
+from pyhive.cli.exercises import exercise_app
+from pyhive.cli.modules import module_app
+from pyhive.cli.programs import program_app
+from pyhive.cli.subjects import subject_app
 from pyhive.cli.users import user_app
 from pyhive.client.sso_utils import get_sso_token
 from pyhive.src._generated_versions import SUPPORTED_API_VERSIONS
 
 app = PyHiveTyper(help="PyHive CLI", rich_markup_mode="rich", no_args_is_help=True)
 
-# Mount the user management subparser
+app.add_typer(assignment_app, name="assignments")
+app.add_typer(class_app, name="classes")
+app.add_typer(exercise_app, name="exercises")
+app.add_typer(module_app, name="modules")
+app.add_typer(program_app, name="programs")
+app.add_typer(subject_app, name="subjects")
 app.add_typer(user_app, name="users")
 
 
@@ -63,7 +74,7 @@ def show_version() -> None:
         None
     """
     try:
-        version_str: str = importlib.metadata.version("pyhive")
+        version_str: str = importlib.metadata.version("PyHiveLMS")
     except importlib.metadata.PackageNotFoundError:
         version_str = "unknown"
 
