@@ -8,7 +8,7 @@ Author: Michael K. Steinberg
 from typing import Any
 
 import click
-from typer import Option, echo, secho, colors, Argument  # pyright: ignore[reportUnknownVariableType]
+from typer import Argument, Context, Option, colors, echo, secho  # pyright: ignore[reportUnknownVariableType]
 
 from pyhive.cli.base import PyHiveTyper
 from pyhive.cli.formatter import (
@@ -21,6 +21,16 @@ from pyhive.cli.client_factory import get_hive_client
 from pyhive.types import ClearanceEnum, GenderEnum, StatusEnum
 
 user_app = PyHiveTyper(help="Manage Hive users.")
+
+
+@user_app.callback(invoke_without_command=True)
+def user_callback(
+    ctx: Context,
+    hive_url: str = Option("https://hive.org", help="Target Hive server URL"),
+    verify: bool = Option(False, help="Verify SSL certificates"),
+) -> None:
+    if ctx.invoked_subcommand is None:
+        list_users(hive_url=hive_url, verify=verify)
 
 
 @user_app.command(name="list")
