@@ -5,11 +5,11 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
+
 from pydantic import Field, PrivateAttr
 
-from .core_item import HiveCoreItem
-from .enums.class_type_enum import ClassTypeEnum
+from ._generated.models import Class as _ClassBase
 
 if TYPE_CHECKING:
     from ...client import HiveClient
@@ -17,25 +17,14 @@ if TYPE_CHECKING:
     from .user import User
 
 
-class Class(HiveCoreItem):
-    """
-    Represents a school class/group in a program.
+class Class(_ClassBase):
+    """Represents a school class/group in a program.
+
+    Data fields are inherited from the generated base.
     """
 
     # Excluded from serialization, prevents network coupling in the data payload
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
-
-    id: int
-    name: str
-    display_name: str
-    program_id: int = Field(alias="program")
-    user_ids: list[int] = Field(alias="users")
-    program_name: str = Field(alias="program__name")
-
-    # Optional fields handled implicitly by Pydantic's exclude_unset
-    email: str | None = Field(default=None)
-    type_: ClassTypeEnum | None = Field(default=None, alias="type")
-    description: str | None = Field(default=None)
 
     # Private attributes for internal lazy-loading state
     _program: "Program | None" = PrivateAttr(default=None)

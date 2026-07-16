@@ -6,14 +6,13 @@ Author: Michael K. Steinberg
 """
 
 from collections.abc import Generator, Iterable
-from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
-from .core_item import HiveCoreItem
+from ._generated.models import Module as _ModuleBase
 from .enums.exercise_patbas_enum import PatbasEnum
 from .enums.exercise_preview_types import ExercisePreviewTypes
-from .enums.sync_status_enum import SyncStatusEnum
 from .exercise import Exercise
 
 if TYPE_CHECKING:
@@ -21,34 +20,10 @@ if TYPE_CHECKING:
     from .subject import Subject
 
 
-class Module(HiveCoreItem):
-    """
-    Course Subject Module.
-
-    Attributes:
-        id: Unique identifier.
-        name: Name of the module.
-        parent_subject_id: ID of the parent subject.
-        order: Order of display within the subject.
-        sync_status: Synchronization status.
-        sync_message: Optional error or status message.
-        parent_program_name: Name of the program the subject belongs to.
-        parent_subject_name: Name of the parent subject.
-        parent_subject_symbol: Symbol of the parent subject.
-        segel_path: Network path accessible to staff.
-    """
+class Module(_ModuleBase):
+    """Course Subject Module. Data fields are inherited from the generated base."""
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
-    id: int
-    name: str
-    parent_subject_id: int = Field(alias="parent_subject")
-    order: str
-    sync_status: SyncStatusEnum
-    sync_message: str | None = Field(default=None)
-    parent_program_name: str
-    parent_subject_name: str
-    parent_subject_symbol: str
-    segel_path: str
 
     _parent_subject: "Subject | None" = PrivateAttr(default=None)
 

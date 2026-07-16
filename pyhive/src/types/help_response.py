@@ -5,45 +5,23 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-import datetime
-from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
-from .core_item import HiveCoreItem
-from .enums.help_response_type_enum import HelpResponseTypeEnum
+from ._generated.models import HelpResponse as _HelpResponseBase
 
 if TYPE_CHECKING:
     from ...client import HiveClient
     from .user import User
 
 
-class HelpResponse(HiveCoreItem):
-    """A response to a help request.
-
-    Attributes:
-        id: Unique identifier for the response.
-        user: ID of the responding user.
-        date: Timestamp of the response.
-        response_type: Type of the response (e.g., Resolve, Open, Comment).
-        contents: Optional text content of the response.
-        file_name: Optional name of an attached file.
-        dear_student: Whether to include a "Dear student" greeting. Default is True.
-        hide_checker_name: If True, the name of the checker is hidden.
-        segel_only: If True, the response is visible only to staff.
-
-    """
+class HelpResponse(_HelpResponseBase):
+    """A response to a help request. Data fields are inherited from the generated
+    base; ``dear_student`` keeps PyHive's ``True`` default."""
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
-    id: int
-    user_id: int = Field(alias="user")
-    date: datetime.datetime
-    response_type: HelpResponseTypeEnum
-    contents: str | None = Field(default=None)
-    file_name: str | None = Field(default=None)
     dear_student: bool = Field(default=True)
-    hide_checker_name: bool | None = Field(default=None)
-    segel_only: bool | None = Field(default=None)
 
     # Lazy-loaded objects
     _user: "User | None" = PrivateAttr(default=None)

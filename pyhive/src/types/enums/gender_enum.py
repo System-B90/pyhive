@@ -1,14 +1,10 @@
-"""Enumeration for gender types."""
+"""Re-export of :class:`GenderEnum` from the auto-generated enum layer.
 
-from enum import Enum
+The enum definition lives in ``pyhive/src/types/_generated/enums.py`` and is
+regenerated from Hive's OpenAPI spec on each release. This thin module keeps
+the historical import path stable.
+"""
 
+from .._generated.enums import GenderEnum
 
-class GenderEnum(str, Enum):
-    """Enumeration of gender types."""
-
-    FEMALE = "Female"
-    MALE = "Male"
-    NONBINARY = "NonBinary"
-
-    def __str__(self) -> str:
-        return str(self.value)
+__all__ = ["GenderEnum"]

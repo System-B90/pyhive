@@ -6,12 +6,11 @@ Author: Michael K. Steinberg
 """
 
 from collections.abc import Iterable
-from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
-from .core_item import HiveCoreItem
-from .enums.sync_status_enum import SyncStatusEnum
+from ._generated.models import Program as _ProgramBase
 from .subject import Subject
 
 if TYPE_CHECKING:
@@ -20,46 +19,15 @@ if TYPE_CHECKING:
     from .user import User
 
 
-class Program(HiveCoreItem):
-    """
-    Course Program entity.
+class Program(_ProgramBase):
+    """Course Program entity. Data fields are inherited from the generated base.
 
-    Attributes:
-        id: Unique identifier.
-        name: Display name of the program.
-        checker_id: User ID of the assigned checker.
-        sync_status: Sync status (e.g., Normal, Creating).
-        sync_message: Optional sync diagnostic message.
-        default_class_id: Optional class ID used as default.
-        auto_toilet: Auto-toilet generation enabled.
-        hanich_raise_hand: Whether hanich can raise hand.
-        auto_schedule: Enable auto-scheduling.
-        auto_room: Enable automatic room assignments.
-        hanich_day_only: Restrict hanich to day-only usage.
-        hanich_work_name: Enable work name customization.
-        auto_toilet_count: Number of auto toilets to assign.
-        hanich_classes_only: Restrict hanich to classes only.
-        hanich_schedule: Whether hanich gets scheduled.
+    ``hanich_work_name`` is retained here because it was dropped from the live
+    spec; PyHive keeps exposing it for backward compatibility.
     """
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
-    id: int
-    name: str
-    checker_id: int = Field(alias="checker")
-    sync_status: SyncStatusEnum
-
-    sync_message: str | None = Field(default=None)
-    default_class_id: int | None = Field(default=None, alias="default_class")
-
-    auto_toilet: bool | None = Field(default=None)
-    hanich_raise_hand: bool | None = Field(default=None)
-    auto_schedule: bool | None = Field(default=None)
-    auto_room: bool | None = Field(default=None)
-    hanich_day_only: bool | None = Field(default=None)
     hanich_work_name: bool | None = Field(default=None)
-    auto_toilet_count: int | None = Field(default=None)
-    hanich_classes_only: bool | None = Field(default=None)
-    hanich_schedule: bool | None = Field(default=None)
 
     _checker: "User | None" = PrivateAttr(default=None)
     _default_class: "Class | None" = PrivateAttr(default=None)

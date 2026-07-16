@@ -1,0 +1,162 @@
+name: Sync from Hive release
+
+# Regenerates PyHive's core layer from Hive's OpenAPI spec when a new Hive
+# version is released, opens a PR, and auto-merges it when the change is purely
+# additive. Triggered by a repository_dispatch from Hive's release workflow, or
+# manually for a specific tag.
+
+on:
+  repository_dispatch:
+    types: [hive-release]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Hive release tag (e.g. v7.1.0). Defaults to Hive's latest release."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  HIVE_REPO: HiveLMS/Hive
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install "datamodel-code-generator[http]" ruff mypy pytest pyyaml
+
+      - name: Resolve Hive tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ secrets.HIVE_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.client_payload.tag || github.event.inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="$(gh api "repos/${HIVE_REPO}/releases/latest" --jq .tag_name)"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          echo "Resolved Hive tag: $TAG"
+
+      - name: Fetch api/core.yaml at tag
+        env:
+          HIVE_REPO_TOKEN: ${{ secrets.HIVE_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl -sSL --fail \
+            -H "Authorization: Bearer ${HIVE_REPO_TOKEN}" \
+            -H "Accept: application/vnd.github.raw" \
+            "https://api.github.com/repos/${HIVE_REPO}/contents/api/core.yaml?ref=${{ steps.tag.outputs.tag }}" \
+            -o core.yaml
+          test -s core.yaml
+
+      - name: Regenerate core layer + classify drift
+        id: sync
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONPATH: tools
+        run: |
+          set -euo pipefail
+          python -m hive_codegen sync \
+            --spec core.yaml --repo-root . \
+            --drift-out drift.md \
+            --github-output "$GITHUB_OUTPUT" || true
+          # Regenerate the supported-versions module from the updated pyproject.
+          python - <<'PY'
+          import tomllib
+          from pathlib import Path
+          versions = tomllib.loads(Path("pyproject.toml").read_text("utf-8"))["tool"]["api_versions"]["supported"]
+          Path("pyhive/src/_generated_versions.py").write_text(
+              "SUPPORTED_API_VERSIONS = " + repr(versions) + "\n"
+              "MIN_API_VERSION = SUPPORTED_API_VERSIONS[0]\n"
+              "LATEST_API_VERSION = SUPPORTED_API_VERSIONS[-1]\n",
+              encoding="utf-8",
+          )
+          PY
+          rm -f core.yaml
+
+      - name: Stop if no changes
+        if: steps.sync.outputs.has_changes != 'true'
+        run: echo "No schema changes for ${{ steps.tag.outputs.version }} — nothing to do."
+
+      - name: Quality gates
+        id: gates
+        if: steps.sync.outputs.has_changes == 'true'
+        continue-on-error: true
+        run: |
+          set -e
+          ruff check pyhive/ tools/
+          mypy pyhive/src/types/_generated/
+          pytest tools/hive_codegen/tests -q
+          python -c "import pyhive, pyhive.types as t; assert t.__all__"
+
+      - name: Open / update PR
+        id: pr
+        if: steps.sync.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.sync.outputs.api_version }}"
+          BRANCH="auto/sync-hive-${VERSION}"
+          git config user.name "hive-sync[bot]"
+          git config user.email "hive-sync@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add -A
+          git commit -m "Sync PyHive to Hive ${VERSION}"
+          git push -f origin "$BRANCH"
+
+          BREAKING="${{ steps.sync.outputs.has_breaking }}"
+          GATES="${{ steps.gates.outcome }}"
+          {
+            echo "Automated sync of PyHive's generated core layer to **Hive ${VERSION}**."
+            echo
+            cat drift.md
+            echo
+            echo "---"
+            echo "- Quality gates: \`${GATES}\`"
+            echo "- Breaking changes: \`${BREAKING}\`"
+          } > pr-body.md
+
+          if [ "$BREAKING" = "true" ] || [ "$GATES" != "success" ]; then
+            LABEL="needs-manual-review"
+          else
+            LABEL="automerge"
+          fi
+          gh label create "$LABEL" --force >/dev/null 2>&1 || true
+
+          PR_URL="$(gh pr create --base master --head "$BRANCH" \
+            --title "Sync PyHive to Hive ${VERSION}" \
+            --body-file pr-body.md --label "$LABEL" 2>/dev/null \
+            || gh pr edit "$BRANCH" --body-file pr-body.md --add-label "$LABEL" --json url --jq .url)"
+          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+          echo "label=$LABEL" >> "$GITHUB_OUTPUT"
+
+      - name: Enable auto-merge (additive changes only)
+        if: steps.sync.outputs.has_changes == 'true' && steps.pr.outputs.label == 'automerge'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge --auto --squash "${{ steps.pr.outputs.pr_url }}" \
+            || echo "Auto-merge could not be enabled (enable it in repo settings). PR left open."
+
+      - name: Flag for manual review (breaking or failing gates)
+        if: steps.sync.outputs.has_changes == 'true' && steps.pr.outputs.label == 'needs-manual-review'
+        run: |
+          echo "::warning::PyHive sync to ${{ steps.sync.outputs.api_version }} needs manual review: ${{ steps.pr.outputs.pr_url }}"

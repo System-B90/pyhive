@@ -1,0 +1,3504 @@
+{
+  "curated_only": {
+    "enums": [
+      "EventTypeEnum"
+    ],
+    "models": [
+      "Event",
+      "EventColor",
+      "EventAttendeesType0Item",
+      "Queue",
+      "QueueItem",
+      "HelpResponseSegelNested"
+    ]
+  },
+  "endpoints": {
+    "/api/core/assignments/": {
+      "get": {
+        "operationId": "assignments_list",
+        "query_params": {
+          "exercise__id": "integer",
+          "exercise__parent_module__id": "integer",
+          "exercise__parent_module__parent_subject__id": "integer",
+          "exercise__tags__id__in": "list[integer]",
+          "queue__id": "integer",
+          "user__classes__id": "integer",
+          "user__classes__id__in": "list[integer]",
+          "user__id__in": "list[integer]",
+          "user__mentor__id": "integer",
+          "user__mentor__id__in": "list[integer]",
+          "user__program__id__in": "list[integer]"
+        }
+      },
+      "post": {
+        "operationId": "assignments_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/assignments/latest/": {
+      "get": {
+        "operationId": "assignments_latest_list",
+        "query_params": {
+          "last_staff_updated__gt": "string",
+          "user__classes__id": "integer",
+          "user__id__in": "list[integer]",
+          "user__mentor__id": "integer"
+        }
+      },
+      "post": {
+        "operationId": "assignments_latest_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/assignments/latest/{id}/": {
+      "delete": {
+        "operationId": "assignments_latest_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "assignments_latest_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "assignments_latest_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "assignments_latest_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/assignments/{id}/": {
+      "delete": {
+        "operationId": "assignments_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "assignments_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "assignments_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "assignments_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/assignments/{id}/lock/": {
+      "put": {
+        "operationId": "assignments_lock_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/assignments/{id}/subscribe/": {
+      "put": {
+        "operationId": "assignments_subscribe_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/assignments/{id}/unlock/": {
+      "put": {
+        "operationId": "assignments_unlock_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/assignments/{id}/unsubscribe/": {
+      "put": {
+        "operationId": "assignments_unsubscribe_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/assignments/{parentId}/responses/": {
+      "get": {
+        "operationId": "assignments_responses_list",
+        "query_params": {}
+      },
+      "post": {
+        "operationId": "assignments_responses_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/assignments/{parentId}/responses/{id}/": {
+      "delete": {
+        "operationId": "assignments_responses_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "assignments_responses_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "assignments_responses_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "assignments_responses_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/assignments/{parentId}/responses/{id}/rerun_autochecks/": {
+      "post": {
+        "operationId": "assignments_responses_rerun_autochecks_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/assignments/{parentId}/responses/{id}/student_files/": {
+      "get": {
+        "operationId": "assignments_responses_student_files_retrieve",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/exercises/": {
+      "get": {
+        "operationId": "course_exercises_list",
+        "query_params": {
+          "id": "integer",
+          "parent_module__id": "integer",
+          "parent_module__parent_subject__id": "integer",
+          "parent_module__parent_subject__parent_program__id__in": "list[integer]",
+          "queue__id": "number",
+          "tags__id__in": "list[integer]"
+        }
+      },
+      "post": {
+        "operationId": "course_exercises_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/exercises/{id}/": {
+      "delete": {
+        "operationId": "course_exercises_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "course_exercises_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "course_exercises_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "course_exercises_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/exercises/{id}/notify_students/": {
+      "post": {
+        "operationId": "course_exercises_notify_students_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/exercises/{id}/patbas_files/": {
+      "get": {
+        "operationId": "course_exercises_patbas_files_retrieve",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/exercises/{id}/patbas_preview/": {
+      "get": {
+        "operationId": "course_exercises_patbas_preview_retrieve",
+        "query_params": {
+          "asset": "string"
+        }
+      }
+    },
+    "/api/core/course/exercises/{id}/preview/": {
+      "get": {
+        "operationId": "course_exercises_preview_retrieve",
+        "query_params": {
+          "asset": "string"
+        }
+      }
+    },
+    "/api/core/course/exercises/{id}/student_files/": {
+      "get": {
+        "operationId": "course_exercises_student_files_retrieve",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/exercises/{parentId}/fields/": {
+      "get": {
+        "operationId": "course_exercises_fields_list",
+        "query_params": {}
+      },
+      "post": {
+        "operationId": "course_exercises_fields_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/exercises/{parentId}/fields/list_with_top_results/": {
+      "get": {
+        "operationId": "course_exercises_fields_list_with_top_results_retrieve",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/exercises/{parentId}/fields/{id}/": {
+      "delete": {
+        "operationId": "course_exercises_fields_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "course_exercises_fields_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "course_exercises_fields_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "course_exercises_fields_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/exercises/{parentId}/fields/{id}/duplicate/": {
+      "post": {
+        "operationId": "course_exercises_fields_duplicate_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/modules/": {
+      "get": {
+        "operationId": "course_modules_list",
+        "query_params": {
+          "parent_subject__id": "integer",
+          "parent_subject__parent_program__id__in": "list[integer]"
+        }
+      },
+      "post": {
+        "operationId": "course_modules_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/modules/{id}/": {
+      "delete": {
+        "operationId": "course_modules_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "course_modules_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "course_modules_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "course_modules_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/programs/": {
+      "get": {
+        "operationId": "course_programs_list",
+        "query_params": {
+          "id__in": "list[integer]"
+        }
+      },
+      "post": {
+        "operationId": "course_programs_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/programs/{id}/": {
+      "delete": {
+        "operationId": "course_programs_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "course_programs_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "course_programs_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "course_programs_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/subjects/": {
+      "get": {
+        "operationId": "course_subjects_list",
+        "query_params": {
+          "parent_program__id__in": "list[integer]"
+        }
+      },
+      "post": {
+        "operationId": "course_subjects_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/course/subjects/{id}/": {
+      "delete": {
+        "operationId": "course_subjects_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "course_subjects_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "course_subjects_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "course_subjects_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/help/": {
+      "get": {
+        "operationId": "help_list",
+        "query_params": {
+          "created_by": "integer",
+          "current": "boolean",
+          "for_exercise__id": "integer",
+          "for_exercise__parent_module__id": "integer",
+          "for_exercise__parent_module__parent_subject__id": "integer",
+          "free_text": "string",
+          "help_status__in": "list[string]",
+          "help_type__in": "list[string]",
+          "limit": "integer",
+          "offset": "integer",
+          "ordering": "string",
+          "user__classes__id": "integer",
+          "user__classes__id__in": "list[integer]",
+          "user__id__in": "list[integer]",
+          "user__mentor__id": "integer",
+          "user__mentor__id__in": "list[integer]",
+          "user__program__id__in": "list[integer]"
+        }
+      },
+      "post": {
+        "operationId": "help_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/help/bulk_respond/": {
+      "post": {
+        "operationId": "help_bulk_respond_create",
+        "query_params": {
+          "created_by": "integer",
+          "current": "boolean",
+          "for_exercise__id": "integer",
+          "for_exercise__parent_module__id": "integer",
+          "for_exercise__parent_module__parent_subject__id": "integer",
+          "free_text": "string",
+          "help_status__in": "list[string]",
+          "help_type__in": "list[string]",
+          "ordering": "string",
+          "user__classes__id": "integer",
+          "user__classes__id__in": "list[integer]",
+          "user__id__in": "list[integer]",
+          "user__mentor__id": "integer",
+          "user__mentor__id__in": "list[integer]",
+          "user__program__id__in": "list[integer]"
+        }
+      }
+    },
+    "/api/core/help/latest/": {
+      "get": {
+        "operationId": "help_latest_list",
+        "query_params": {
+          "help_type__in": "list[string]",
+          "last_staff_updated__gt": "string",
+          "user__classes__id": "integer",
+          "user__id__in": "list[integer]",
+          "user__mentor__id": "integer"
+        }
+      },
+      "post": {
+        "operationId": "help_latest_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/help/latest/{id}/": {
+      "delete": {
+        "operationId": "help_latest_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "help_latest_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "help_latest_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "help_latest_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/help/{id}/": {
+      "delete": {
+        "operationId": "help_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "help_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "help_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "help_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/help/{id}/lock/": {
+      "put": {
+        "operationId": "help_lock_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/help/{id}/subscribe/": {
+      "put": {
+        "operationId": "help_subscribe_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/help/{id}/top_responses/": {
+      "get": {
+        "operationId": "help_top_responses_list",
+        "query_params": {}
+      }
+    },
+    "/api/core/help/{id}/unlock/": {
+      "put": {
+        "operationId": "help_unlock_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/help/{id}/unsubscribe/": {
+      "put": {
+        "operationId": "help_unsubscribe_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/help/{parentId}/responses/": {
+      "get": {
+        "operationId": "help_responses_list",
+        "query_params": {}
+      },
+      "post": {
+        "operationId": "help_responses_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/help/{parentId}/responses/{id}/": {
+      "delete": {
+        "operationId": "help_responses_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "help_responses_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "help_responses_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "help_responses_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/help/{parentId}/responses/{id}/student_files/": {
+      "get": {
+        "operationId": "help_responses_student_files_retrieve",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/classes/": {
+      "get": {
+        "operationId": "management_classes_list",
+        "query_params": {
+          "id__in": "list[integer]",
+          "name": "string",
+          "program__id__in": "list[integer]",
+          "type": "string"
+        }
+      },
+      "post": {
+        "operationId": "management_classes_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/classes/{id}/": {
+      "delete": {
+        "operationId": "management_classes_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "management_classes_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "management_classes_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "management_classes_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/classes/{id}/auto_seat/": {
+      "post": {
+        "operationId": "management_classes_auto_seat_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/classes/{id}/lesson/": {
+      "post": {
+        "operationId": "management_classes_lesson_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/classes/{id}/queue/": {
+      "post": {
+        "operationId": "management_classes_queue_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/classes/{id}/unassign_override_queues/": {
+      "patch": {
+        "operationId": "management_classes_unassign_override_queues_partial_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/register/": {
+      "post": {
+        "operationId": "management_register_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/seating/": {
+      "get": {
+        "operationId": "management_seating_list",
+        "query_params": {
+          "classroom__id": "integer"
+        }
+      },
+      "post": {
+        "operationId": "management_seating_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/seating/{id}/": {
+      "delete": {
+        "operationId": "management_seating_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "management_seating_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "management_seating_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "management_seating_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/users/": {
+      "get": {
+        "operationId": "management_users_list",
+        "query_params": {
+          "classes__id__in": "list[integer]",
+          "clearance__in": "list[integer]",
+          "id__in": "list[integer]",
+          "mentor__id": "integer",
+          "mentor__id__in": "list[integer]",
+          "program__id__in": "list[integer]",
+          "program_checker__id__in": "list[integer]"
+        }
+      },
+      "post": {
+        "operationId": "management_users_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/users/check_in/": {
+      "put": {
+        "operationId": "management_users_check_in_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/users/me/": {
+      "get": {
+        "operationId": "management_users_me_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "management_users_me_partial_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/users/{id}/": {
+      "delete": {
+        "operationId": "management_users_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "management_users_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "management_users_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "management_users_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/management/users/{id}/avatar/": {
+      "get": {
+        "operationId": "management_users_avatar_retrieve",
+        "query_params": {}
+      }
+    },
+    "/api/core/notification/": {
+      "get": {
+        "operationId": "notification_list",
+        "query_params": {
+          "assignment": "integer",
+          "assignment__exercise": "integer",
+          "assignment__exercise__in": "list[integer]",
+          "from_user__isnull": "boolean",
+          "help": "integer",
+          "help__in": "list[integer]",
+          "was_read": "boolean"
+        }
+      },
+      "post": {
+        "operationId": "notification_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/notification/{id}/": {
+      "delete": {
+        "operationId": "notification_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "notification_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "notification_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "notification_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/powersync/token/": {
+      "get": {
+        "operationId": "powersync_token_retrieve",
+        "query_params": {}
+      }
+    },
+    "/api/core/queues/": {
+      "get": {
+        "operationId": "queues_list",
+        "query_params": {
+          "class__id": "integer",
+          "mentor__id": "integer",
+          "module": "integer",
+          "module__isnull": "boolean",
+          "program__id__in": "list[integer]",
+          "user": "integer",
+          "user__isnull": "boolean"
+        }
+      },
+      "post": {
+        "operationId": "queues_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/queues/{id}/": {
+      "delete": {
+        "operationId": "queues_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "queues_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "queues_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "queues_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/queues/{id}/delete_new/": {
+      "post": {
+        "operationId": "queues_delete_new_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/queues/{id}/duplicate/": {
+      "post": {
+        "operationId": "queues_duplicate_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/queues/{parentId}/items/": {
+      "get": {
+        "operationId": "queues_items_list",
+        "query_params": {}
+      },
+      "post": {
+        "operationId": "queues_items_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/queues/{parentId}/items/{id}/": {
+      "delete": {
+        "operationId": "queues_items_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "queues_items_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "queues_items_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "queues_items_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/queues/{parentId}/items/{id}/expand/": {
+      "post": {
+        "operationId": "queues_items_expand_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/queues/{parentId}/items/{id}/move/": {
+      "post": {
+        "operationId": "queues_items_move_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/categories/": {
+      "get": {
+        "operationId": "schedule_categories_list",
+        "query_params": {}
+      },
+      "post": {
+        "operationId": "schedule_categories_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/categories/{id}/": {
+      "delete": {
+        "operationId": "schedule_categories_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "schedule_categories_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "schedule_categories_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "schedule_categories_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/daily_review/": {
+      "post": {
+        "operationId": "schedule_daily_review_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/event-attendees/": {
+      "get": {
+        "operationId": "schedule_event_attendees_list",
+        "query_params": {}
+      },
+      "post": {
+        "operationId": "schedule_event_attendees_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/event-attendees/{id}/": {
+      "delete": {
+        "operationId": "schedule_event_attendees_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "schedule_event_attendees_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "schedule_event_attendees_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "schedule_event_attendees_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/event-instructors/": {
+      "get": {
+        "operationId": "schedule_event_instructors_list",
+        "query_params": {}
+      },
+      "post": {
+        "operationId": "schedule_event_instructors_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/event-instructors/{id}/": {
+      "delete": {
+        "operationId": "schedule_event_instructors_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "schedule_event_instructors_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "schedule_event_instructors_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "schedule_event_instructors_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/event-taggings/": {
+      "get": {
+        "operationId": "schedule_event_taggings_list",
+        "query_params": {}
+      },
+      "post": {
+        "operationId": "schedule_event_taggings_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/event-taggings/{id}/": {
+      "delete": {
+        "operationId": "schedule_event_taggings_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "schedule_event_taggings_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "schedule_event_taggings_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "schedule_event_taggings_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/event-tags/": {
+      "get": {
+        "operationId": "schedule_event_tags_list",
+        "query_params": {}
+      },
+      "post": {
+        "operationId": "schedule_event_tags_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/event-tags/{id}/": {
+      "delete": {
+        "operationId": "schedule_event_tags_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "schedule_event_tags_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "schedule_event_tags_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "schedule_event_tags_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/events/": {
+      "get": {
+        "operationId": "schedule_events_list",
+        "query_params": {
+          "end__lte": "string",
+          "lesson__id": "integer",
+          "start__gte": "string"
+        }
+      },
+      "post": {
+        "operationId": "schedule_events_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/events/{id}/": {
+      "delete": {
+        "operationId": "schedule_events_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "schedule_events_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "schedule_events_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "schedule_events_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/lessons/": {
+      "get": {
+        "operationId": "schedule_lessons_list",
+        "query_params": {
+          "module__id": "integer",
+          "module__parent_subject__parent_program_id__in": "list[integer]"
+        }
+      },
+      "post": {
+        "operationId": "schedule_lessons_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/lessons/{id}/": {
+      "delete": {
+        "operationId": "schedule_lessons_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "schedule_lessons_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "schedule_lessons_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "schedule_lessons_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/lessons/{parentId}/rules/": {
+      "get": {
+        "operationId": "schedule_lessons_rules_list",
+        "query_params": {}
+      },
+      "post": {
+        "operationId": "schedule_lessons_rules_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/lessons/{parentId}/rules/{id}/": {
+      "delete": {
+        "operationId": "schedule_lessons_rules_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "schedule_lessons_rules_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "schedule_lessons_rules_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "schedule_lessons_rules_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/tags/": {
+      "get": {
+        "operationId": "tags_list",
+        "query_params": {}
+      },
+      "post": {
+        "operationId": "tags_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/tags/{id}/": {
+      "delete": {
+        "operationId": "tags_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "tags_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "tags_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "tags_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/time/": {
+      "get": {
+        "operationId": "time_retrieve",
+        "query_params": {}
+      }
+    },
+    "/api/core/token/": {
+      "post": {
+        "operationId": "token_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/token/refresh/": {
+      "post": {
+        "operationId": "token_refresh_create",
+        "query_params": {}
+      }
+    }
+  },
+  "enums": {
+    "ActionEnum": {
+      "is_int": false,
+      "members": {
+        "BUILT": "Built",
+        "ERROR": "Error",
+        "FINISHED": "Finished",
+        "HANDLING": "Handling",
+        "NO_CHECK": "No Check",
+        "SENDING": "Sending",
+        "SUCCESS": "Success"
+      }
+    },
+    "AssignmentResponseTypeEnum": {
+      "is_int": false,
+      "members": {
+        "AUTOCHECK": "AutoCheck",
+        "COMMENT": "Comment",
+        "DONE": "Done",
+        "REDO": "Redo",
+        "SUBMISSION": "Submission",
+        "WORK_IN_PROGRESS": "Work In Progress"
+      }
+    },
+    "AssignmentStatusEnum": {
+      "is_int": false,
+      "members": {
+        "AUTOCHECKED": "AutoChecked",
+        "DONE": "Done",
+        "NEW": "New",
+        "REDO": "Redo",
+        "SUBMITTED": "Submitted",
+        "WORK_IN_PROGRESS": "Work In Progress"
+      }
+    },
+    "ClassTypeEnum": {
+      "is_int": false,
+      "members": {
+        "ROOM": "Room",
+        "STUDENT_GROUP": "Student Group"
+      }
+    },
+    "ClearanceEnum": {
+      "is_int": true,
+      "members": {
+        "ADMIN": 5,
+        "CHECKER": 2,
+        "HANICH": 1,
+        "SEGEL": 3
+      }
+    },
+    "ExercisePreviewTypes": {
+      "is_int": false,
+      "members": {
+        "DISABLED": "Disabled",
+        "MARKDOWN": "Markdown",
+        "PDF": "PDF"
+      }
+    },
+    "FormFieldTypeEnum": {
+      "is_int": false,
+      "members": {
+        "MULTIPLE": "multiple",
+        "MULTIRESPONSE": "multiResponse",
+        "NUMBER": "number",
+        "TEXT": "text"
+      }
+    },
+    "GenderEnum": {
+      "is_int": false,
+      "members": {
+        "FEMALE": "Female",
+        "MALE": "Male",
+        "NONBINARY": "NonBinary"
+      }
+    },
+    "HelpResponseTypeEnum": {
+      "is_int": false,
+      "members": {
+        "COMMENT": "Comment",
+        "OPEN": "Open",
+        "RESOLVE": "Resolve"
+      }
+    },
+    "HelpStatusEnum": {
+      "is_int": false,
+      "members": {
+        "OPEN": "Open",
+        "RESOLVED": "Resolved"
+      }
+    },
+    "HelpTypeEnum": {
+      "is_int": false,
+      "members": {
+        "CHAT": "Chat",
+        "ERROR": "Error",
+        "EXERCISE": "Exercise",
+        "MEDICAL": "Medical",
+        "MUSIC": "Music",
+        "OTHER": "Other",
+        "REQUEST": "Request"
+      }
+    },
+    "MeClearanceEnum": {
+      "is_int": true,
+      "members": {
+        "_1": 1,
+        "_2": 2,
+        "_3": 3,
+        "_5": 5
+      }
+    },
+    "NotificationResponseTypeEnum": {
+      "is_int": false,
+      "members": {
+        "AUTOCHECK": "AutoCheck",
+        "COMMENT": "Comment",
+        "DONE": "Done",
+        "OPEN": "Open",
+        "REDO": "Redo",
+        "RESOLVE": "Resolve",
+        "SUBMISSION": "Submission",
+        "WORK_IN_PROGRESS": "Work In Progress"
+      }
+    },
+    "PatbasEnum": {
+      "is_int": false,
+      "members": {
+        "ALWAYS": "Always",
+        "NEVER": "Never",
+        "ON_DONE": "On Done",
+        "STAFF_ONLY": "Staff Only"
+      }
+    },
+    "QueueRuleEnum": {
+      "is_int": false,
+      "members": {
+        "CHOOSE": "Choose",
+        "WAIT_FOR_AUTOCHECKS": "Wait For AutoChecks",
+        "WAIT_FOR_DONE": "Wait For Done",
+        "WAIT_FOR_SUBMITTED": "Wait For Submitted"
+      }
+    },
+    "StatusEnum": {
+      "is_int": false,
+      "members": {
+        "HOME": "Home",
+        "MEDICAL": "Medical",
+        "PERSONAL_TALK": "Personal Talk",
+        "PRAYER": "Prayer",
+        "PRESENT": "Present",
+        "RAISED_HAND": "Raised Hand",
+        "ROOM": "Room",
+        "TOILET": "Toilet",
+        "TOILET_REQUEST": "Toilet Request",
+        "WORK_TALK": "Work Talk"
+      }
+    },
+    "SyncStatusEnum": {
+      "is_int": false,
+      "members": {
+        "CREATING": "Creating",
+        "DELETING": "Deleting",
+        "ERROR": "Error",
+        "NORMAL": "Normal"
+      }
+    },
+    "VisibilityEnum": {
+      "is_int": false,
+      "members": {
+        "ALL_STAFF": "All Staff",
+        "ALL_STAFF_AND_CHECKERS": "All Staff And Checkers",
+        "AUTHOR_ONLY": "Author Only"
+      }
+    }
+  },
+  "models": {
+    "Assignment": {
+      "curated_model": "Assignment",
+      "fields": {
+        "assignment_status": {
+          "nullable": false,
+          "required": true,
+          "type": "AssignmentStatusEnum",
+          "wire": "assignment_status"
+        },
+        "checker_first_name": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "checker_first_name"
+        },
+        "checker_id": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "checker"
+        },
+        "checker_last_name": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "checker_last_name"
+        },
+        "description": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "description"
+        },
+        "exercise_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "exercise"
+        },
+        "flagged": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "flagged"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "is_subscribed": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "is_subscribed"
+        },
+        "last_staff_updated": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "last_staff_updated"
+        },
+        "manual_check_count": {
+          "nullable": false,
+          "required": false,
+          "type": "integer",
+          "wire": "manual_check_count"
+        },
+        "patbas": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "patbas"
+        },
+        "student_assignment_status": {
+          "nullable": false,
+          "required": false,
+          "type": "AssignmentStatusEnum",
+          "wire": "student_assignment_status"
+        },
+        "submission_count": {
+          "nullable": false,
+          "required": false,
+          "type": "integer",
+          "wire": "submission_count"
+        },
+        "timer": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "timer"
+        },
+        "total_check_count": {
+          "nullable": false,
+          "required": false,
+          "type": "integer",
+          "wire": "total_check_count"
+        },
+        "user_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "user"
+        },
+        "work_time": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "work_time"
+        }
+      }
+    },
+    "AssignmentNotification": {
+      "curated_model": "AssignmentNotification",
+      "fields": {
+        "exercise_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "exercise"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "last_staff_updated": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "last_staff_updated"
+        },
+        "module_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "module"
+        },
+        "subject": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "subject"
+        },
+        "user_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "user"
+        },
+        "user_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "user_name"
+        }
+      }
+    },
+    "AssignmentOptionHanich": {
+      "curated_model": "AssignmentOptionHanich",
+      "fields": {
+        "assignment_status": {
+          "nullable": false,
+          "required": true,
+          "type": "AssignmentStatusEnum",
+          "wire": "assignment_status"
+        },
+        "exercise_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "exercise"
+        },
+        "exercise_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "exercise_name"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "parent_module_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "parent_module"
+        },
+        "parent_module_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "parent_module_name"
+        },
+        "parent_subject_color": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "parent_subject_color"
+        },
+        "parent_subject_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "parent_subject"
+        },
+        "parent_subject_symbol": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "parent_subject_symbol"
+        }
+      }
+    },
+    "AssignmentResponse": {
+      "curated_model": "AssignmentResponse",
+      "fields": {
+        "date": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "date"
+        },
+        "dear_student": {
+          "nullable": true,
+          "required": false,
+          "type": "boolean",
+          "wire": "dear_student"
+        },
+        "file_name": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "file_name"
+        },
+        "hide_checker_name": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "hide_checker_name"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "response_type": {
+          "nullable": false,
+          "required": true,
+          "type": "AssignmentResponseTypeEnum",
+          "wire": "response_type"
+        },
+        "segel_only": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "segel_only"
+        },
+        "user_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "user"
+        }
+      }
+    },
+    "AssignmentResponseContent": {
+      "curated_model": "AssignmentResponseContent",
+      "fields": {
+        "field_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "field"
+        },
+        "raw_content": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "content"
+        }
+      }
+    },
+    "Class": {
+      "curated_model": "Class",
+      "fields": {
+        "description": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "description"
+        },
+        "display_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "display_name"
+        },
+        "email": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "email"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        },
+        "program_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "program"
+        },
+        "program_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "program__name"
+        },
+        "type_": {
+          "nullable": false,
+          "required": false,
+          "type": "ClassTypeEnum",
+          "wire": "type"
+        },
+        "user_ids": {
+          "nullable": false,
+          "required": true,
+          "type": "list[integer]",
+          "wire": "users"
+        }
+      }
+    },
+    "CourseTokenObtainPair": {
+      "curated_model": "CourseTokenObtainPair",
+      "fields": {
+        "access": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "access"
+        },
+        "refresh": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "refresh"
+        }
+      }
+    },
+    "CourseUser": {
+      "curated_model": "User",
+      "fields": {
+        "avatar_filename": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "avatar_filename"
+        },
+        "checkers_brief": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "checkers_brief"
+        },
+        "class_ids": {
+          "nullable": false,
+          "required": false,
+          "type": "list[integer]",
+          "wire": "classes"
+        },
+        "clearance": {
+          "nullable": false,
+          "required": true,
+          "type": "ClearanceEnum",
+          "wire": "clearance"
+        },
+        "confirmed": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "confirmed"
+        },
+        "current_assignment_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "current_assignment"
+        },
+        "current_assignment_options": {
+          "nullable": false,
+          "required": true,
+          "type": "list[integer]",
+          "wire": "current_assignment_options"
+        },
+        "disable_queue": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "disable_queue"
+        },
+        "disable_user_queue": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "disable_user_queue"
+        },
+        "display_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "display_name"
+        },
+        "first_name": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "first_name"
+        },
+        "gender": {
+          "nullable": false,
+          "required": true,
+          "type": "GenderEnum",
+          "wire": "gender"
+        },
+        "hostname": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "hostname"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "last_name": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "last_name"
+        },
+        "mentee_ids": {
+          "nullable": false,
+          "required": true,
+          "type": "list[integer]",
+          "wire": "mentees"
+        },
+        "mentor_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "mentor"
+        },
+        "number": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "number"
+        },
+        "override_queue_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "override_queue"
+        },
+        "program_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "program"
+        },
+        "queue_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "queue"
+        },
+        "status": {
+          "nullable": false,
+          "required": true,
+          "type": "StatusEnum",
+          "wire": "status"
+        },
+        "status_date": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "status_date"
+        },
+        "teacher": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "teacher"
+        },
+        "user_queue_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "user_queue"
+        },
+        "username": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "username"
+        }
+      }
+    },
+    "Event": {
+      "curated_model": "Event",
+      "fields": {
+        "attendees": {
+          "nullable": false,
+          "required": true,
+          "type": "list[object]",
+          "wire": "attendees"
+        },
+        "category_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "category_id"
+        },
+        "category_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "category_name"
+        },
+        "color": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "color"
+        },
+        "description": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "description"
+        },
+        "end": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "end"
+        },
+        "hidden_from_students": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "hidden_from_students"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "lesson_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "lesson_id"
+        },
+        "locked": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "locked"
+        },
+        "room_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "room_id"
+        },
+        "start": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "start"
+        },
+        "title": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "title"
+        }
+      }
+    },
+    "EventAttendee": {
+      "curated_model": "EventAttendee",
+      "fields": {
+        "attendee_class_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "attendee_class_id"
+        },
+        "event_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "event_id"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        }
+      }
+    },
+    "EventCategory": {
+      "curated_model": "EventCategory",
+      "fields": {
+        "color": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "color"
+        },
+        "has_lesson": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "has_lesson"
+        },
+        "hide_details_in_review": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "hide_details_in_review"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        },
+        "students_see_subject": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "students_see_subject"
+        },
+        "visible_to_students": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "visible_to_students"
+        }
+      }
+    },
+    "EventInstructor": {
+      "curated_model": "EventInstructor",
+      "fields": {
+        "event_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "event_id"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "instructor_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "instructor_id"
+        }
+      }
+    },
+    "EventTag": {
+      "curated_model": "EventTag",
+      "fields": {
+        "color": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "color"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        }
+      }
+    },
+    "EventTagging": {
+      "curated_model": "EventTagging",
+      "fields": {
+        "event_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "event_id"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "tag_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "tag_id"
+        }
+      }
+    },
+    "Exercise": {
+      "curated_model": "Exercise",
+      "fields": {
+        "autocheck_tag": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "autocheck_tag"
+        },
+        "autodone": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "autodone"
+        },
+        "download": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "download"
+        },
+        "expected_duration": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "expected_duration"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "is_lecture": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "is_lecture"
+        },
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        },
+        "on_creation_data": {
+          "nullable": false,
+          "required": false,
+          "type": "any",
+          "wire": "on_creation_data"
+        },
+        "order": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "order"
+        },
+        "parent_module_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "parent_module"
+        },
+        "parent_module_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "parent_module_name"
+        },
+        "parent_module_order": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "parent_module_order"
+        },
+        "parent_subject_color": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "parent_subject_color"
+        },
+        "parent_subject_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "parent_subject"
+        },
+        "parent_subject_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "parent_subject_name"
+        },
+        "parent_subject_symbol": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "parent_subject_symbol"
+        },
+        "patbas": {
+          "nullable": false,
+          "required": true,
+          "type": "PatbasEnum",
+          "wire": "patbas"
+        },
+        "patbas_download": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "patbas_download"
+        },
+        "patbas_preview": {
+          "nullable": false,
+          "required": false,
+          "type": "ExercisePreviewTypes",
+          "wire": "patbas_preview"
+        },
+        "preview": {
+          "nullable": false,
+          "required": true,
+          "type": "ExercisePreviewTypes",
+          "wire": "preview"
+        },
+        "segel_brief": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "segel_brief"
+        },
+        "segel_path": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "segel_path"
+        },
+        "style": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "style"
+        },
+        "sync_message": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "sync_message"
+        },
+        "sync_status": {
+          "nullable": false,
+          "required": true,
+          "type": "SyncStatusEnum",
+          "wire": "sync_status"
+        },
+        "tags": {
+          "nullable": false,
+          "required": true,
+          "type": "list[string]",
+          "wire": "tags"
+        }
+      }
+    },
+    "FormField": {
+      "curated_model": "FormField",
+      "fields": {
+        "choices": {
+          "nullable": true,
+          "required": false,
+          "type": "list[string]",
+          "wire": "choices"
+        },
+        "description": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "description"
+        },
+        "group_ids": {
+          "nullable": false,
+          "required": false,
+          "type": "list[integer]",
+          "wire": "groups"
+        },
+        "hanich_responses": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "hanich_responses"
+        },
+        "has_value": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "has_value"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "lower_limit": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "lower_limit"
+        },
+        "metadata": {
+          "nullable": false,
+          "required": false,
+          "type": "any",
+          "wire": "metadata"
+        },
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        },
+        "order": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "order"
+        },
+        "required": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "required"
+        },
+        "segel_only": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "segel_only"
+        },
+        "staff_responses": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "staff_responses"
+        },
+        "type_": {
+          "nullable": false,
+          "required": true,
+          "type": "FormFieldTypeEnum",
+          "wire": "type"
+        },
+        "upper_limit": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "upper_limit"
+        }
+      }
+    },
+    "FormFieldTopResponse": {
+      "curated_model": "FormFieldTopResponse",
+      "fields": {
+        "choices": {
+          "nullable": true,
+          "required": false,
+          "type": "list[string]",
+          "wire": "choices"
+        },
+        "description": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "description"
+        },
+        "exercise_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "exercise"
+        },
+        "group_ids": {
+          "nullable": false,
+          "required": false,
+          "type": "list[integer]",
+          "wire": "groups"
+        },
+        "hanich_responses": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "hanich_responses"
+        },
+        "has_value": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "has_value"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "lower_limit": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "lower_limit"
+        },
+        "metadata": {
+          "nullable": false,
+          "required": false,
+          "type": "any",
+          "wire": "metadata"
+        },
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        },
+        "order": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "order"
+        },
+        "required": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "required"
+        },
+        "segel_only": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "segel_only"
+        },
+        "staff_responses": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "staff_responses"
+        },
+        "top_responses": {
+          "nullable": false,
+          "required": true,
+          "type": "list[string]",
+          "wire": "top_responses"
+        },
+        "type_": {
+          "nullable": false,
+          "required": true,
+          "type": "FormFieldTypeEnum",
+          "wire": "type"
+        },
+        "upper_limit": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "upper_limit"
+        }
+      }
+    },
+    "Help": {
+      "curated_model": "Help",
+      "fields": {
+        "checker_first_name": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "checker_first_name"
+        },
+        "checker_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "checker"
+        },
+        "checker_last_name": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "checker_last_name"
+        },
+        "help_status": {
+          "nullable": false,
+          "required": true,
+          "type": "HelpStatusEnum",
+          "wire": "help_status"
+        },
+        "help_type": {
+          "nullable": false,
+          "required": true,
+          "type": "HelpTypeEnum",
+          "wire": "help_type"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "is_subscribed": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "is_subscribed"
+        },
+        "title": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "title"
+        },
+        "user_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "user"
+        },
+        "visibility": {
+          "nullable": false,
+          "required": false,
+          "type": "VisibilityEnum",
+          "wire": "visibility"
+        }
+      }
+    },
+    "HelpNotification": {
+      "curated_model": "HelpNotification",
+      "fields": {
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "last_staff_updated": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "last_staff_updated"
+        },
+        "user_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "user_name"
+        }
+      }
+    },
+    "HelpResponse": {
+      "curated_model": "HelpResponse",
+      "fields": {
+        "contents": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "contents"
+        },
+        "date": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "date"
+        },
+        "dear_student": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "dear_student"
+        },
+        "file_name": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "file_name"
+        },
+        "hide_checker_name": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "hide_checker_name"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "response_type": {
+          "nullable": false,
+          "required": true,
+          "type": "HelpResponseTypeEnum",
+          "wire": "response_type"
+        },
+        "segel_only": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "segel_only"
+        },
+        "user_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "user"
+        }
+      }
+    },
+    "HelpResponseSegelNested": {
+      "curated_model": "HelpResponseSegelNested",
+      "fields": {
+        "contents": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "contents"
+        },
+        "date": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "date"
+        },
+        "dear_student": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "dear_student"
+        },
+        "file_name": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "file_name"
+        },
+        "hide_checker_name": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "hide_checker_name"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "response_type": {
+          "nullable": false,
+          "required": true,
+          "type": "HelpResponseTypeEnum",
+          "wire": "response_type"
+        },
+        "segel_only": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "segel_only"
+        },
+        "user_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "user"
+        }
+      }
+    },
+    "Lesson": {
+      "curated_model": "Lesson",
+      "fields": {
+        "description": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "description"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "module_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "module_id"
+        },
+        "module_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "module_name"
+        },
+        "module_order": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "module_order"
+        },
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        },
+        "program_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "program_name"
+        },
+        "subject_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "subject_name"
+        },
+        "subject_symbol": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "subject_symbol"
+        }
+      }
+    },
+    "LessonRule": {
+      "curated_model": "LessonRule",
+      "fields": {
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "parent_rule": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "parent_rule"
+        },
+        "queue_data": {
+          "nullable": true,
+          "required": true,
+          "type": "Queue",
+          "wire": "queue_data"
+        },
+        "queue_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "queue"
+        },
+        "student_groups": {
+          "nullable": false,
+          "required": false,
+          "type": "list[integer]",
+          "wire": "student_groups"
+        },
+        "student_groups_data": {
+          "nullable": true,
+          "required": true,
+          "type": "list[Class]",
+          "wire": "student_groups_data"
+        }
+      }
+    },
+    "Me": {
+      "curated_model": "Me",
+      "fields": {
+        "clearance": {
+          "nullable": false,
+          "required": true,
+          "type": "MeClearanceEnum",
+          "wire": "clearance"
+        },
+        "confirmed": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "confirmed"
+        },
+        "current_assignment__exercise_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "current_assignment__exercise_id"
+        },
+        "current_assignment__exercise_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "current_assignment__exercise_name"
+        },
+        "current_assignment__module_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "current_assignment__module_id"
+        },
+        "current_assignment__subject_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "current_assignment__subject_id"
+        },
+        "current_assignment_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "current_assignment"
+        },
+        "current_assignment_options": {
+          "nullable": false,
+          "required": true,
+          "type": "list[AssignmentOptionHanich]",
+          "wire": "current_assignment_options"
+        },
+        "display_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "display_name"
+        },
+        "hanich_raise_hand": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "hanich_raise_hand"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "number": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "number"
+        },
+        "only_today": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "only_today"
+        },
+        "program_id": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "program"
+        },
+        "program_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "program__name"
+        },
+        "schedule_enabled": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "schedule_enabled"
+        },
+        "status": {
+          "nullable": false,
+          "required": true,
+          "type": "StatusEnum",
+          "wire": "status"
+        },
+        "teacher": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "teacher"
+        },
+        "username": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "username"
+        }
+      }
+    },
+    "Module": {
+      "curated_model": "Module",
+      "fields": {
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        },
+        "order": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "order"
+        },
+        "parent_program_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "parent_program_name"
+        },
+        "parent_subject_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "parent_subject"
+        },
+        "parent_subject_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "parent_subject_name"
+        },
+        "parent_subject_symbol": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "parent_subject_symbol"
+        },
+        "segel_brief": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "segel_brief"
+        },
+        "segel_path": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "segel_path"
+        },
+        "sync_message": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "sync_message"
+        },
+        "sync_status": {
+          "nullable": false,
+          "required": true,
+          "type": "SyncStatusEnum",
+          "wire": "sync_status"
+        }
+      }
+    },
+    "Notification": {
+      "curated_model": "Notification",
+      "fields": {
+        "assignment": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "assignment"
+        },
+        "comment": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "comment"
+        },
+        "exercise_id": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "exercise"
+        },
+        "exercise_name": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "exercise_name"
+        },
+        "for_user": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "for_user"
+        },
+        "for_user_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "for_user_name"
+        },
+        "from_user_id": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "from_user"
+        },
+        "from_user_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "from_user_name"
+        },
+        "help": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "help"
+        },
+        "help_title": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "help_title"
+        },
+        "help_type": {
+          "nullable": true,
+          "required": true,
+          "type": "HelpTypeEnum",
+          "wire": "help_type"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "module_id": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "module"
+        },
+        "program_id": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "program"
+        },
+        "response_type": {
+          "nullable": false,
+          "required": true,
+          "type": "NotificationResponseTypeEnum",
+          "wire": "response_type"
+        },
+        "subject": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "subject"
+        },
+        "time": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "time"
+        },
+        "was_read": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "was_read"
+        }
+      }
+    },
+    "NotificationNested": {
+      "curated_model": "NotificationNested",
+      "fields": {
+        "comment": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "comment"
+        },
+        "from_user_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "from_user"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        }
+      }
+    },
+    "PaginatedHelpList": {
+      "curated_model": "PaginatedHelpList",
+      "fields": {
+        "count": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "count"
+        },
+        "next": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "next"
+        },
+        "previous": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "previous"
+        },
+        "results": {
+          "nullable": false,
+          "required": true,
+          "type": "list[Help]",
+          "wire": "results"
+        }
+      }
+    },
+    "PowerSyncToken": {
+      "curated_model": "PowerSyncToken",
+      "fields": {
+        "endpoint": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "endpoint"
+        },
+        "expiresAt": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "expiresAt"
+        },
+        "token": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "token"
+        }
+      }
+    },
+    "Program": {
+      "curated_model": "Program",
+      "fields": {
+        "auto_room": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "auto_room"
+        },
+        "auto_schedule": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "auto_schedule"
+        },
+        "auto_toilet": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "auto_toilet"
+        },
+        "auto_toilet_count": {
+          "nullable": false,
+          "required": false,
+          "type": "integer",
+          "wire": "auto_toilet_count"
+        },
+        "checker_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "checker"
+        },
+        "default_class_id": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "default_class"
+        },
+        "hanich_classes_only": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "hanich_classes_only"
+        },
+        "hanich_day_only": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "hanich_day_only"
+        },
+        "hanich_raise_hand": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "hanich_raise_hand"
+        },
+        "hanich_schedule": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "hanich_schedule"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        },
+        "sync_message": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "sync_message"
+        },
+        "sync_status": {
+          "nullable": false,
+          "required": true,
+          "type": "SyncStatusEnum",
+          "wire": "sync_status"
+        }
+      }
+    },
+    "Queue": {
+      "curated_model": "Queue",
+      "fields": {
+        "description": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "description"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "module_id": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "module_id"
+        },
+        "module_name": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "module_name"
+        },
+        "module_order": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "module_order"
+        },
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        },
+        "program_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "program_id"
+        },
+        "program_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "program_name"
+        },
+        "subject_color": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "subject_color"
+        },
+        "subject_id": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "subject_id"
+        },
+        "subject_name": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "subject_name"
+        },
+        "subject_symbol": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "subject_symbol"
+        },
+        "user_id": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "user_id"
+        },
+        "user_name": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "user_name"
+        }
+      }
+    },
+    "QueueItem": {
+      "curated_model": "QueueItem",
+      "fields": {
+        "continue_on_redo": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "continue_on_redo"
+        },
+        "enabled": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "enabled"
+        },
+        "exercise_id": {
+          "nullable": true,
+          "required": true,
+          "type": "Exercise",
+          "wire": "exercise"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "nested_queue": {
+          "nullable": true,
+          "required": true,
+          "type": "Queue",
+          "wire": "nested_queue"
+        },
+        "order": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "order"
+        },
+        "queue_rule": {
+          "nullable": false,
+          "required": true,
+          "type": "QueueRuleEnum",
+          "wire": "queue_rule"
+        }
+      }
+    },
+    "RegisterCourseUser": {
+      "curated_model": "RegisterCourseUser",
+      "fields": {
+        "first_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "first_name"
+        },
+        "gender": {
+          "nullable": false,
+          "required": true,
+          "type": "GenderEnum",
+          "wire": "gender"
+        },
+        "last_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "last_name"
+        },
+        "password": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "password"
+        },
+        "username": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "username"
+        }
+      }
+    },
+    "Seating": {
+      "curated_model": "Seating",
+      "fields": {
+        "classroom": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "classroom"
+        },
+        "hanich": {
+          "nullable": true,
+          "required": false,
+          "type": "integer",
+          "wire": "hanich"
+        },
+        "hostname": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "hostname"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "x": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "x"
+        },
+        "y": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "y"
+        }
+      }
+    },
+    "Status": {
+      "curated_model": "AutoCheckStatus",
+      "fields": {
+        "action": {
+          "nullable": false,
+          "required": true,
+          "type": "ActionEnum",
+          "wire": "action"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "payload": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "payload"
+        },
+        "time": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "time"
+        }
+      }
+    },
+    "Subject": {
+      "curated_model": "Subject",
+      "fields": {
+        "color": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "color"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        },
+        "parent_program_id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "parent_program"
+        },
+        "parent_program_name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "parent_program_name"
+        },
+        "segel_brief": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "segel_brief"
+        },
+        "segel_path": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "segel_path"
+        },
+        "symbol": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "symbol"
+        },
+        "sync_message": {
+          "nullable": true,
+          "required": false,
+          "type": "string",
+          "wire": "sync_message"
+        },
+        "sync_status": {
+          "nullable": false,
+          "required": true,
+          "type": "SyncStatusEnum",
+          "wire": "sync_status"
+        }
+      }
+    },
+    "Tag": {
+      "curated_model": "Tag",
+      "fields": {
+        "color": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "color"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        }
+      }
+    },
+    "TokenRefresh": {
+      "curated_model": "TokenRefresh",
+      "fields": {
+        "access": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "access"
+        },
+        "refresh": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "refresh"
+        }
+      }
+    },
+    "TopHelpResponseChecker": {
+      "curated_model": "TopHelpResponseChecker",
+      "fields": {
+        "contents": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "contents"
+        }
+      }
+    }
+  },
+  "version": "7.1.0"
+}

@@ -11,19 +11,36 @@ from datetime import datetime
 import importlib.metadata
 from typing import Any
 
+import keyring
 import typer
 
 from pyhive.cli.base import PyHiveTyper
 from pyhive.cli.formatter import print_error_and_exit, print_info, print_result
 from pyhive.cli.state import state
-from pyhive.cli.client_factory import get_hive_client
+from pyhive.cli.client_factory import (
+    KEYRING_ACCOUNT,
+    KEYRING_REFRESH_ACCOUNT,
+    KEYRING_SERVICE,
+    get_hive_client,
+)
+from pyhive.cli.assignments import assignment_app
+from pyhive.cli.classes import class_app
+from pyhive.cli.exercises import exercise_app
+from pyhive.cli.modules import module_app
+from pyhive.cli.programs import program_app
+from pyhive.cli.subjects import subject_app
 from pyhive.cli.users import user_app
 from pyhive.client.sso_utils import get_sso_token
 from pyhive.src._generated_versions import SUPPORTED_API_VERSIONS
 
-app = PyHiveTyper(help="PyHive CLI", rich_markup_mode="rich")
+app = PyHiveTyper(help="PyHive CLI", rich_markup_mode="rich", no_args_is_help=True)
 
-# Mount the user management subparser
+app.add_typer(assignment_app, name="assignments")
+app.add_typer(class_app, name="classes")
+app.add_typer(exercise_app, name="exercises")
+app.add_typer(module_app, name="modules")
+app.add_typer(program_app, name="programs")
+app.add_typer(subject_app, name="subjects")
 app.add_typer(user_app, name="users")
 
 
@@ -39,19 +56,7 @@ def main_callback(
         None, "--token", "-t", help="Hive access token for authentication"
     ),
 ) -> None:
-    """
-    Global CLI options configuration.
-
-    Args:
-        use_json (bool): Flag to enable JSON output across all commands.
-        username (str | None): Username for API requests.
-        password (str | None): Password for API requests.
-        access_token (str | None): Access token for API requests.
-        cache_token (bool): Flag to cache the generated token locally.
-
-    Returns:
-        None
-    """
+    """Store root-level auth credentials into global CLI state."""
     state.username = username
     state.password = password
     state.access_token = access_token
@@ -75,7 +80,7 @@ def show_version() -> None:
         None
     """
     try:
-        version_str: str = importlib.metadata.version("pyhive")
+        version_str: str = importlib.metadata.version("PyHiveLMS")
     except importlib.metadata.PackageNotFoundError:
         version_str = "unknown"
 
@@ -128,6 +133,15 @@ def get_token(
         access_token, refresh_token, expires_at = get_sso_token(
             hive_url=hive_url, verify=verify
         )
+
+        if state.cache_token:
+            try:
+                keyring.set_password(KEYRING_SERVICE, KEYRING_ACCOUNT, access_token)
+                keyring.set_password(
+                    KEYRING_SERVICE, KEYRING_REFRESH_ACCOUNT, refresh_token
+                )
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
 
         def text_output() -> None:
             typer.secho("\nAuthentication Successful!", fg=typer.colors.GREEN)

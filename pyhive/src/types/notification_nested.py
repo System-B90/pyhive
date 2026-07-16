@@ -5,31 +5,21 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
-from .core_item import HiveCoreItem
+from ._generated.models import NotificationNested as _NotificationNestedBase
 
 if TYPE_CHECKING:
     from ...client import HiveClient
     from .user import User
 
 
-class NotificationNested(HiveCoreItem):
-    """A lightweight notification model.
-
-    Attributes:
-        id: Unique identifier of the notification.
-        from_user_id: Optional user ID that sent the notification.
-        comment: Optional comment text.
-
-    """
+class NotificationNested(_NotificationNestedBase):
+    """A lightweight notification model. Data fields inherited from the generated base."""
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
-    id: int
-    from_user_id: int | None = Field(default=None, alias="from_user")
-    comment: str | None = Field(default=None)
 
     _from_user: "User | None" = PrivateAttr(default=None)
 

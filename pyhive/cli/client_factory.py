@@ -14,6 +14,17 @@ from pyhive.client import HiveClient
 
 KEYRING_SERVICE = "pyhive_cli"
 KEYRING_ACCOUNT = "pyhive_access_token"
+KEYRING_REFRESH_ACCOUNT = "pyhive_refresh_token"
+
+
+def _get_cached_tokens() -> tuple[str | None, str | None]:
+    """Safely fetch the cached access and refresh tokens from the OS keyring."""
+    try:
+        access_token = keyring.get_password(KEYRING_SERVICE, KEYRING_ACCOUNT)
+        refresh_token = keyring.get_password(KEYRING_SERVICE, KEYRING_REFRESH_ACCOUNT)
+    except Exception:  # pylint: disable=broad-exception-caught
+        return None, None
+    return access_token, refresh_token
 
 
 def get_hive_client(hive_url: str, verify: bool) -> HiveClient:
@@ -30,14 +41,7 @@ def get_hive_client(hive_url: str, verify: bool) -> HiveClient:
         HiveClient: An authenticated instance of the Hive client.
     """
     env_token: str | None = os.environ.get("HIVE_ACCESS_TOKEN")
-
-    # Safely attempt to fetch from OS credential manager
-    try:
-        keyring_token: str | None = keyring.get_password(
-            KEYRING_SERVICE, KEYRING_ACCOUNT
-        )
-    except Exception:  # pylint: disable=broad-exception-caught
-        keyring_token = None
+    keyring_access_token, keyring_refresh_token = _get_cached_tokens()
 
     if state.username and state.password:
         client = HiveClient(
@@ -58,11 +62,13 @@ def get_hive_client(hive_url: str, verify: bool) -> HiveClient:
             verify=verify,
             api_token=env_token,
         )
-    elif keyring_token:
+    elif keyring_access_token and keyring_refresh_token:
         client = HiveClient.from_api_token(
             hive_url=hive_url,
             verify=verify,
-            api_token=keyring_token,
+            api_token=keyring_access_token,
+            refresh_token=keyring_refresh_token,
+            auth_strategy="cache",
         )
     else:
         client = HiveClient.from_sso(
@@ -70,14 +76,16 @@ def get_hive_client(hive_url: str, verify: bool) -> HiveClient:
             verify=verify,
         )
 
-    if getattr(state, "cache_token", False):
-        token: str | None = getattr(
-            client,
-            "_access_token",
-        )
-        if token:
+    if state.cache_token:
+        access_token: str | None = client._access_token  # pylint: disable=protected-access
+        refresh_token: str | None = client._refresh_token  # pylint: disable=protected-access
+        if access_token:
             try:
-                keyring.set_password(KEYRING_SERVICE, KEYRING_ACCOUNT, token)
+                keyring.set_password(KEYRING_SERVICE, KEYRING_ACCOUNT, access_token)
+                if refresh_token:
+                    keyring.set_password(
+                        KEYRING_SERVICE, KEYRING_REFRESH_ACCOUNT, refresh_token
+                    )
             except Exception:  # pylint: disable=broad-exception-caught
                 # Silently fail or log in debug mode; we don't want to crash
                 # the command execution just because the keychain is locked

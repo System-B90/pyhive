@@ -5,12 +5,11 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-from typing import Annotated,TYPE_CHECKING, Any, Iterable, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Iterable, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
-from .core_item import HiveCoreItem
-from .enums.sync_status_enum import SyncStatusEnum
+from ._generated.models import Subject as _SubjectBase
 
 if TYPE_CHECKING:
     from ...client import HiveClient
@@ -18,33 +17,15 @@ if TYPE_CHECKING:
     from .program import Program
 
 
-class Subject(HiveCoreItem):
+class Subject(_SubjectBase):
     """Represents a Subject in the Hive system.
 
-    Attributes:
-        hive_client (HiveClient): Reference to the Hive API client.
-        id (int): Subject ID.
-        symbol (str): Subject symbol.
-        parent_program_id (int): ID of the parent Program.
-        color (str): Subject color (hex code or name).
-        name (str): Display name.
-        parent_program_name (str): Name of the parent Program.
-        sync_status (SyncStatusEnum): Status of subject synchronization.
-        sync_message (str | None): Optional sync error or status message.
-        segel_path (str): Staff-accessible path on shared drive.
-
+    Data fields (id, symbol, parent_program_id, color, name, ...) are inherited
+    from the generated base. ``segel_brief`` is overridden as required to keep
+    PyHive's established contract (the spec marks it optional).
     """
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
-    id: int
-    symbol: str
-    parent_program_id: int = Field(alias="parent_program")
-    color: str
-    name: str
-    parent_program_name: str
-    sync_status: SyncStatusEnum
-    sync_message: str | None = Field(default=None)
-    segel_path: str
     segel_brief: str
     _parent_program: "Program | None" = PrivateAttr(default=None)
 

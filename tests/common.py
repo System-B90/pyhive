@@ -13,7 +13,7 @@ from pyhive.types import GenderEnum, StatusEnum
 
 def get_client_params() -> dict[str, Any]:
     return {
-        "username": "michaelks",
+        "username": "admin",
         "password": "Password1",
         "hive_url": "https://hive.org",
         "verify": False,

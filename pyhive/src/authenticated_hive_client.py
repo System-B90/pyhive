@@ -315,3 +315,11 @@ class AuthenticatedHiveClient:
         if not isinstance(data, dict):
             raise TypeError("Expected JSON object from PUT response")
         return data
+
+    def __repr__(self) -> str:
+        """Return a short representation including username and hive_url.
+
+        The representation intentionally omits secrets.
+        """
+
+        return f"HiveClient({self.username!r}, '***', {self.hive_url!r})"
