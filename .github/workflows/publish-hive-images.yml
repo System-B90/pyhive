@@ -2,9 +2,9 @@ name: Publish Hive Images
 
 # Builds Hive's prod docker images from the hivelms/Hive source (checked out
 # with the same PAT the sync workflow uses) and publishes them to GHCR under
-# ghcr.io/system-b15/hive/<service>:<commit-sha>. This is the "build Hive
+# ghcr.io/system-b90/hive/<service>:<commit-sha>. This is the "build Hive
 # once" half of the org CI redesign: consumer repos (Bluz, Peek-a-boo, Madash)
-# pull these images via the shared setup-hive action (System-B15/.github)
+# pull these images via the shared setup-hive action (System-B90/.github)
 # with `image-source: registry` instead of each rebuilding Hive from source.
 #
 # Lives here (not in hivelms/Hive) because we don't control that repo. The
@@ -40,7 +40,7 @@ env:
   HIVE_REPO: hivelms/Hive
   HIVE_REF: ${{ inputs.hive-ref || 'feature/sso' }}
   REGISTRY: ghcr.io
-  REGISTRY_PREFIX: ghcr.io/system-b15/hive
+  REGISTRY_PREFIX: ghcr.io/system-b90/hive
   # Representative image used to test whether this SHA is already published.
   ANCHOR_SERVICE: core
 

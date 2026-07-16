@@ -23,7 +23,7 @@ It provides:
 Install directly from GitHub in a virtual environment:
 
 ```pwsh
-pip install git+https://github.com/System-B15/pyhive.git
+pip install git+https://github.com/System-B90/pyhive.git
 ```
 
 ## Quickstart
