@@ -11,12 +11,18 @@ from datetime import datetime
 import importlib.metadata
 from typing import Any
 
+import keyring
 import typer
 
 from pyhive.cli.base import PyHiveTyper
 from pyhive.cli.formatter import print_error_and_exit, print_info, print_result
 from pyhive.cli.state import state
-from pyhive.cli.client_factory import get_hive_client
+from pyhive.cli.client_factory import (
+    KEYRING_ACCOUNT,
+    KEYRING_REFRESH_ACCOUNT,
+    KEYRING_SERVICE,
+    get_hive_client,
+)
 from pyhive.cli.assignments import assignment_app
 from pyhive.cli.classes import class_app
 from pyhive.cli.exercises import exercise_app
@@ -127,6 +133,15 @@ def get_token(
         access_token, refresh_token, expires_at = get_sso_token(
             hive_url=hive_url, verify=verify
         )
+
+        if state.cache_token:
+            try:
+                keyring.set_password(KEYRING_SERVICE, KEYRING_ACCOUNT, access_token)
+                keyring.set_password(
+                    KEYRING_SERVICE, KEYRING_REFRESH_ACCOUNT, refresh_token
+                )
+            except Exception:  # pylint: disable=broad-exception-caught
+                pass
 
         def text_output() -> None:
             typer.secho("\nAuthentication Successful!", fg=typer.colors.GREEN)
