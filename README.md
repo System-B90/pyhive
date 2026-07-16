@@ -20,10 +20,10 @@ It provides:
 
 ## Install
 
-Install from PyPI in a virtual environment:
+Install directly from GitHub in a virtual environment:
 
 ```pwsh
-pip install PyHiveLMS
+pip install git+https://github.com/System-B15/pyhive.git
 ```
 
 ## Quickstart
