@@ -323,4 +323,3 @@ class AuthenticatedHiveClient:
         """
 
         return f"HiveClient({self.username!r}, '***', {self.hive_url!r})"
-
