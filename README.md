@@ -1,83 +1,169 @@
+## PyHive — Hive API client for Python
 
-# pyhive — a stupid simple Hive Python API
+PyHive (package: `PyHiveLMS`) is a lightweight synchronous Python client for the Hive LMS API, featuring Pydantic V2-based models for type safety and validation.
 
-Lightweight, no-fuss Python client for the Hive service used in this repo. It exposes a small, synchronous HTTP client (as a context manager) and typed model objects for common Hive resources like programs, subjects, modules, exercises and users.
+It provides:
 
-## Highlights
-- Minimal, dependency-light wrapper around the Hive API
-- Generator-based list endpoints for memory-efficient iteration
-- Typed model objects under `src.types` for convenience
+- A simple `HiveClient` that manages authentication and the session lifecycle.
+- Built-in support for Hive SSO and username/password authentication.
+- Generator-based list endpoints for efficient paging and iteration.
+- Model convenience helpers for working with programs, subjects, modules, exercises, assignments, queues, and users.
+- Filter-friendly APIs that accept both IDs and model instances.
+
+### Supported Hive Versions
+<!-- SUPPORTED_API_VERSIONS_START -->
+- `5.1.2`
+- `6.2.0`
+- `6.4.0`
+- `7.1.0`
+<!-- SUPPORTED_API_VERSIONS_END -->
 
 ## Install
-This project uses plain Python. From the repository root you can install the development requirements or install the package locally.
 
-1) Create and activate a virtualenv (recommended)
-
-Windows (PowerShell):
+Install from PyPI in a virtual environment:
 
 ```pwsh
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-2) Install dependencies
-
-```pwsh
-pip install -r requirements.txt
-# or install the package in editable mode
-pip install -e .
+pip install PyHiveLMS
 ```
 
 ## Quickstart
-The main client class is `HiveClient` in `pyhive.client`. It is used as a context manager to ensure proper session/login handling.
 
-Example — list programs and print their ids and names:
+The main entry point is `HiveClient`. Use it as a context manager to keep authentication and HTTP resources scoped cleanly.
 
-```python
-from pyhive.client import HiveClient
+### SSO login (recommended)
 
-USERNAME = "yourusername"
-PASSWORD = "yourpassword"
-HIVE_URL = "https://hive.example.com"
-
-with HiveClient(USERNAME, PASSWORD, HIVE_URL) as client:
-	for program in client.get_course_programs():
-		print(program.id, program.name)
-```
-
-Example — fetch a program by id:
+Use `HiveClient.from_sso(...)` to authenticate via Hive SSO. This workflow opens a browser-based login page and completes authentication automatically.
 
 ```python
-with HiveClient(USERNAME, PASSWORD, HIVE_URL) as client:
-	program = client.get_program(42)
-	print(program.name, program.description)
+from pyhive import HiveClient
+
+with HiveClient.from_sso(hive_url="https://hive.org", verify=False) as client:
+    programs = list(client.get_programs())
+    print(programs)
 ```
 
-Notes on generators: list-style endpoints (e.g. `get_course_programs`, `get_exercises`, `get_users`, `get_classes`) return generators of typed model objects — iterate over them or convert to a list if you need random access.
+### Username/password login
 
-## API contract (short)
-- Initialization: `HiveClient(username: str, password: str, hive_url: str, **kwargs)`
-- Common methods return either a single typed object (e.g. `get_program(id)`) or a generator of objects (e.g. `get_course_programs()`)
-- Model classes provide `.from_dict(...)` constructors and are found under `src.types`.
+Authenticate directly with Hive credentials when SSO is not desirable.
 
-Error handling: HTTP-level errors raised by the underlying request logic will surface; catch exceptions around client calls as needed.
+```python
+from pyhive import HiveClient
 
-## Tests
-Run the unit tests with pytest from the repository root:
+with HiveClient("username", "password", "https://hive.org") as client:
+    subjects = list(client.get_subjects())
+    print(subjects)
+```
+
+## Core features
+
+### Iterable model helpers
+
+Models expose convenience methods and iterators so you can fetch related objects naturally.
+
+- `Subject` supports `subject.get_modules()` and can be iterated to yield its modules.
+- `Assignment` supports `assignment.get_responses()` and can be iterated to yield its responses.
+
+### Filter-friendly list APIs
+
+List endpoints accept filter keyword arguments that are forwarded to Hive.
+
+```python
+subjects = client.get_subjects(parent_program__id__in=[123])
+assignments = client.get_assignments(user__id__in=[456])
+```
+
+Many methods also accept either an ID or a model instance.
+
+```python
+exercise_fields = client.get_exercise_fields(exercise)
+```
+
+### Type hints
+
+Public model classes are available from `pyhive.types` for type-safe code and editor completion. All models are Pydantic V2 BaseModel subclasses with automatic validation and serialization.
+
+```python
+from pyhive import HiveClient
+from pyhive.types import Program, Subject, User
+
+with HiveClient("username", "password", "https://hive.org") as client:
+    program = client.get_program(123)
+    subjects = client.get_subjects(parent_program=program)
+    for subject in subjects:
+        print(subject.id, subject.name)
+```
+
+### Convenience helpers
+
+Call methods directly on models for common domain operations.
+
+```python
+with HiveClient("username", "password", "https://hive.org") as client:
+    # Create a new module in a subject
+    subject = client.get_subjects(parent_program__id__in=[123])[0]
+    new_module = subject.create_module(
+        name="Limits and Continuity",
+        order=10,
+        segel_brief="Introduction to limits.",
+    )
+    print(new_module.id, new_module.name)
+    
+    # Create a new exercise in a module
+    new_exercise = new_module.create_exercise(
+        name="Derivative Rules",
+        order=1,
+        description="Practice basic derivative rules.",
+    )
+    print(new_exercise.id, new_exercise.name)
+    
+    # Create a new user
+    new_user = client.create_user(
+        username="student123",
+        email="student@example.com",
+        first_name="John",
+        last_name="Doe",
+    )
+    print(new_user.id, new_user.username)
+```
+
+## Common methods
+
+- `HiveClient(username, password, hive_url, **kwargs)`
+- `HiveClient.from_sso(hive_url, **kwargs)`
+- `get_programs(...)`
+- `get_program(program_id)`
+- `get_subjects(...)`
+- `get_modules(...)`
+- `get_exercises(...)`
+- `get_exercise(exercise_id)`
+- `get_exercise_fields(exercise)`
+- `get_assignments(...)`
+- `get_assignment(assignment_id)`
+- `get_assignment_responses(assignment)`
+- `get_users(...)`
+- `get_classes(...)`
+
+Return values are typed model objects or generators of model objects.
+
+## CLI
+
+PyHive includes a CLI exposed as the `pyhive` console script with the following commands:
+
+- `pyhive versions`: Display supported Hive API versions.
+- `pyhive token`: Authenticate via SSO and output a valid access token.
+- `pyhive register <service_name> <redirect_uri>`: Register a new service with the Hive server and generate client keys.
+
+## Testing
+
+Run the package tests with pytest:
 
 ```pwsh
-pip install -r requirements.txt
+pip install -e .
 pytest -q
 ```
 
-## Contributing
-- Open an issue or PR for changes
-- Keep changes focused and small; prefer adding tests for new behavior
+## Notes
 
-## Files of interest
-- `pyhive/client.py` — the high-level client class you will use
-- `src/types/` — typed model objects created from API responses
-- `tests/` — unit tests and examples of client usage
-
-## License
-This repository does not include a formal license file. Add a LICENSE if you plan to publish or share this package.
+- Network and HTTP errors are surfaced through the underlying HTTP client.
+- Pass `verify=False` only when necessary for self-signed or development servers.
+- The package is intended for synchronous Hive API usage with a minimal convenience layer.

@@ -1,18 +1,20 @@
-"""Module for EventColor type."""
+"""
+Name: event_color.py
+Purpose: Module for EventColor type.
+Created: 2026-04-05
+Author: Michael K. Steinberg
+"""
 
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Self, TypeVar
+from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
 
-from attrs import define
+from pydantic import Field
+
 from .core_item import HiveCoreItem
 
 if TYPE_CHECKING:
     from ...client import HiveClient
 
-T = TypeVar("T", bound="EventColor")
 
-
-@define
 class EventColor(HiveCoreItem):
     """Attributes:
     id (int):
@@ -24,40 +26,13 @@ class EventColor(HiveCoreItem):
     id: int
     name: str
     color: str
-    hive_client: "HiveClient"
-
-    def to_dict(self) -> dict[str, Any]:
-        """Converts the EventColor instance to a dictionary."""
-        id = self.id
-
-        name = self.name
-
-        color = self.color
-
-        field_dict: dict[str, Any] = {}
-        field_dict.update(
-            {
-                "id": id,
-                "name": name,
-                "color": color,
-            },
-        )
-
-        return field_dict
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
 
     @classmethod
-    def from_dict(cls, src_dict: Mapping[str, Any], hive_client: "HiveClient") -> Self:
-        """Creates an EventColor instance from a dictionary."""
-        d = dict(src_dict)
-        id = d.pop("id")
+    def from_dict(cls, src_dict: dict[str, Any], hive_client: "HiveClient") -> Self:
+        data = dict(src_dict)
+        data["hive_client"] = hive_client
+        return cls.model_validate(data)
 
-        name = d.pop("name")
 
-        color = d.pop("color")
-
-        return cls(
-            id=id,
-            name=name,
-            color=color,
-            hive_client=hive_client,
-        )
+T = TypeVar("T", bound="EventColor")

@@ -1,0 +1,39 @@
+name: Sync API Versions
+
+on:
+  push:
+    branches: ["main", "master"]
+
+jobs:
+  update-readme:
+    name: Update README with supported API versions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install project (editable mode, triggers version gen via setup.py)
+        run: |
+          pip install --upgrade pip
+          pip install -e .
+
+      - name: Sync README
+        run: python scripts/update_readme.py
+
+      - name: Commit & Push if README changed
+        run: |
+          git config --local user.name "GitHub Actions"
+          git config --local user.email "actions@github.com"
+          git add README.md
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: sync API versions in README"
+            git push
+          fi

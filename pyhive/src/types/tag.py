@@ -1,62 +1,30 @@
-"""Module defining the Tag class for Hive tags."""
+"""
+Name: tag.py
+Purpose: Module defining the Tag class for Hive tags.
+Created: 2026-04-05
+Author: Michael K. Steinberg
+"""
 
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
-from attrs import define as _attrs_define
-from .core_item import HiveCoreItem
+from pydantic import Field
+
+from ._generated.models import Tag as _TagBase
 
 if TYPE_CHECKING:
     from ...client import HiveClient
 
-T = TypeVar("T", bound="Tag")
 
+class Tag(_TagBase):
+    """A Hive tag (id, name, color). Data fields are inherited from the generated base."""
 
-@_attrs_define
-class Tag(HiveCoreItem):
-    """Attributes:
-    id (int):
-    name (str):
-    color (str):
-
-    """
-
-    hive_client: "HiveClient"
-    id: int
-    name: str
-    color: str
-
-    def to_dict(self) -> dict[str, Any]:
-        id = self.id
-
-        name = self.name
-
-        color = self.color
-
-        field_dict: dict[str, Any] = {}
-        field_dict.update(
-            {
-                "id": id,
-                "name": name,
-                "color": color,
-            },
-        )
-
-        return field_dict
+    hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
 
     @classmethod
-    def from_dict(cls, src_dict: Mapping[str, Any], hive_client: "HiveClient") -> Self:
-        d = dict(src_dict)
-        id = d.pop("id")
+    def from_dict(cls, src_dict: dict[str, Any], hive_client: "HiveClient") -> Self:
+        data = dict(src_dict)
+        data["hive_client"] = hive_client
+        return cls.model_validate(data)
 
-        name = d.pop("name")
 
-        color = d.pop("color")
-
-        tag = cls(
-            id=id,
-            name=name,
-            color=color,
-            hive_client=hive_client,
-        )
-        return tag
+T = TypeVar("T", bound="Tag")

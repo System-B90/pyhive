@@ -1,3 +1,0 @@
-httpx
-python-dateutil>=2.9.0
-attrs>=25.4.0

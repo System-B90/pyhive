@@ -8,10 +8,13 @@ HTTP calls and an internal ``_AuthenticatedHiveClient`` which wraps an
 import functools
 import time
 from collections.abc import Callable
-from types import TracebackType
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, cast
 
 import httpx
+from httpx import HTTPStatusError
+
+if TYPE_CHECKING:
+    from httpx._types import ProxyTypes
 
 F = TypeVar("F", bound=Callable[..., httpx.Response])
 
@@ -28,7 +31,9 @@ def _retry_on_bad_gateway(func: F) -> F:
     """
 
     @functools.wraps(func)
-    def wrapper(self: "_AuthenticatedHiveClient", *args: Any, **kwargs: Any):
+    def wrapper(
+        self: "AuthenticatedHiveClient", *args: Any, **kwargs: Any
+    ) -> httpx.Response:
         delay = INITIAL_BACKOFF_SECONDS
         if MAX_RETRIES_ON_SERVER_ERRORS <= 0:
             raise ValueError("MAX_RETRIES_ON_SERVER_ERRORS must be greater than 0")
@@ -55,11 +60,19 @@ def _refresh_token_on_unauthorized(func: F) -> F:
     """
 
     @functools.wraps(func)
-    def wrapper(self: "_AuthenticatedHiveClient", *args: Any, **kwargs: Any):
+    def wrapper(
+        self: "AuthenticatedHiveClient", *args: Any, **kwargs: Any
+    ) -> httpx.Response:
         response = func(self, *args, **kwargs)
         if response.status_code == httpx.codes.UNAUTHORIZED.value:
             self._refresh_access_token()  # pylint: disable=protected-access
             response = func(self, *args, **kwargs)
+        if response.status_code == httpx.codes.BAD_REQUEST.value:
+            raise HTTPStatusError(
+                f"Bad request! {response.json()}",
+                request=response.request,
+                response=response,
+            )
         response.raise_for_status()
         return response
 
@@ -76,13 +89,14 @@ def _with_retries_and_token_refresh(func: F) -> F:
     return _refresh_token_on_unauthorized(_retry_on_bad_gateway(func))
 
 
-class _AuthenticatedHiveClient:
+class AuthenticatedHiveClient:
     """Internal class used to handle authentication and re-authentication with Hive web endpoint."""
 
     _refresh_token: str
     _access_token: str
     _session: httpx.Client
     username: str
+    _auth_strategy: Literal["password", "sso", "token_only", "cache"]
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -93,6 +107,10 @@ class _AuthenticatedHiveClient:
         timeout: httpx.Timeout | float | None = None,
         headers: dict[str, str] | None = None,
         verify: bool | str | None = None,
+        proxy: Optional["ProxyTypes"],
+        existing_token: str | None = None,
+        auth_strategy: Literal["sso", "cache"] | None = None,
+        refresh_token: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Create an authenticated client.
@@ -113,6 +131,8 @@ class _AuthenticatedHiveClient:
             client_kwargs["headers"] = headers
         if verify is not None:
             client_kwargs["verify"] = verify
+        if proxy is not None:
+            client_kwargs["proxy"] = proxy
 
         # Include any other httpx.Client kwargs passed in **kwargs
         client_kwargs.update(kwargs)
@@ -121,31 +141,28 @@ class _AuthenticatedHiveClient:
             base_url=hive_url,
             **client_kwargs,
         ).__enter__()
-        self._login(username, password)
 
-    def __enter__(self) -> "_AuthenticatedHiveClient":
-        """Enter context manager and return this client instance.
-
-        The underlying :class:`httpx.Client` is managed by this object's
-        lifecycle; entering the context returns the authenticated client so
-        callers can perform API calls.
-        """
-
-        return self
-
-    def __exit__(
-        self,
-        type_: type[BaseException] | None,
-        value: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> bool | None:
-        """Exit the context and close the underlying httpx session.
-
-        This delegates to the managed :class:`httpx.Client`'s ``__exit__``
-        method to ensure resources are released.
-        """
-
-        self._session.__exit__(type_, value, traceback)
+        # Decide how to authenticate: either via username/password (default)
+        # or by using an already-issued API token.
+        if existing_token is not None:
+            self._access_token = existing_token
+            self._session.headers.update(
+                {"Authorization": f"Bearer {self._access_token}"}
+            )
+            if auth_strategy in ("sso", "cache"):
+                assert refresh_token is not None, (
+                    "Using SSO but no refresh token was given!"
+                )
+                self._auth_strategy = auth_strategy
+                self._refresh_token = refresh_token
+            else:
+                # Use the provided token directly; no login or refresh endpoint.
+                self._auth_strategy = "token_only"
+                # No refresh token is available in this mode.
+                self._refresh_token = ""
+        else:
+            self._auth_strategy = "password"
+            self._login(username, password)
 
     def _login(self, username: str, password: str) -> None:
         """Perform an authentication request and store access/refresh tokens.
@@ -168,7 +185,21 @@ class _AuthenticatedHiveClient:
         """Refresh the access token using the stored refresh token.
 
         Updates the stored access and refresh tokens and the session header.
+
+        In ``password`` mode this calls the Hive API token refresh endpoint.
+        In ``token_only`` mode (when an existing token was supplied at
+        construction time) automatic refresh is not supported and a
+        ``RuntimeError`` is raised so callers can obtain a fresh token from
+        their SSO/web flow and recreate the client.
         """
+
+        if self._auth_strategy == "token_only":
+            msg = (
+                "Cannot refresh access token when using an existing API token. "
+                "Please acquire a new token from your SSO/web authentication "
+                "flow and create a new HiveClient instance."
+            )
+            raise RuntimeError(msg)
 
         response = self._session.post(
             "/api/core/token/refresh/",
@@ -183,14 +214,22 @@ class _AuthenticatedHiveClient:
 
     @_with_retries_and_token_refresh
     def _get(
-        self, endpoint: str, params: httpx.QueryParams | None = None
+        self,
+        endpoint: str,
+        params: httpx.QueryParams | None = None,
+        follow_redirects: bool = False,
     ) -> httpx.Response:
         """Low-level GET that returns an :class:`httpx.Response`.
 
         This is decorated to handle retries and token refresh automatically.
         """
 
-        return self._session.get(endpoint, params=params)
+        return self._session.get(
+            endpoint,
+            params=params,
+            headers={"Accept": "application/json"},
+            follow_redirects=follow_redirects,
+        )
 
     @_with_retries_and_token_refresh
     def _post(self, endpoint: str, data: dict[Any, Any]) -> httpx.Response:
@@ -225,21 +264,57 @@ class _AuthenticatedHiveClient:
 
         return self._session.put(endpoint, json=data)
 
-    def get(self, endpoint: str, params: httpx.QueryParams | None = None) -> Any:
+    def get(
+        self,
+        endpoint: str,
+        params: httpx.QueryParams | None = None,
+        follow_redirects: bool = False,
+    ) -> dict[str, Any] | list[Any]:
         """High-level GET that returns parsed JSON from the response.
 
         This calls the decorated ``_get`` helper and returns its JSON body.
         """
 
-        return self._get(endpoint, params).json()
+        response = self._get(endpoint, params, follow_redirects=follow_redirects).json()
+        if not isinstance(response, (dict, list)):
+            raise TypeError("Expected JSON object or list from GET response")
+        return response
 
-    def post(self, endpoint: str, data: dict[Any, Any]) -> Any:
+    def post(self, endpoint: str, data: dict[Any, Any]) -> dict[str, Any]:
         """High-level POST that returns parsed JSON from the response.
 
         The ``data`` dict is JSON-encoded for the request body.
-        """
 
-        return self._post(endpoint, data).json()
+        Raises an exception with response JSON included for HTTP 400.
+        """
+        try:
+            resp = self._post(endpoint, data)
+            resp.raise_for_status()
+        except HTTPStatusError as exc:
+            # If status code is 400, raise with response JSON
+            if exc.response.status_code == 400:
+                try:
+                    error_json = exc.response.json()
+                except Exception:  # pylint: disable=broad-except
+                    error_json = exc.response.text
+                raise ValueError(f"HTTP 400 Error: {error_json}") from exc
+            # Otherwise, re-raise the original HTTP error
+            raise
+        data = resp.json()
+        if not isinstance(data, dict):
+            raise TypeError("Expected JSON object from POST response")
+        return data
+
+    def delete(self, endpoint: str, force: bool = False) -> None:  # pylint: disable=unused-argument
+        response = self._delete(endpoint)
+        if response.status_code != httpx.codes.NO_CONTENT.value:  # 204 No response body
+            raise RuntimeError("Failed to delete!")
+
+    def put(self, endpoint: str, data: dict[Any, Any]) -> dict[Any, Any]:
+        data = self._put(endpoint, data).json()
+        if not isinstance(data, dict):
+            raise TypeError("Expected JSON object from PUT response")
+        return data
 
     def __repr__(self) -> str:
         """Return a short representation including username and hive_url.
@@ -248,3 +323,4 @@ class _AuthenticatedHiveClient:
         """
 
         return f"HiveClient({self.username!r}, '***', {self.hive_url!r})"
+

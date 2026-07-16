@@ -1,0 +1,39 @@
+name: Verify Tag Version
+
+on:
+  push:
+    tags:
+      - "*" # Triggers on any tag push
+
+jobs:
+  verify-version:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify pyproject.toml version matches tag
+        run: |
+          # The GitHub ref includes 'refs/tags/', we strip it out
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+
+          # Strip leading 'v' for standard semantic versioning comparison
+          CLEAN_TAG="${TAG_NAME#v}"
+
+          # Extract version from pyproject.toml
+          TOML_VERSION=$(grep -m 1 '^version = ' pyproject.toml | awk -F'"' '{print $2}')
+
+          if [ -z "$TOML_VERSION" ]; then
+            echo "::error::Could not extract version from pyproject.toml"
+            exit 1
+          fi
+
+          echo "Pushed Tag: $TAG_NAME (Cleaned: $CLEAN_TAG)"
+          echo "pyproject.toml version: $TOML_VERSION"
+
+          if [ "$CLEAN_TAG" != "$TOML_VERSION" ]; then
+            echo "::error::Version mismatch! Tag is $TAG_NAME but pyproject.toml is $TOML_VERSION"
+            exit 1
+          fi
+
+          echo "✅ Versions match. Verification successful."

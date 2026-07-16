@@ -1,14 +1,27 @@
 [MASTER]
+# Ensure project package is importable
 init-hook='import sys; sys.path.append("./pyhive")'
 
 [FORMAT]
-max-line-length=120
+# Maximum characters per line
+max-line-length = 120
 
 [DESIGN]
-max-attributes=30
+# Allow classes with many attributes (common in data models)
+max-attributes = 30
 
 [MESSAGES CONTROL]
-allowed-redefined-builtins=id
-disable=R0801,fixme
+# Allow certain built-ins to be redefined (e.g., id)
+allowed-redefined-builtins = id
 
-# You can add more pylint configuration here as needed.
+# Disable selected warnings / messages
+disable =
+    R0801,  # duplicate-code
+    fixme,  # TODO / FIXME comments
+    import-outside-toplevel,
+    broad-exception-caught,
+    cyclic-import, # Known issue with false positives (https://github.com/pylint-dev/pylint/issues/5168)
+    missing-function-docstring, # Temporary disablement for test functions
+    too-many-arguments, # Temporary disablement
+    too-many-positional-arguments, # Temporary disablement
+    too-many-locals # Temporary disablement

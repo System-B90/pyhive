@@ -1,15 +1,10 @@
-"""Enumeration for PATBAS settings (auto-generated)."""
+"""Re-export of :class:`PatbasEnum` from the auto-generated enum layer.
 
-from enum import Enum
+The enum definition lives in ``pyhive/src/types/_generated/enums.py`` and is
+regenerated from Hive's OpenAPI spec on each release. This thin module keeps
+the historical import path stable.
+"""
 
+from .._generated.enums import PatbasEnum
 
-class PatbasEnum(str, Enum):
-    """PATBAS settings."""
-
-    ALWAYS = "Always"
-    NEVER = "Never"
-    ON_DONE = "On Done"
-    STAFF_ONLY = "Staff Only"
-
-    def __str__(self) -> str:
-        return str(self.value)
+__all__ = ["PatbasEnum"]

@@ -1,0 +1,129 @@
+# Configuration for hive_codegen — the PyHive auto-generation tool.
+#
+# This drives generation of the *generated layer* (pyhive/src/types/_generated/)
+# from Hive's OpenAPI spec (api/core.yaml). The curated ergonomic layer
+# (pyhive/src/types/*.py) subclasses these generated bases.
+#
+# See tools/hive_codegen/README.md for the full design.
+
+[output]
+# Package dir (relative to repo root) the generated layer is written to.
+package = "pyhive/src/types/_generated"
+# Dotted import path of the Pydantic base class every generated model inherits.
+base_class = "pyhive.src.types.core_item.HiveCoreItem"
+
+[spec]
+# A component schema whose name contains any of these substrings is treated as
+# drf-spectacular noise (error/request envelopes) and excluded from generation.
+noise_name_contains = [
+    "Error",
+    "Request",
+    "ValidationError",
+    "ErrorComponent",
+    "ErrorResponse",
+]
+
+# Global field-rename map: spec wire name -> PyHive python attribute name.
+# datamodel-code-generator emits `<python_name>: T = Field(alias="<wire_name>")`.
+# The convention across PyHive is that foreign-key fields carry an `_id`/`_ids`
+# suffix and reserved/builtin names get a trailing underscore.
+[aliases]
+parent_module = "parent_module_id"
+parent_subject = "parent_subject_id"
+parent_program = "parent_program_id"
+checker = "checker_id"
+default_class = "default_class_id"
+exercise = "exercise_id"
+for_exercise = "for_exercise_id"
+from_user = "from_user_id"
+field = "field_id"
+content = "raw_content"
+mentor = "mentor_id"
+mentees = "mentee_ids"
+classes = "class_ids"
+queue = "queue_id"
+user_queue = "user_queue_id"
+override_queue = "override_queue_id"
+current_assignment = "current_assignment_id"
+groups = "group_ids"
+users = "user_ids"
+program__name = "program_name"
+user = "user_id"
+program = "program_id"
+module = "module_id"
+type = "type_"
+
+# Fields drf-spectacular marks as required (non-nullable) that PyHive treats as
+# optional because the server may omit them (denormalised / unassigned-FK
+# fields). Entries are "<SchemaName>.<wire_field>"; the generator drops them from
+# `required` and marks them nullable, so the generated base — and the manifest —
+# render them as `T | None = None`, matching the curated contract.
+# Nested-object fields whose element type is a *curated* model (with its own
+# hive_client + lazy relations). The generator omits them from the generated
+# base so the curated subclass can declare them with the curated nested type
+# (declaring is additive — overriding would violate list invariance under mypy).
+# All other (scalar/FK/enum) fields on these schemas are still auto-generated.
+[spec.skip_fields]
+fields = [
+    "Assignment.notifications",
+    "AssignmentResponse.contents",
+    "AssignmentResponse.autocheck_statuses",
+    "Help.responses",
+    "Help.notifications",
+    # Spec serialises for_exercise as a nested Exercise object; PyHive exposes it
+    # as an int FK (`for_exercise_id`), declared in the curated Help.
+    "Help.for_exercise",
+]
+
+# Fields the spec marks required/non-nullable that PyHive accepts as null while
+# keeping them required (no default). Distinct from force_optional, which also
+# drops the field from `required`.
+[spec.force_nullable]
+fields = [
+    "Assignment.checker",
+    # dear_student is nullable in PyHive's contract; keep the base type `bool |
+    # None` so the curated `= True` default override doesn't widen it.
+    "AssignmentResponse.dear_student",
+]
+
+[spec.force_optional]
+fields = [
+    "Assignment.checker_first_name",
+    "Assignment.checker_last_name",
+    "AssignmentResponse.autocheck_statuses",
+    "Exercise.sync_message",
+    "Module.sync_message",
+    "Program.sync_message",
+    "Subject.sync_message",
+    "Help.checker_first_name",
+    "Help.checker_last_name",
+    "Help.checker",
+    "Help.for_exercise",
+    "CourseUser.current_assignment",
+]
+
+# Curated model class  ->  spec schema it inherits its generated base from.
+# Used only to build the drift manifest's model<->schema correspondence and the
+# import-alias hints. Models not listed here keep their schema name verbatim.
+[models]
+User = "CourseUser"
+AutoCheckStatus = "Status"
+
+# Models that are intentionally NOT backed by a generated base — they have
+# diverged from the live spec and are maintained by hand. The drift report lists
+# these so maintainers know they are excluded from auto-update.
+[curated_only]
+# Event domain diverged from spec; Queue/QueueItem/HelpResponseSegelNested have
+# schema-specific shapes (dual module/module_id fields, nested objects, a raw
+# `user` FK) that the global alias map can't express. Kept hand-written; the
+# drift report still tracks their spec schemas.
+models = [
+    "Event",
+    "EventColor",
+    "EventAttendeesType0Item",
+    "Queue",
+    "QueueItem",
+    "HelpResponseSegelNested",
+]
+# Enums present in PyHive but no longer in the spec (kept hand-written).
+enums = ["EventTypeEnum"]

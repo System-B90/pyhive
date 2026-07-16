@@ -1,0 +1,182 @@
+name: Publish Hive Images
+
+# Builds Hive's prod docker images from the hivelms/Hive source (checked out
+# with the same PAT the sync workflow uses) and publishes them to GHCR under
+# ghcr.io/system-b15/hive/<service>:<commit-sha>. This is the "build Hive
+# once" half of the org CI redesign: consumer repos (Bluz, Peek-a-boo, Madash)
+# pull these images via the shared setup-hive action (System-B15/.github)
+# with `image-source: registry` instead of each rebuilding Hive from source.
+#
+# Lives here (not in hivelms/Hive) because we don't control that repo. The
+# nightly schedule + SHA skip-check approximates "on push to the consumed
+# branch": if images for the current tip already exist, the run is a no-op.
+# The Hive team adding a native publish workflow (or a repository_dispatch to
+# this one, like their release workflow already sends for hive-release) would
+# make publishing immediate instead of nightly.
+
+on:
+  workflow_dispatch:
+    inputs:
+      hive-ref:
+        description: Hive branch/ref to build.
+        required: false
+        default: feature/sso
+      force:
+        description: Rebuild and push even if images for the current Hive commit already exist.
+        type: boolean
+        default: false
+  schedule:
+    - cron: "0 3 * * *"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  HIVE_REPO: hivelms/Hive
+  HIVE_REF: ${{ inputs.hive-ref || 'feature/sso' }}
+  REGISTRY: ghcr.io
+  REGISTRY_PREFIX: ghcr.io/system-b15/hive
+  # Representative image used to test whether this SHA is already published.
+  ANCHOR_SERVICE: core
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Verify Hive checkout token and branch
+        env:
+          HIVE_CHECKOUT_TOKEN: ${{ secrets.HIVE_REPO_TOKEN || secrets.CLASSIC_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$HIVE_CHECKOUT_TOKEN" ]; then
+            echo "::error::No Hive checkout token configured. Add HIVE_REPO_TOKEN or CLASSIC_ACCESS_TOKEN (PAT with read access to ${HIVE_REPO}) under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          repo_code=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${HIVE_CHECKOUT_TOKEN}" \
+            "https://api.github.com/repos/${HIVE_REPO}")
+          if [ "$repo_code" != "200" ]; then
+            echo "::error::The token cannot read ${HIVE_REPO} (HTTP $repo_code)."
+            exit 1
+          fi
+          branch_code=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${HIVE_CHECKOUT_TOKEN}" \
+            "https://api.github.com/repos/${HIVE_REPO}/branches/${HIVE_REF}")
+          if [ "$branch_code" != "200" ]; then
+            echo "::error::Branch '${HIVE_REF}' not found in ${HIVE_REPO} (HTTP $branch_code)."
+            exit 1
+          fi
+          echo "Hive token OK — repository and branch '${HIVE_REF}' are reachable."
+
+      - name: Resolve Hive tip commit
+        id: hive_sha
+        env:
+          HIVE_CHECKOUT_TOKEN: ${{ secrets.HIVE_REPO_TOKEN || secrets.CLASSIC_ACCESS_TOKEN }}
+        run: |
+          sha=$(curl -s \
+            -H "Authorization: token ${HIVE_CHECKOUT_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${HIVE_REPO}/commits/${HIVE_REF}" \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['sha'])")
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Hive ${HIVE_REF} tip: $sha"
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
+
+      # Nightly runs are no-ops when the branch hasn't moved: the anchor
+      # image's manifest existing for this SHA means a previous run already
+      # published the full set (images are pushed anchor-last, so a partial
+      # earlier failure re-publishes everything).
+      - name: Check if this commit is already published
+        id: published
+        env:
+          FORCE: ${{ inputs.force }}
+        run: |
+          ref="${REGISTRY_PREFIX}/${ANCHOR_SERVICE}:${{ steps.hive_sha.outputs.sha }}"
+          if [ "$FORCE" != "true" ] && docker manifest inspect "$ref" > /dev/null 2>&1; then
+            echo "Images for this SHA already published ($ref) — nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Preinstalled SDKs eat ~30GB the job never uses; Hive's ~13 images
+      # need the room.
+      - name: Free disk space
+        if: steps.published.outputs.skip != 'true'
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          sudo docker image prune -af || true
+          df -h /
+
+      - name: Checkout Hive
+        if: steps.published.outputs.skip != 'true'
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.HIVE_REPO }}
+          ref: ${{ steps.hive_sha.outputs.sha }}
+          token: ${{ secrets.HIVE_REPO_TOKEN || secrets.CLASSIC_ACCESS_TOKEN }}
+          path: hive
+          filter: blob:limit=50k
+          persist-credentials: false
+
+      - name: Setup Python
+        if: steps.published.outputs.skip != 'true'
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      # Same prod build the consumers' setup-hive action runs in build mode.
+      - name: Build Hive prod images
+        if: steps.published.outputs.skip != 'true'
+        working-directory: hive
+        run: |
+          python3 manage_hive.py build_deps
+          docker compose -f docker-compose.yaml build
+          docker builder prune -af || true
+
+      # Push every runtime image (base images excluded — only needed to
+      # build) as <prefix>/<service>:<sha> plus a sanitized branch tag. The
+      # anchor image is pushed LAST so the skip-check above only ever sees a
+      # complete set.
+      - name: Push images to GHCR
+        if: steps.published.outputs.skip != 'true'
+        env:
+          HIVE_SHA: ${{ steps.hive_sha.outputs.sha }}
+        run: |
+          branch_tag=$(echo "$HIVE_REF" | tr '/' '-')
+          imgs=$(docker images 'hive/*' --format '{{.Repository}}:{{.Tag}}' | grep -v -- '-base')
+          if [ -z "$imgs" ]; then
+            echo "::error::No hive/* runtime images found after build."
+            exit 1
+          fi
+          anchor=""
+          for img in $imgs; do
+            name="${img#hive/}"
+            name="${name%%:*}"
+            if [ "$name" = "$ANCHOR_SERVICE" ]; then
+              anchor="$img"
+              continue
+            fi
+            docker tag "$img" "${REGISTRY_PREFIX}/${name}:${HIVE_SHA}"
+            docker tag "$img" "${REGISTRY_PREFIX}/${name}:${branch_tag}"
+            docker push "${REGISTRY_PREFIX}/${name}:${HIVE_SHA}"
+            docker push "${REGISTRY_PREFIX}/${name}:${branch_tag}"
+          done
+          if [ -z "$anchor" ]; then
+            echo "::error::Anchor image hive/${ANCHOR_SERVICE} not found among built images."
+            exit 1
+          fi
+          docker tag "$anchor" "${REGISTRY_PREFIX}/${ANCHOR_SERVICE}:${HIVE_SHA}"
+          docker tag "$anchor" "${REGISTRY_PREFIX}/${ANCHOR_SERVICE}:${branch_tag}"
+          docker push "${REGISTRY_PREFIX}/${ANCHOR_SERVICE}:${HIVE_SHA}"
+          docker push "${REGISTRY_PREFIX}/${ANCHOR_SERVICE}:${branch_tag}"
+          echo "Published $(echo "$imgs" | wc -l) images at ${REGISTRY_PREFIX}/*:${HIVE_SHA}"
