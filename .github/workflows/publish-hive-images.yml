@@ -201,27 +201,50 @@ jobs:
           docker push "${REGISTRY_PREFIX}/${ANCHOR_SERVICE}:${branch_tag}"
           echo "Published $(echo "$imgs" | wc -l) images at ${REGISTRY_PREFIX}/*:${HIVE_SHA}"
 
-      # Only the two files setup-hive's registry mode actually reads:
-      # docker-compose.yaml (to run `docker compose up`) and .env (hostname,
-      # sample SSL keys, worker counts — see setup-hive's own comments).
-      # Deliberately not the rest of the Hive checkout: that's private
-      # application source, and hive-stack/ ships in this public repo.
+      # Orchestration config setup-hive's registry mode needs to run
+      # `docker compose up` against the already-published images — not
+      # application source. Deliberately NOT the rest of the Hive checkout
+      # (core/frontend/powersync source, migrations, etc.): that's private
+      # IP, and hive-stack/ ships in this public repo.
       #
-      # KNOWN GAP: if docker-compose.yaml bind-mounts other files from the
-      # Hive tree (e.g. nginx sample SSL certs under a path like nginx/ssl/),
-      # `docker compose up` in registry mode will fail on a missing mount
-      # until those specific paths are added here too. Nobody on this task
-      # had read access to hivelms/Hive to check its compose file's volumes:
-      # section — whoever does should verify this list is complete against
-      # actual `docker compose up` output the first time registry mode runs
-      # end-to-end, and extend this step (never `cp -r hive/ hive-stack/`).
+      # This list was derived by actually reading docker-compose.yaml's
+      # `include:` and `volumes:` sections (that file is itself now public
+      # in hive-stack/, so anyone can audit this against it without needing
+      # hivelms/Hive access) plus grepping .env for *_PATH vars it
+      # interpolates into bind mounts:
+      #  - docker-compose-images.yaml: `include:`-ed by docker-compose.yaml,
+      #    almost certainly defines database/redis (referenced via
+      #    depends_on but not in docker-compose.yaml itself).
+      #  - images/nginx/{nginx,ssl,errors}.conf, sites-enabled/sites.conf:
+      #    bind-mounted config templates nginx needs to start (not build
+      #    context — registry mode doesn't build nginx's image, only reads
+      #    these four).
+      #  - ssl/: HIVE_SSL_PATH in .env points here; sample SSL keys nginx's
+      #    ssl.conf template references.
+      # NOT copied: HIVE_{COURSE_DIRS,CALENDAR_DIRS,TRASH,CORE_MEDIA,
+      # DATABASE,METRICS}_PATH's targets (./dummy/*, ./media, ./db,
+      # ./metrics) — plain data-volume bind mounts Docker creates empty on
+      # `up` if missing, no content required.
+      #
+      # STILL A KNOWN GAP: this is what one `docker compose up` failure at a
+      # time has surfaced so far, not an audit of docker-compose-images.yaml
+      # (which this run is exporting for the first time) or every path
+      # .env's other *_PATH vars touch. If a future `docker compose up` in
+      # registry mode fails on another missing file, extend this list with
+      # that exact path — never switch to `cp -r hive/ hive-stack/`.
       - name: Export Hive stack config for token-free consumers
         if: steps.published.outputs.skip != 'true'
         run: |
           rm -rf hive-stack
-          mkdir -p hive-stack
+          mkdir -p hive-stack/images/nginx/sites-enabled hive-stack/ssl
           cp hive/docker-compose.yaml hive-stack/docker-compose.yaml
+          cp hive/docker-compose-images.yaml hive-stack/docker-compose-images.yaml
           cp hive/.env hive-stack/.env
+          cp hive/images/nginx/nginx.conf hive-stack/images/nginx/nginx.conf
+          cp hive/images/nginx/ssl.conf hive-stack/images/nginx/ssl.conf
+          cp hive/images/nginx/errors.conf hive-stack/images/nginx/errors.conf
+          cp hive/images/nginx/sites-enabled/sites.conf hive-stack/images/nginx/sites-enabled/sites.conf
+          cp -a hive/ssl/. hive-stack/ssl/
           echo "${{ steps.hive_sha.outputs.sha }}" > hive-stack/HIVE_SHA
           echo "$HIVE_REF" > hive-stack/HIVE_REF
 
