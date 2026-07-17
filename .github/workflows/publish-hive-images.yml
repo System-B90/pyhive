@@ -3,9 +3,19 @@ name: Publish Hive Images
 # Builds Hive's prod docker images from the hivelms/Hive source (checked out
 # with the same PAT the sync workflow uses) and publishes them to GHCR under
 # ghcr.io/system-b90/hive/<service>:<commit-sha>. This is the "build Hive
-# once" half of the org CI redesign: consumer repos (Bluz, Peek-a-boo, Madash)
-# pull these images via the shared setup-hive action (System-B90/.github)
-# with `image-source: registry` instead of each rebuilding Hive from source.
+# once" half of the org CI redesign: consumer repos (Bluz, Peek-a-boo, Madash,
+# hive-core) pull these images via the shared setup-hive action
+# (System-B90/.github) with `image-source: registry` instead of each
+# rebuilding Hive from source.
+#
+# Also publishes the *orchestration* config those consumers need to actually
+# run the pulled images — docker-compose.yaml and .env — into this repo's own
+# hive-stack/ directory (see "Export Hive stack config" below). This repo is
+# public, so setup-hive's registry mode can read them with no token at all,
+# instead of every consumer repo needing its own PAT with read access to the
+# private hivelms/Hive repo just to fetch two config files. Deliberately NOT
+# copying anything else from the Hive checkout here — that checkout is
+# Hive's private application source, and this repo is public.
 #
 # Lives here (not in hivelms/Hive) because we don't control that repo. The
 # nightly schedule + SHA skip-check approximates "on push to the consumed
@@ -29,7 +39,7 @@ on:
     - cron: "0 3 * * *"
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 concurrency:
@@ -50,6 +60,12 @@ jobs:
     timeout-minutes: 60
 
     steps:
+      # Needed so the "Export Hive stack config" step below has somewhere to
+      # commit into. Hive itself still checks out to its own `hive/` path
+      # further down — no conflict.
+      - name: Checkout pyhive
+        uses: actions/checkout@v7
+
       - name: Verify Hive checkout token and branch
         env:
           HIVE_CHECKOUT_TOKEN: ${{ secrets.HIVE_REPO_TOKEN || secrets.CLASSIC_ACCESS_TOKEN }}
@@ -94,6 +110,10 @@ jobs:
       # image's manifest existing for this SHA means a previous run already
       # published the full set (images are pushed anchor-last, so a partial
       # earlier failure re-publishes everything).
+      #
+      # NOTE: this only compares the anchor *image*. If Hive's tip commit is
+      # unchanged but hive-stack/ was hand-edited or lost, this still skips —
+      # re-run with force: true to refresh hive-stack/ without a code change.
       - name: Check if this commit is already published
         id: published
         env:
@@ -180,3 +200,40 @@ jobs:
           docker push "${REGISTRY_PREFIX}/${ANCHOR_SERVICE}:${HIVE_SHA}"
           docker push "${REGISTRY_PREFIX}/${ANCHOR_SERVICE}:${branch_tag}"
           echo "Published $(echo "$imgs" | wc -l) images at ${REGISTRY_PREFIX}/*:${HIVE_SHA}"
+
+      # Only the two files setup-hive's registry mode actually reads:
+      # docker-compose.yaml (to run `docker compose up`) and .env (hostname,
+      # sample SSL keys, worker counts — see setup-hive's own comments).
+      # Deliberately not the rest of the Hive checkout: that's private
+      # application source, and hive-stack/ ships in this public repo.
+      #
+      # KNOWN GAP: if docker-compose.yaml bind-mounts other files from the
+      # Hive tree (e.g. nginx sample SSL certs under a path like nginx/ssl/),
+      # `docker compose up` in registry mode will fail on a missing mount
+      # until those specific paths are added here too. Nobody on this task
+      # had read access to hivelms/Hive to check its compose file's volumes:
+      # section — whoever does should verify this list is complete against
+      # actual `docker compose up` output the first time registry mode runs
+      # end-to-end, and extend this step (never `cp -r hive/ hive-stack/`).
+      - name: Export Hive stack config for token-free consumers
+        if: steps.published.outputs.skip != 'true'
+        run: |
+          rm -rf hive-stack
+          mkdir -p hive-stack
+          cp hive/docker-compose.yaml hive-stack/docker-compose.yaml
+          cp hive/.env hive-stack/.env
+          echo "${{ steps.hive_sha.outputs.sha }}" > hive-stack/HIVE_SHA
+          echo "$HIVE_REF" > hive-stack/HIVE_REF
+
+      - name: Commit Hive stack config
+        if: steps.published.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add hive-stack
+          if git diff --cached --quiet; then
+            echo "hive-stack/ unchanged — nothing to commit."
+          else
+            git commit -m "Update hive-stack config for Hive ${{ steps.hive_sha.outputs.sha }}"
+            git push
+          fi
