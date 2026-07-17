@@ -1,0 +1,230 @@
+services:
+  redis:
+    build: images/redis
+    image: hive/redis
+    container_name: hive-redis
+    volumes:
+      - redis:/data
+    networks:
+      - hive-net
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 1s
+      retries: 10
+      start_period: 20s
+      timeout: 10s
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${HIVE_MAX_DOCKER_LOG_SIZE}"
+
+  database:
+    build: images/postgres
+    image: hive/database
+    container_name: hive-postgres
+    environment:
+      - "POSTGRES_USER=root"
+      - "POSTGRES_PASSWORD=${HIVE_DATABASE_ADMIN_PASSWORD}"
+      - "HIVE_CORE_DATABASE_PASSWORD=${HIVE_CORE_DATABASE_PASSWORD}"
+      - "HIVE_GRAFANA_DATABASE_PASSWORD=${HIVE_GRAFANA_DATABASE_PASSWORD}"
+    volumes:
+      - "${HIVE_DATABASE_PATH}:/var/lib/postgresql"
+    networks:
+      - hive-net
+    expose:
+      - 5432
+    ports:
+      - 5432:5432
+    restart: always
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 1s
+      retries: 10
+      start_period: 20s
+      timeout: 10s
+    command: >
+      postgres -c shared_preload_libraries='pg_stat_statements' -c
+      shared_buffers=${HIVE_POSTGRES_SHARED_BUFFERS} -c max_connections=${HIVE_POSTGRES_MAX_CONNECTIONS}
+      -c wal_level=logical
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${HIVE_MAX_DOCKER_LOG_SIZE}"
+
+  grafana:
+    build: images/grafana
+    image: hive/grafana
+    container_name: hive-grafana
+    expose:
+      - 3000
+    volumes:
+      - grafana:/var/lib/grafana
+      - ${HIVE_GRAFANA_DASHBOARDS_DIR}:/user-dashboards
+    networks:
+      - hive-net
+    restart: always
+    environment:
+      - "GF_SERVER_ROOT_URL=https://${HIVE_HOSTNAME_PLAIN}/grafana/"
+      - "GF_AUTH_ANONYMOUS_ENABLED=true"
+      - "GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer"
+      - "GF_AUTH_DISABLE_LOGIN_FORM=true"
+      - "GF_AUTH_DISABLE_SIGNOUT_MENU=TRUE"
+      - "GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/dashboards/hive.json"
+      - "HIVE_GRAFANA_DATABASE_PASSWORD=${HIVE_GRAFANA_DATABASE_PASSWORD}"
+      - "GF_SECURITY_ALLOW_EMBEDDING=True"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${HIVE_MAX_DOCKER_LOG_SIZE}"
+
+  prometheus:
+    build: images/prometheus
+    image: hive/prometheus
+    container_name: hive-prometheus
+    user: root
+    volumes:
+      - "${HIVE_METRICS_PATH}:/prometheus"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.external-url=https://${HIVE_HOSTNAME_PLAIN}/prometheus/"
+    expose:
+      - 9090
+    networks:
+      - hive-net
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${HIVE_MAX_DOCKER_LOG_SIZE}"
+
+  pgadmin:
+    build: images/pgadmin
+    image: hive/pgadmin
+    restart: always
+    container_name: hive-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin@${HIVE_HOSTNAME_PLAIN}
+      PGADMIN_DEFAULT_PASSWORD: 123
+      PGADMIN_LISTEN_PORT: 1111
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_CONFIG_AUTHENTICATION_SOURCES: "['webserver']"
+      PGADMIN_CONFIG_WEBSERVER_REMOTE_USER: "'X-Forwarded-User'"
+    networks:
+      - hive-net
+    expose:
+      - 1111
+    depends_on:
+      database:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c " mkdir -p /var/lib/pgadmin/storage/pgadmin_${HIVE_HOSTNAME_PLAIN};
+      echo database:5432:*:root:$HIVE_DATABASE_ADMIN_PASSWORD >
+      /var/lib/pgadmin/storage/pgadmin_${HIVE_HOSTNAME_PLAIN}/pgpass; chmod 600
+      /var/lib/pgadmin/storage/pgadmin_${HIVE_HOSTNAME_PLAIN}/pgpass; /entrypoint.sh;
+      "
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${HIVE_MAX_DOCKER_LOG_SIZE}"
+
+  flower:
+    build: images/flower
+    image: hive/flower
+    depends_on:
+      redis:
+        condition: service_healthy
+    container_name: hive-flower
+    environment:
+      - BROKER_URL=redis://redis:6379
+      - FLOWER_URL_PREFIX=flower
+    networks:
+      - hive-net
+    restart: always
+    expose:
+      - 5555
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${HIVE_MAX_DOCKER_LOG_SIZE}"
+
+  rediscommander:
+    build: images/rediscommander
+    image: hive/rediscommander
+    container_name: hive-rediscommander
+    networks:
+      - hive-net
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+      - URL_PREFIX=/rediscommander
+      - PORT=9999
+    expose:
+      - 9999
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${HIVE_MAX_DOCKER_LOG_SIZE}"
+
+  cadvisor:
+    build: images/cadvisor
+    image: hive/cadvisor
+    container_name: hive-cadvisor
+    # For CentOS, Fedora, and RHEL (see https://github.com/google/cadvisor/blob/master/docs/running.md#centos-fedora-and-rhel)
+    privileged: true
+    networks:
+      - hive-net
+    restart: always
+    command:
+      - "-url_base_prefix=/cadvisor"
+    environment:
+      - CADVISOR_HEALTHCHECK_URL=http://localhost:8080/cadvisor/healthz
+    expose:
+      - 8080
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:rw"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${HIVE_MAX_DOCKER_LOG_SIZE}"
+
+  otel-collector:
+    build: images/otel-collector
+    image: hive/otel-collector
+    container_name: hive-otel-collector
+    restart: unless-stopped
+    command: ["--config", "/etc/otelcol/config.yaml"]
+    networks:
+      - hive-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${HIVE_MAX_DOCKER_LOG_SIZE}"
+
+  tempo:
+    build: images/tempo
+    image: hive/tempo
+    container_name: hive-tempo
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - tempo-data:/var/tempo
+    networks:
+      - hive-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${HIVE_MAX_DOCKER_LOG_SIZE}"
+
+networks:
+  hive-net:
+
+volumes:
+  redis:
+  grafana:
+  tempo-data:
