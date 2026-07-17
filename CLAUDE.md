@@ -2,6 +2,13 @@
 
 Python SDK and CLI for the Hive Learning Management System API (package name: `PyHiveLMS`, import name: `pyhive`).
 
+Org-wide conventions (repo list, Hive-org boundary, package scopes, git workflow, commit
+format, CI secrets) live in
+[System-B90/.github CLAUDE.md](https://github.com/System-B90/.github/blob/main/CLAUDE.md).
+This file covers what's specific to pyhive; the org file's rules — commit messages as
+`Vibe-<PastTenseVerb> <description>`, feature branches only, never skip hooks — apply here
+too even though they aren't repeated below.
+
 ## Project layout
 
 ```
