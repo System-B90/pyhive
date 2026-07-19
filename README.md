@@ -20,7 +20,13 @@ It provides:
 
 ## Install
 
-Install directly from GitHub in a virtual environment:
+Install a tagged release from the org's private pip index (needs a GitHub PAT with `repo` scope):
+
+```pwsh
+pip install PyHiveLMS --index-url https://<user>:<PAT>@raw.githubusercontent.com/System-B90/.github/main/pypi/
+```
+
+Or install an unreleased ref directly from GitHub:
 
 ```pwsh
 pip install git+https://github.com/System-B90/pyhive.git
