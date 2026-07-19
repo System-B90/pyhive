@@ -63,3 +63,41 @@ jobs:
         with:
           files: dist/*
           generate_release_notes: true
+
+  update-index:
+    name: Update pip index in .github repo
+    runs-on: ubuntu-latest
+    needs: publish
+    steps:
+      - name: Checkout pyhive
+        uses: actions/checkout@v7
+
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          path: dist
+          merge-multiple: true
+
+      - name: Checkout .github index repo
+        uses: actions/checkout@v7
+        with:
+          repository: System-B90/.github
+          token: ${{ secrets.ACCESS_TOKEN }}
+          path: org-github
+
+      - name: Copy distributions and regenerate index
+        run: |
+          mkdir -p org-github/pypi/pyhive
+          cp dist/* org-github/pypi/pyhive/
+          python org-github/pypi/generate_index.py pyhive
+
+      - name: Commit and push index update
+        working-directory: org-github
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pypi/
+          git diff --cached --quiet && exit 0
+          git commit -m "Vibe-Updated pip index for pyhive ${{ github.ref_name }}"
+          git push
