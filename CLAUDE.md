@@ -123,7 +123,7 @@ Ruff ignored rules (project-wide): `BLE001` (broad-except), `RET504` (unnecessar
 
 ### Publish
 
-Releasing is a version bump + tag; CI (`.github/workflows/publish.yml`) does the rest — builds wheels for 3.11–3.14, cuts the GitHub Release, and pushes the wheel + regenerated index into `System-B90/.github`'s `pypi/pyhive/`.
+Releasing is a version bump + tag; CI (`.github/workflows/publish.yml`) does the rest — builds wheels for 3.11–3.14, cuts the GitHub Release, and pushes the wheel + regenerated index into `System-B90/.github`'s `pypi/pyhivelms/` (PEP 503 requires the normalized project name — `pyhivelms`, not the import name `pyhive`).
 
 ```pwsh
 python ..\.github\scripts\publish.py . patch   # or: minor / major
@@ -136,7 +136,7 @@ python ..\.github\scripts\publish.py . patch   # or: minor / major
 
 Requires `master` to be clean and checked out locally, and a git identity that can push directly (bypasses the PR flow, not branch protection).
 
-Verify the release landed: `gh run list --branch vX.Y.Z` in the pyhive repo, and check `https://raw.githubusercontent.com/System-B90/.github/main/pypi/pyhive/index.html` (needs a PAT) lists the new wheel.
+Verify the release landed: `gh run list --branch vX.Y.Z` in the pyhive repo, and check `https://raw.githubusercontent.com/System-B90/.github/main/pypi/pyhivelms/index.html` lists the new wheel.
 
 ## Code conventions
 

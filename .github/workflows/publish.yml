@@ -88,9 +88,9 @@ jobs:
 
       - name: Copy distributions and regenerate index
         run: |
-          mkdir -p org-github/pypi/pyhive
-          cp dist/* org-github/pypi/pyhive/
-          python org-github/pypi/generate_index.py pyhive
+          mkdir -p org-github/pypi/pyhivelms
+          cp dist/* org-github/pypi/pyhivelms/
+          python org-github/pypi/generate_index.py pyhivelms
 
       - name: Commit and push index update
         working-directory: org-github

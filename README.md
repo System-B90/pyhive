@@ -20,7 +20,7 @@ It provides:
 
 ## Install
 
-Install a tagged release from the org's private pip index (needs a GitHub PAT with `repo` scope):
+Install a tagged release from the org's pip index:
 
 ```pwsh
 pip install PyHiveLMS --index-url https://raw.githubusercontent.com/System-B90/.github/main/pypi/
