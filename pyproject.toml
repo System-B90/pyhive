@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "PyHiveLMS"
-version = "2.1.1"
+version = "2.1.2"
 description = "Python bindings for Hive"
 authors = [
     { name = "Michael K. Steinberg", email = "m.kuper.steinberg@gmail.com" },
