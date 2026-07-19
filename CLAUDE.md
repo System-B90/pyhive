@@ -121,6 +121,23 @@ mypy pyhive/                 # strict mode (see [tool.mypy] in pyproject.toml)
 
 Ruff ignored rules (project-wide): `BLE001` (broad-except), `RET504` (unnecessary-assign), `ARG001` (unused-arg). Pylint excludes `_generated_*.py` and the `tests/` directory.
 
+### Publish
+
+Releasing is a version bump + tag; CI (`.github/workflows/publish.yml`) does the rest — builds wheels for 3.11–3.14, cuts the GitHub Release, and pushes the wheel + regenerated index into `System-B90/.github`'s `pypi/pyhive/`.
+
+```pwsh
+python ..\.github\scripts\publish.py . patch   # or: minor / major
+```
+
+(assumes the standard sibling checkout layout, `pyhive` and `.github` both under the same parent dir). The script:
+1. Bumps `version` in `pyproject.toml`.
+2. Commits directly to `master` as `Vibe-Bumped version to X.Y.Z` and pushes — **the one sanctioned exception to "never commit directly to master"**, since a version bump has nothing to review and always immediately precedes the tag.
+3. Tags `vX.Y.Z` and pushes the tag, which triggers the release workflow.
+
+Requires `master` to be clean and checked out locally, and a git identity that can push directly (bypasses the PR flow, not branch protection).
+
+Verify the release landed: `gh run list --branch vX.Y.Z` in the pyhive repo, and check `https://raw.githubusercontent.com/System-B90/.github/main/pypi/pyhive/index.html` (needs a PAT) lists the new wheel.
+
 ## Code conventions
 
 - **Python ≥ 3.11**: use `X | Y` union syntax, built-in generics (`list[X]`, `dict[K, V]`), not `Union`/`List`/`Dict`.
@@ -143,3 +160,4 @@ Ruff ignored rules (project-wide): `BLE001` (broad-except), `RET504` (unnecessar
 - `HiveClient.__repr__` contains `input()` — this is intentional (prevents accidental credential leakage in logs) and should not be "fixed".
 - `AuthenticatedHiveClient._api_version_check()` makes a live network call at construction; pass `skip_version_check=True` in tests to avoid this overhead.
 - The `dist/` directory contains a vendored venv used for distribution; it is not the development environment and should not be modified.
+- The `verify-tag-version` pre-push hook prints a `✅` on success; on Windows consoles with a non-UTF-8 codepage this crashes with `UnicodeEncodeError` even though the check itself passed. Run the push with `PYTHONIOENCODING=utf-8` (e.g. `PYTHONIOENCODING=utf-8 git push origin vX.Y.Z`) rather than `--no-verify`.
