@@ -56,7 +56,7 @@ env:
 
 jobs:
   publish:
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     timeout-minutes: 60
 
     steps:
@@ -127,15 +127,28 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # Preinstalled SDKs eat ~30GB the job never uses; Hive's ~13 images
-      # need the room.
+      # Hive's ~13 images need a lot of room. How to make it differs by runner:
+      # a GitHub-hosted VM is disposable, so deleting the ~30GB of preinstalled
+      # SDKs it never uses and flushing the whole image store is free. The
+      # self-hosted box is shared and persistent — those toolchain directories
+      # aren't ours to remove, and `docker image prune -af` would throw away
+      # every other repo's cached images (including the Hive layers this job
+      # is about to rebuild). Reclaim only what is genuinely garbage there.
       - name: Free disk space
         if: steps.published.outputs.skip != 'true'
         run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
-            /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
-          sudo docker image prune -af || true
-          df -h /
+          echo "Disk before:"; df -h /
+          if [ "$RUNNER_ENVIRONMENT" = "github-hosted" ]; then
+            sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+              /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+            sudo docker image prune -af || true
+          else
+            # Dangling (untagged) images and stopped containers only — no -a.
+            docker image prune -f || true
+            docker container prune -f || true
+            docker builder prune -f --keep-storage 20GB || true
+          fi
+          echo "Disk after:"; df -h /
 
       - name: Checkout Hive
         if: steps.published.outputs.skip != 'true'
