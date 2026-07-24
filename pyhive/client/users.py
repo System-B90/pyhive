@@ -3,7 +3,8 @@
 Provides listing and retrieval of user records from the management API.
 """
 
-from typing import TYPE_CHECKING, Iterable, Optional
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Optional
 
 from pyhive.src.types.enums.gender_enum import GenderEnum
 from pyhive.src.types.enums.status_enum import StatusEnum
@@ -26,13 +27,13 @@ class UserClientMixin(ClientCoreMixin):
     def get_users(  # pylint: disable=too-many-arguments
         self,
         *,
-        classes__id__in: Optional[list[int]] = None,
-        clearance__in: Optional[list[int]] = None,
-        id__in: Optional[list[int]] = None,
-        mentor__id: Optional[int] = None,
-        mentor__id__in: Optional[list[int]] = None,
-        program__id__in: Optional[list[int]] = None,
-        program_checker__id__in: Optional[list[int]] = None,
+        classes__id__in: list[int] | None = None,
+        clearance__in: list[int] | None = None,
+        id__in: list[int] | None = None,
+        mentor__id: int | None = None,
+        mentor__id__in: list[int] | None = None,
+        program__id__in: list[int] | None = None,
+        program_checker__id__in: list[int] | None = None,
     ) -> Iterable[User]:
         """Yield users filtered by the provided criteria."""
         from ..client import HiveClient
@@ -95,7 +96,7 @@ class UserClientMixin(ClientCoreMixin):
         self,
         name: str,
         *,
-        clearance: Optional[ClearanceEnum] = None,
+        clearance: ClearanceEnum | None = None,
     ) -> User | None:
         all_users = list(
             self.get_users(clearance__in=[clearance] if clearance else None)
@@ -137,7 +138,7 @@ class UserClientMixin(ClientCoreMixin):
         )
 
     def get_student(
-        self, name: Optional[str] = None, number: Optional[int] = None
+        self, name: str | None = None, number: int | None = None
     ) -> User | None:
         if name is None and number is None:
             raise ValueError("Either name or number must be given!")
@@ -188,24 +189,24 @@ class UserClientMixin(ClientCoreMixin):
         *,
         clearance: ClearanceEnum,
         gender: GenderEnum,
-        number: Optional[int] = None,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
-        mentees: Optional[list["UserLike"]] = None,
+        number: int | None = None,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        mentees: list["UserLike"] | None = None,
         status: StatusEnum = StatusEnum.PRESENT,
-        avatar_filename: Optional[str] = None,
+        avatar_filename: str | None = None,
         program: Optional["ProgramLike"] = None,
-        checkers_brief: Optional[str] = None,
+        checkers_brief: str | None = None,
         mentor: Optional["UserLike"] = None,
-        classes: Optional[list["ClassLike"]] = None,
+        classes: list["ClassLike"] | None = None,
         queue: Optional["QueueLike"] = None,
-        disable_queue: Optional[bool] = None,
+        disable_queue: bool | None = None,
         user_queue: Optional["QueueLike"] = None,
-        disable_user_queue: Optional[bool] = None,
+        disable_user_queue: bool | None = None,
         override_queue: Optional["QueueLike"] = None,
-        confirmed: Optional[bool] = None,
-        teacher: Optional[bool] = None,
-        hostname: Optional[str] = None,
+        confirmed: bool | None = None,
+        teacher: bool | None = None,
+        hostname: str | None = None,
     ) -> User:
         from ..client import HiveClient
 
@@ -286,20 +287,20 @@ class UserClientMixin(ClientCoreMixin):
         password: str,
         gender: GenderEnum,
         *,
-        number: Optional[int] = None,
-        first_name: Optional[str] = None,
-        last_name: Optional[str] = None,
+        number: int | None = None,
+        first_name: str | None = None,
+        last_name: str | None = None,
         program: Optional["ProgramLike"] = None,
-        hostname: Optional[str] = None,
+        hostname: str | None = None,
         status: StatusEnum = StatusEnum.PRESENT,
         mentor: Optional["UserLike"] = None,
-        classes: Optional[list["ClassLike"]] = None,
-        avatar_filename: Optional[str] = None,
-        checkers_brief: Optional[str] = None,
+        classes: list["ClassLike"] | None = None,
+        avatar_filename: str | None = None,
+        checkers_brief: str | None = None,
         queue: Optional["QueueLike"] = None,
         user_queue: Optional["QueueLike"] = None,
-        disable_queue: Optional[bool] = None,
-        disable_user_queue: Optional[bool] = None,
+        disable_queue: bool | None = None,
+        disable_user_queue: bool | None = None,
         override_queue: Optional["QueueLike"] = None,
     ) -> User:
         return self.create_user(

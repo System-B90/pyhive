@@ -6,7 +6,12 @@ import typer
 
 from pyhive.cli.base import PyHiveTyper
 from pyhive.cli.client_factory import get_hive_client
-from pyhive.cli.formatter import print_error_and_exit, print_formatted_list, print_info, print_result
+from pyhive.cli.formatter import (
+    print_error_and_exit,
+    print_formatted_list,
+    print_info,
+    print_result,
+)
 
 program_app = PyHiveTyper(help="Manage Hive programs.")
 

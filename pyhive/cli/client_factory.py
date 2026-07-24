@@ -8,6 +8,7 @@ Author: Michael K. Steinberg
 import os
 
 import keyring
+import typer
 
 from pyhive.cli.state import state
 from pyhive.client import HiveClient
@@ -86,9 +87,15 @@ def get_hive_client(hive_url: str, verify: bool) -> HiveClient:
                     keyring.set_password(
                         KEYRING_SERVICE, KEYRING_REFRESH_ACCOUNT, refresh_token
                     )
-            except Exception:  # pylint: disable=broad-exception-caught
-                # Silently fail or log in debug mode; we don't want to crash
-                # the command execution just because the keychain is locked
-                pass
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                # A locked keychain must not crash the command — the client is
+                # already authenticated either way. Report it on stderr rather
+                # than dropping it, so a persistently failing cache is
+                # diagnosable; stdout stays clean for --json consumers.
+                typer.secho(
+                    f"Warning: could not cache token in the OS keyring ({exc}).",
+                    fg=typer.colors.YELLOW,
+                    err=True,
+                )
 
     return client

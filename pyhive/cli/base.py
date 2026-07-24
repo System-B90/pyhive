@@ -7,7 +7,8 @@ Author: Michael K. Steinberg
 
 import functools
 import inspect
-from typing import Any, Callable, TypeVar, Set, cast
+from collections.abc import Callable
+from typing import Any, TypeVar, cast
 
 import typer
 
@@ -44,7 +45,7 @@ class PyHiveTyper(typer.Typer):
             F: The wrapped and decorated function.
         """
         original_sig = inspect.signature(f)
-        original_params: Set[str] = set(original_sig.parameters.keys())
+        original_params: set[str] = set(original_sig.parameters.keys())
 
         new_params = list(original_sig.parameters.values())
         for name, option in reversed(list(GLOBAL_OPTIONS.items())):
@@ -58,7 +59,12 @@ class PyHiveTyper(typer.Typer):
                     )
                 )
 
-        setattr(f, "__signature__", original_sig.replace(parameters=new_params))
+        # Typer reads __signature__ to build the command's options. F is a
+        # TypeVar bound to Callable, which doesn't declare that dunder, so the
+        # assignment is invisible to the type system either way.
+        f.__signature__ = original_sig.replace(  # type: ignore[attr-defined]
+            parameters=new_params
+        )
 
         @functools.wraps(f)
         def wrapper(*args: Any, **kwargs: Any) -> Any:

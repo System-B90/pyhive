@@ -5,7 +5,8 @@ Provides listing and retrieval of Exercise records, with rich filtering, via the
 Intended for mixing into the main HiveClient only.
 """
 
-from typing import TYPE_CHECKING, Iterable, Optional
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Optional
 
 from ..src.types.enums.exercise_patbas_enum import PatbasEnum
 from ..src.types.enums.exercise_preview_types import ExercisePreviewTypes
@@ -35,16 +36,14 @@ class ExerciseClientMixin(ClientCoreMixin):
     def get_exercises(  # pylint: disable=too-many-arguments
         self,
         *,
-        parent_module__id: Optional[int] = None,
-        parent_module__parent_subject__id: Optional[int] = None,
-        parent_module__parent_subject__parent_program__id__in: Optional[
-            list[int]
-        ] = None,
-        queue__id: Optional[int] = None,
-        tags__id__in: Optional[list[int]] = None,
+        parent_module__id: int | None = None,
+        parent_module__parent_subject__id: int | None = None,
+        parent_module__parent_subject__parent_program__id__in: list[int] | None = None,
+        queue__id: int | None = None,
+        tags__id__in: list[int] | None = None,
         parent_module: Optional["ModuleLike"] = None,
         parent_subject: Optional["SubjectLike"] = None,
-        exercise_name: Optional[str] = None,
+        exercise_name: str | None = None,
     ) -> Iterable[Exercise]:
         """Yield ``Exercise`` objects, supporting rich parent-based filtering."""
         from ..client import HiveClient
@@ -109,7 +108,7 @@ class ExerciseClientMixin(ClientCoreMixin):
         expected_duration: str = "",
         segel_brief: str = "",
         is_lecture: bool = False,
-        tags: Optional[list[str]] = None,
+        tags: list[str] | None = None,
     ) -> Exercise:
         from ..client import HiveClient
 

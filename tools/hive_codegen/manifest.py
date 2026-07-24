@@ -17,7 +17,7 @@ def _type_of(prop: dict[str, Any]) -> str:
     if "$ref" in prop:
         return prop["$ref"].rsplit("/", 1)[-1]
     for combinator in ("allOf", "oneOf", "anyOf"):
-        if combinator in prop and prop[combinator]:
+        if prop.get(combinator):
             inner = prop[combinator][0]
             if "$ref" in inner:
                 return inner["$ref"].rsplit("/", 1)[-1]

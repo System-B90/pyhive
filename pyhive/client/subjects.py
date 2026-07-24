@@ -5,7 +5,8 @@ Provides methods for listing and retrieving Subject records via the Hive API.
 Intended for use as a mixin on the main HiveClient only.
 """
 
-from typing import TYPE_CHECKING, Iterable, Optional
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Optional
 
 from ..src.types.subject import Subject, SubjectLike
 from .client_shared import ClientCoreMixin
@@ -29,10 +30,10 @@ class SubjectClientMixin(ClientCoreMixin):
 
     def get_subjects(
         self,
-        parent_program__id__in: Optional[list[int]] = None,
+        parent_program__id__in: list[int] | None = None,
         # Non built-in filters
         parent_program: Optional["ProgramLike"] = None,
-        subject_name: Optional[str] = None,
+        subject_name: str | None = None,
     ) -> Iterable[Subject]:
         """Yield ``Subject`` objects, supporting program-based filtering."""
         from ..client import HiveClient

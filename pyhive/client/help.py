@@ -3,7 +3,8 @@
 Provides listing and retrieval of Help request records via the Hive API.
 """
 
-from typing import TYPE_CHECKING, Iterable, Optional
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Optional
 
 import httpx
 
@@ -41,23 +42,23 @@ class HelpClientMixin(ClientCoreMixin):
     def get_help_requests(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
-        created_by: Optional[int] = None,
-        current: Optional[bool] = None,
-        for_exercise__id: Optional[int] = None,
-        for_exercise__parent_module__id: Optional[int] = None,
-        for_exercise__parent_module__parent_subject__id: Optional[int] = None,
-        free_text: Optional[str] = None,
-        help_status__in: Optional[list[str]] = None,
-        help_type__in: Optional[list[str]] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        ordering: Optional[str] = None,
-        user__classes__id: Optional[int] = None,
-        user__classes__id__in: Optional[list[int]] = None,
-        user__id__in: Optional[list[int]] = None,
-        user__mentor__id: Optional[int] = None,
-        user__mentor__id__in: Optional[list[int]] = None,
-        user__program__id__in: Optional[list[int]] = None,
+        created_by: int | None = None,
+        current: bool | None = None,
+        for_exercise__id: int | None = None,
+        for_exercise__parent_module__id: int | None = None,
+        for_exercise__parent_module__parent_subject__id: int | None = None,
+        free_text: str | None = None,
+        help_status__in: list[str] | None = None,
+        help_type__in: list[str] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        ordering: str | None = None,
+        user__classes__id: int | None = None,
+        user__classes__id__in: list[int] | None = None,
+        user__id__in: list[int] | None = None,
+        user__mentor__id: int | None = None,
+        user__mentor__id__in: list[int] | None = None,
+        user__program__id__in: list[int] | None = None,
     ) -> Iterable[Help]:
         """Yield ``Help`` requests filtered by the provided criteria."""
         from ..client import HiveClient

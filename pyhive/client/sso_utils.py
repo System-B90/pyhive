@@ -6,15 +6,15 @@ Author: Michael K. Steinberg
 """
 
 import base64
-from datetime import datetime, timezone
 import hashlib
 import logging
 import secrets
 import time
 import urllib.parse
 import webbrowser
+from datetime import UTC, datetime
 from threading import Thread
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any
 
 import flask
 import httpx
@@ -33,7 +33,7 @@ flask_log = logging.getLogger("flask.app")
 flask_log.setLevel(logging.ERROR)
 
 
-def _generate_pkce_pair() -> Tuple[str, str]:
+def _generate_pkce_pair() -> tuple[str, str]:
     """
     Generates a cryptographically secure PKCE verifier and challenge pair.
 
@@ -50,8 +50,8 @@ def _exchange_code_for_token(
     hive_url: str,
     auth_code: str,
     code_verifier: str,
-    verify: Optional[Union[bool, str]] = None,
-) -> Tuple[str, str, datetime]:
+    verify: bool | str | None = None,
+) -> tuple[str, str, datetime]:
     """
     Exchanges an OAuth2 authorization code for a SimpleJWT token pair via the Hive SSO exchange endpoint.
 
@@ -96,7 +96,7 @@ def _exchange_code_for_token(
 
         token_data: dict[str, Any] = response.json()
         if not isinstance(token_data, dict):  # pyright: ignore[reportUnnecessaryIsInstance]
-            raise RuntimeError("Token response did not return a JSON object")
+            raise TypeError("Token response did not return a JSON object")
 
         opaque_access_token = token_data.get("access_token")
 
@@ -133,7 +133,7 @@ def _exchange_code_for_token(
                 "Exchange response is missing 'access_token', 'refresh_token', or 'expires_at'."
             )
 
-        expires_at_dt = datetime.fromtimestamp(expires_at_timestamp, tz=timezone.utc)
+        expires_at_dt = datetime.fromtimestamp(expires_at_timestamp, tz=UTC)
 
         return str(jwt_access_token), str(jwt_refresh_token), expires_at_dt
 
@@ -141,8 +141,8 @@ def _exchange_code_for_token(
 def _start_local_callback_server(
     hive_url: str,
     code_verifier: str,
-    verify: Optional[Union[bool, str]] = None,
-) -> Tuple[str, str, datetime]:
+    verify: bool | str | None = None,
+) -> tuple[str, str, datetime]:
     """
     Spins up a temporary local Flask server to catch the OIDC callback, then exchanges the code.
 
@@ -208,8 +208,8 @@ def _start_local_callback_server(
 
 
 def get_sso_token(
-    hive_url: str, verify: Optional[Union[bool, str]] = None
-) -> Tuple[str, str, datetime]:
+    hive_url: str, verify: bool | str | None = None
+) -> tuple[str, str, datetime]:
     """
     Orchestrates the local Single Sign-On flow by opening a browser and catching the callback.
 
@@ -242,7 +242,7 @@ def get_sso_token(
 def generate_sso_client_credentials(
     client: "HiveClient",
     service_name: str,
-    redirect_uris: Optional[List[str] | str] = None,
+    redirect_uris: list[str] | str | None = None,
 ) -> dict[str, Any]:
     """
     Programmatically generates OAuth2 client credentials in Hive for a new external service.

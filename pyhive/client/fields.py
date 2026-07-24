@@ -3,7 +3,8 @@
 Provides methods to list and retrieve form fields for a specific exercise.
 """
 
-from typing import TYPE_CHECKING, Any, Iterable, cast
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, cast
 
 from ..src.types.form_field import FormField
 from .client_shared import ClientCoreMixin

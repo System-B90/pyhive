@@ -4,7 +4,8 @@ Class resource mixin for HiveClient.
 Provides listing and retrieval of Class records from the Hive API. Use only as a mixin for the main HiveClient.
 """
 
-from typing import TYPE_CHECKING, Iterable, Optional
+from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from ..src.types.class_ import Class
 from ..src.types.enums.class_type_enum import ClassTypeEnum
@@ -32,10 +33,10 @@ class ClassesClientMixin(ClientCoreMixin):
     def get_classes(
         self,
         *,
-        id__in: Optional[list[int]] = None,
-        name: Optional[str] = None,
-        program__id__in: Optional[list[int]] = None,
-        type_: Optional[ClassTypeEnum] = None,
+        id__in: list[int] | None = None,
+        name: str | None = None,
+        program__id__in: list[int] | None = None,
+        type_: ClassTypeEnum | None = None,
     ) -> Iterable[Class]:
         """Yield ``Class`` objects filtered by the provided criteria."""
         from ..client import HiveClient
@@ -70,11 +71,11 @@ class ClassesClientMixin(ClientCoreMixin):
         name: str,
         *,
         program: "ProgramLike",
-        users: Optional[list["UserLike"]] = None,
-        email: Optional[str] = None,
-        type_: Optional[ClassTypeEnum] = None,
-        classes: Optional[list["ClassLike"]] = None,
-        description: Optional[str] = None,
+        users: list["UserLike"] | None = None,
+        email: str | None = None,
+        type_: ClassTypeEnum | None = None,
+        classes: list["ClassLike"] | None = None,
+        description: str | None = None,
     ) -> Class:
         """
         Create a Class via the Hive API.
@@ -114,7 +115,7 @@ class ClassesClientMixin(ClientCoreMixin):
         self,
         class_: Class,
         *,
-        users_from_classes: Optional[Iterable["ClassLike"]] = None,
+        users_from_classes: Iterable["ClassLike"] | None = None,
     ) -> Class:
         from ..client import HiveClient
 
