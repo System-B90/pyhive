@@ -124,10 +124,14 @@ jobs:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
+      # No `cache: pip` here, and no checkout on purpose. This job installs the
+      # built wheel rather than the source tree, and setup-python's pip cache
+      # keys off a **/requirements.txt or **/pyproject.toml in the workspace —
+      # with no checkout there is none, and it fails the step outright rather
+      # than skipping the cache.
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-          cache: pip
 
       - uses: actions/download-artifact@v6
         with:
