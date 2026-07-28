@@ -234,6 +234,10 @@ jobs:
       #    these four).
       #  - ssl/: HIVE_SSL_PATH in .env points here; sample SSL keys nginx's
       #    ssl.conf template references.
+      #  - static/: HIVE_FRONTEND_STATIC in .env points here; bind-mounted
+      #    read-only into frontend at /frontend/public/static, which Hive
+      #    reads at runtime for logo/icon svgs — not baked into the frontend
+      #    build.
       # NOT copied: HIVE_{COURSE_DIRS,CALENDAR_DIRS,TRASH,CORE_MEDIA,
       # DATABASE,METRICS}_PATH's targets (./dummy/*, ./media, ./db,
       # ./metrics) — plain data-volume bind mounts Docker creates empty on
@@ -249,7 +253,7 @@ jobs:
         if: steps.published.outputs.skip != 'true'
         run: |
           rm -rf hive-stack
-          mkdir -p hive-stack/images/nginx/sites-enabled hive-stack/ssl
+          mkdir -p hive-stack/images/nginx/sites-enabled hive-stack/ssl hive-stack/static
           cp hive/docker-compose.yaml hive-stack/docker-compose.yaml
           cp hive/docker-compose-images.yaml hive-stack/docker-compose-images.yaml
           cp hive/.env hive-stack/.env
@@ -258,6 +262,7 @@ jobs:
           cp hive/images/nginx/errors.conf hive-stack/images/nginx/errors.conf
           cp hive/images/nginx/sites-enabled/sites.conf hive-stack/images/nginx/sites-enabled/sites.conf
           cp -a hive/ssl/. hive-stack/ssl/
+          cp -a hive/static/. hive-stack/static/
           echo "${{ steps.hive_sha.outputs.sha }}" > hive-stack/HIVE_SHA
           echo "$HIVE_REF" > hive-stack/HIVE_REF
 
