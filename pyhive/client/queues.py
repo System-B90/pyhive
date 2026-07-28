@@ -12,8 +12,8 @@ from .client_shared import ClientCoreMixin
 
 if TYPE_CHECKING:
     from ..src.types.module import ModuleLike
-    from ..src.types.user import UserLike
     from ..src.types.queue import QueueLike
+    from ..src.types.user import UserLike
 
 
 class QueuesClientMixin(ClientCoreMixin):

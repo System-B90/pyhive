@@ -9,7 +9,9 @@ from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr
 
-from ._generated.models import AssignmentResponseContent as _AssignmentResponseContentBase
+from ._generated.models import (
+    AssignmentResponseContent as _AssignmentResponseContentBase,
+)
 
 if TYPE_CHECKING:
     from ...client import HiveClient

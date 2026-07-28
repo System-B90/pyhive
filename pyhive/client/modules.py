@@ -5,7 +5,8 @@ Adds methods for listing and retrieving Module records via the Hive API. Intende
 as a mixin on the main HiveClient only.
 """
 
-from typing import TYPE_CHECKING, Iterable, Optional
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Optional
 
 from ..src.types.module import Module, ModuleLike
 from .client_shared import ClientCoreMixin
@@ -31,12 +32,12 @@ class ModuleClientMixin(ClientCoreMixin):
     def get_modules(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         /,
-        parent_subject__id: Optional[int] = None,
-        parent_subject__parent_program__id__in: Optional[list[int]] = None,
+        parent_subject__id: int | None = None,
+        parent_subject__parent_program__id__in: list[int] | None = None,
         # Non built-in filters
         parent_subject: Optional["SubjectLike"] = None,
         parent_program: Optional["ProgramLike"] = None,
-        module_name: Optional[str] = None,
+        module_name: str | None = None,
     ) -> Iterable[Module]:
         """Yield ``Module`` objects, supporting filtering by subject and program."""
         from ..client import HiveClient

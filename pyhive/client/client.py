@@ -1,7 +1,7 @@
 """High-level Hive API client aggregator."""
 
 from types import TracebackType
-from typing import TYPE_CHECKING, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Literal, Optional, Self, Union
 
 from pyhive.client.sso_utils import generate_sso_client_credentials, get_sso_token
 
@@ -51,13 +51,13 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
         hive_url: str,
         *,
         skip_version_check: bool = False,
-        timeout: Optional[Union["Timeout", float]] = None,
-        headers: Optional[dict[str, str]] = None,
-        verify: Optional[Union[bool, str]] = None,
+        timeout: Union["Timeout", float] | None = None,
+        headers: dict[str, str] | None = None,
+        verify: bool | str | None = None,
         proxy: Optional["ProxyTypes"] = None,
         existing_token: str | None = None,
         auth_strategy: Literal["sso", "cache"] | None = None,
-        refresh_token: Optional[str] = None,
+        refresh_token: str | None = None,
         **kwargs: object,
     ):
         super().__init__(
@@ -82,10 +82,10 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
         api_token: str,
         hive_url: str,
         *,
-        refresh_token: Optional[str] = None,
-        timeout: Optional[Union["Timeout", float]] = None,
-        headers: Optional[dict[str, str]] = None,
-        verify: Optional[Union[bool, str]] = None,
+        refresh_token: str | None = None,
+        timeout: Union["Timeout", float] | None = None,
+        headers: dict[str, str] | None = None,
+        verify: bool | str | None = None,
         proxy: Optional["ProxyTypes"] = None,
         skip_version_check: bool = False,
         auth_strategy: Literal["sso", "cache"] | None = None,
@@ -121,9 +121,9 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
         cls,
         hive_url: str,
         *,
-        timeout: Optional[Union["Timeout", float]] = None,
-        headers: Optional[dict[str, str]] = None,
-        verify: Optional[Union[bool, str]] = None,
+        timeout: Union["Timeout", float] | None = None,
+        headers: dict[str, str] | None = None,
+        verify: bool | str | None = None,
         proxy: Optional["ProxyTypes"] = None,
         skip_version_check: bool = False,
         **kwargs: object,
@@ -169,7 +169,7 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
 
         return f"HiveClient({self.username!r}, input(), {self.hive_url!r})"
 
-    def __enter__(self) -> "HiveClient":
+    def __enter__(self) -> Self:
         """Enter context manager and return this client instance.
 
         The underlying :class:`httpx.Client` is managed by this object's
@@ -206,15 +206,13 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
         if version_str not in SUPPORTED_API_VERSIONS:
             supported_range = f"{MIN_API_VERSION} .. {LATEST_API_VERSION}"
             raise RuntimeError(
-                (
-                    f"Unsupported Hive API version '{version_str}'. Supported versions: {supported_range}. "
-                    f"Please upgrade/downgrade the server or use a compatible client."
-                )
+                f"Unsupported Hive API version '{version_str}'. Supported versions: {supported_range}. "
+                f"Please upgrade/downgrade the server or use a compatible client."
             )
 
     def register_sso_service(
         self,
         service_name: str,
-        redirect_uris: Optional[List[str] | str] = None,
+        redirect_uris: list[str] | str | None = None,
     ) -> dict[str, str]:
         return generate_sso_client_credentials(self, service_name, redirect_uris)

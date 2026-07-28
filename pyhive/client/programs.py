@@ -5,7 +5,8 @@ Provides methods for listing and retrieving Program records via the Hive API.
 Designed to be mixed into the main HiveClient only.
 """
 
-from typing import TYPE_CHECKING, Iterable, Optional
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Optional
 
 from ..src.types.program import Program, ProgramLike
 from .client_shared import ClientCoreMixin
@@ -30,8 +31,8 @@ class ProgramClientMixin(ClientCoreMixin):
 
     def get_programs(
         self,
-        id__in: Optional[list[int]] = None,
-        program_name: Optional[str] = None,
+        id__in: list[int] | None = None,
+        program_name: str | None = None,
     ) -> Iterable[Program]:
         """Yield ``Program`` objects, optionally filtered by ids/name."""
         from ..client import HiveClient
@@ -65,15 +66,15 @@ class ProgramClientMixin(ClientCoreMixin):
         *,
         checker: "UserLike",
         default_class: Optional["ClassLike"] = None,
-        auto_toilet: Optional[bool] = None,
-        hanich_raise_hand: Optional[bool] = None,
-        auto_schedule: Optional[bool] = None,
-        auto_room: Optional[bool] = None,
-        hanich_day_only: Optional[bool] = None,
-        hanich_work_name: Optional[bool] = None,
-        auto_toilet_count: Optional[int] = None,
-        hanich_classes_only: Optional[bool] = None,
-        hanich_schedule: Optional[bool] = None,
+        auto_toilet: bool | None = None,
+        hanich_raise_hand: bool | None = None,
+        auto_schedule: bool | None = None,
+        auto_room: bool | None = None,
+        hanich_day_only: bool | None = None,
+        hanich_work_name: bool | None = None,
+        auto_toilet_count: int | None = None,
+        hanich_classes_only: bool | None = None,
+        hanich_schedule: bool | None = None,
     ) -> Program:
         """
         Create a Program via the Hive API.

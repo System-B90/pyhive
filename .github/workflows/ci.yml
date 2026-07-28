@@ -6,24 +6,46 @@ on:
     branches: [master, dev]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # Static analysis + fast unit checks, on one interpreter. This absorbed the
+  # old standalone lint.yml, which ran ruff and pylint across a 3.11-3.14
+  # matrix on every push to every branch. Both are configured entirely from
+  # pyproject.toml and analyse the same sources whichever interpreter hosts
+  # them, so the matrix bought four sequential runs of identical work — and on
+  # a single self-hosted runner, sequential is exactly what it means.
+  # Interpreter compatibility is a real question, but it's about whether the
+  # package *imports and runs*, which is what the compat job below checks.
   checks:
-    runs-on: ubuntu-latest
+    name: Lint + typecheck
+    runs-on: self-hosted
+    timeout-minutes: 20
+
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
+          cache: pip
 
+      # dev carries pytest (for the codegen tests), lint the pinned linters,
+      # codegen datamodel-code-generator + pyyaml. All three are needed for the
+      # steps below — dropping dev is what made this job fail with
+      # "pytest: command not found".
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
-          pip install "datamodel-code-generator[http]" ruff mypy pytest pyyaml
+          pip install -e ".[dev,lint,codegen]"
 
       - name: Ruff
         run: ruff check pyhive/ tools/
+
+      - name: Pylint
+        run: pylint ./pyhive/ --ignore-patterns="_generated_.*.py" --ignore-paths=".*/_generated(/.*)?"
 
       - name: Mypy (generated core layer)
         run: mypy pyhive/src/types/_generated/
@@ -33,3 +55,98 @@ jobs:
 
       - name: Import smoke test
         run: python -c "import pyhive, pyhive.types as t; print('OK', len(t.__all__), 'public types')"
+
+  # The wheel is pure-Python (py3-none-any), so it is built once and the same
+  # artifact is then installed and imported on every supported interpreter.
+  # The previous arrangement built the wheel once per Python version, which
+  # produced four identical artifacts and never installed any of them — 4x the
+  # runner time to test strictly less.
+  build:
+    name: Build wheel
+    runs-on: self-hosted
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+
+      - name: Build wheel
+        run: python -m build -w
+
+      - name: Assert the wheel is interpreter-independent
+        run: |
+          # If this ever stops holding (a compiled extension, an
+          # interpreter-specific build hook), the build-once-install-everywhere
+          # strategy below is no longer valid. Fail loudly here rather than
+          # silently shipping a wheel that only works on 3.11.
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          if [ ${#wheels[@]} -ne 1 ]; then
+            echo "::error::Expected exactly 1 wheel, found ${#wheels[@]}: ${wheels[*]}"
+            exit 1
+          fi
+          case "${wheels[0]}" in
+            *-py3-none-any.whl) echo "OK: ${wheels[0]} is a universal wheel" ;;
+            *)
+              echo "::error::${wheels[0]} is not py3-none-any. pyhive is expected to be pure Python; if that changed on purpose, restore a real build matrix here."
+              exit 1
+              ;;
+          esac
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: wheel
+          path: dist/*.whl
+          retention-days: 7
+
+  # The compatibility question worth asking on every supported interpreter is
+  # "does the shipped artifact install and import here?" — not "can this
+  # interpreter build a wheel we already know is byte-identical". Installing a
+  # prebuilt wheel is also seconds of work, which matters when the runner
+  # executes matrix legs one at a time.
+  compat:
+    name: Install + import on ${{ matrix.python-version }}
+    runs-on: self-hosted
+    timeout-minutes: 20
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      # No `cache: pip` here, and no checkout on purpose. This job installs the
+      # built wheel rather than the source tree, and setup-python's pip cache
+      # keys off a **/requirements.txt or **/pyproject.toml in the workspace —
+      # with no checkout there is none, and it fails the step outright rather
+      # than skipping the cache.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/download-artifact@v6
+        with:
+          name: wheel
+          path: dist
+
+      - name: Install the built wheel
+        run: |
+          python -m pip install --upgrade pip
+          pip install dist/*.whl
+
+      # Run from a directory with no ./pyhive source tree, so this exercises
+      # the installed wheel instead of a checkout shadowing it.
+      - name: Import + CLI smoke test
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -c "import pyhive, pyhive.types as t; print('import OK —', len(t.__all__), 'public types')"
+          pyhive --help > /dev/null && echo "CLI entry point OK"

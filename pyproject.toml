@@ -24,6 +24,12 @@ readme = "README.md"
 [project.optional-dependencies]
 dev = ["pytest>=9.0.2", "pytest-httpx>=0.36.0", "types-python-dateutil>=0.1.0"]
 codegen = ["datamodel-code-generator[http]>=0.66", "pyyaml>=6.0"]
+# Pinned exactly, on purpose. CI used to `pip install ruff pylint mypy`
+# unpinned, so an upstream release that adds or promotes a rule turned the
+# build red on an unrelated PR, with no repo change to point at — which is
+# exactly what happened when ruff started reporting 177 findings on code that
+# had passed the day before. Bump these deliberately, in their own PR.
+lint = ["ruff==0.16.0", "pylint==4.0.6", "mypy==2.3.0"]
 
 [project.scripts]
 pyhive = "pyhive.cli.cli:main"
@@ -39,6 +45,13 @@ path = "scripts/generate_versions.py"
 
 [tool.api_versions]
 supported = ["5.1.2", "6.2.0", "6.4.0", "7.1.0"]
+
+[tool.ruff]
+# datamodel-code-generator owns everything under _generated/ and rewrites it on
+# every Hive release. Linting it produces findings nobody may fix by hand, and
+# `ruff check --fix` will happily edit it and have the change silently reverted
+# by the next codegen run. Pylint already excludes these paths.
+exclude = ["pyhive/src/types/_generated", "pyhive/src/_generated_versions.py"]
 
 [tool.ruff.lint]
 ignore = [

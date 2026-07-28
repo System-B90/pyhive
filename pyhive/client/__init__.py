@@ -1,7 +1,5 @@
 """Hive API Client module."""
 
-from .client import HiveClient  # re-export
-
 # Rebuild Pydantic models to resolve forward references
 from ..src.types.assignment import Assignment
 from ..src.types.assignment_response import AssignmentResponse
@@ -24,6 +22,7 @@ from ..src.types.queue_item import QueueItem
 from ..src.types.subject import Subject
 from ..src.types.tag import Tag
 from ..src.types.user import User
+from .client import HiveClient  # re-export
 
 Assignment.model_rebuild()
 AssignmentResponse.model_rebuild()

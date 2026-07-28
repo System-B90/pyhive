@@ -3,7 +3,8 @@
 - ``ClientCoreMixin``: base class that provides ``_get_core_items`` used by resource mixins.
 """
 
-from typing import Any, Iterable, Optional
+from collections.abc import Iterable
+from typing import Any
 
 import httpx
 
@@ -23,7 +24,7 @@ class ClientCoreMixin(AuthenticatedHiveClient):
         endpoint: str,
         item_type: type[CoreItemTypeT],
         /,
-        extra_ctor_params: Optional[dict[str, Any]] = None,
+        extra_ctor_params: dict[str, Any] | None = None,
         **kwargs: (
             str
             | int

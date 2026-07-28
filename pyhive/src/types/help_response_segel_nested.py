@@ -6,7 +6,7 @@ Author: Michael K. Steinberg
 """
 
 import datetime
-from typing import Annotated,TYPE_CHECKING, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field
 

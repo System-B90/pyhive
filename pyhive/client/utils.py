@@ -1,6 +1,6 @@
 """Utility types and helpers for Hive client mixins."""
 
-from typing import Any, Optional, TypeVar, Union, cast, overload
+from typing import Any, TypeVar, cast, overload
 
 from ..src.types.core_item import HiveCoreItem
 
@@ -16,8 +16,8 @@ def resolve_item_or_id(item_or_id: HiveCoreItem | int) -> int: ...
 
 
 def resolve_item_or_id(
-    item_or_id: Union[HiveCoreItem, int, None],
-) -> Optional[int]:
+    item_or_id: HiveCoreItem | int | None,
+) -> int | None:
     """Return the integer id represented by ``item_or_id``.
 
     If ``item_or_id`` is ``None``, returns ``None``. If a ``HiveCoreItem`` is provided, its ``id`` is returned.

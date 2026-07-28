@@ -7,27 +7,27 @@ Created: 2026-03-29
 Author: Michael K. Steinberg
 """
 
-from datetime import datetime
 import importlib.metadata
+from datetime import datetime
 from typing import Any
 
 import keyring
 import typer
 
+from pyhive.cli.assignments import assignment_app
 from pyhive.cli.base import PyHiveTyper
-from pyhive.cli.formatter import print_error_and_exit, print_info, print_result
-from pyhive.cli.state import state
+from pyhive.cli.classes import class_app
 from pyhive.cli.client_factory import (
     KEYRING_ACCOUNT,
     KEYRING_REFRESH_ACCOUNT,
     KEYRING_SERVICE,
     get_hive_client,
 )
-from pyhive.cli.assignments import assignment_app
-from pyhive.cli.classes import class_app
 from pyhive.cli.exercises import exercise_app
+from pyhive.cli.formatter import print_error_and_exit, print_info, print_result
 from pyhive.cli.modules import module_app
 from pyhive.cli.programs import program_app
+from pyhive.cli.state import state
 from pyhive.cli.subjects import subject_app
 from pyhive.cli.users import user_app
 from pyhive.client.sso_utils import get_sso_token
@@ -140,8 +140,16 @@ def get_token(
                 keyring.set_password(
                     KEYRING_SERVICE, KEYRING_REFRESH_ACCOUNT, refresh_token
                 )
-            except Exception:  # pylint: disable=broad-exception-caught
-                pass
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                # A locked or unavailable keychain must not fail the command —
+                # the token in hand is still valid. But swallowing it silently
+                # left users with no way to tell caching had failed. stderr, so
+                # --json output stays machine-parseable.
+                typer.secho(
+                    f"Warning: could not cache token in the OS keyring ({exc}).",
+                    fg=typer.colors.YELLOW,
+                    err=True,
+                )
 
         def text_output() -> None:
             typer.secho("\nAuthentication Successful!", fg=typer.colors.GREEN)

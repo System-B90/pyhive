@@ -8,16 +8,23 @@ Author: Michael K. Steinberg
 from typing import Any
 
 import click
-from typer import Argument, Context, Option, colors, echo, secho  # pyright: ignore[reportUnknownVariableType]
+from typer import (  # pyright: ignore[reportUnknownVariableType]
+    Argument,
+    Context,
+    Option,
+    colors,
+    echo,
+    secho,
+)
 
 from pyhive.cli.base import PyHiveTyper
+from pyhive.cli.client_factory import get_hive_client
 from pyhive.cli.formatter import (
     print_error_and_exit,
     print_formatted_list,
     print_info,
     print_result,
 )
-from pyhive.cli.client_factory import get_hive_client
 from pyhive.types import ClearanceEnum, GenderEnum, StatusEnum
 
 user_app = PyHiveTyper(help="Manage Hive users.")

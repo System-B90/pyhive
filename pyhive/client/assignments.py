@@ -5,7 +5,8 @@ Adds methods for listing and retrieving Assignment records via the Hive API. Mea
 for use as a mixin on HiveClient.
 """
 
-from typing import TYPE_CHECKING, Iterable, Optional, Sequence
+from collections.abc import Iterable, Sequence
+from typing import TYPE_CHECKING, Optional
 
 from ..src.types.assignment import Assignment
 from .client_shared import ClientCoreMixin
@@ -32,17 +33,17 @@ class AssignmentClientMixin(ClientCoreMixin):
     def get_assignments(  # pylint: disable=too-many-arguments,too-many-locals
         self,
         *,
-        exercise__id: Optional[int] = None,
-        exercise__parent_module__id: Optional[int] = None,
-        exercise__parent_module__parent_subject__id: Optional[int] = None,
-        exercise__tags__id__in: Optional[Sequence[int]] = None,
-        queue__id: Optional[int] = None,
-        user__classes__id: Optional[int] = None,
-        user__classes__id__in: Optional[Sequence[int]] = None,
-        user__id__in: Optional[Sequence[int]] = None,
-        user__mentor__id: Optional[int] = None,
-        user__mentor__id__in: Optional[Sequence[int]] = None,
-        user__program__id__in: Optional[Sequence[int]] = None,
+        exercise__id: int | None = None,
+        exercise__parent_module__id: int | None = None,
+        exercise__parent_module__parent_subject__id: int | None = None,
+        exercise__tags__id__in: Sequence[int] | None = None,
+        queue__id: int | None = None,
+        user__classes__id: int | None = None,
+        user__classes__id__in: Sequence[int] | None = None,
+        user__id__in: Sequence[int] | None = None,
+        user__mentor__id: int | None = None,
+        user__mentor__id__in: Sequence[int] | None = None,
+        user__program__id__in: Sequence[int] | None = None,
         # Non built-in filters
         parent_module: Optional["ModuleLike"] = None,
         parent_subject: Optional["SubjectLike"] = None,
