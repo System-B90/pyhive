@@ -8,6 +8,7 @@ jobs:
   update-readme:
     name: Update README with supported API versions
     runs-on: self-hosted
+    timeout-minutes: 15
     permissions:
       contents: write
 
