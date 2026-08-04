@@ -56,7 +56,7 @@ env:
 
 jobs:
   publish:
-    runs-on: self-hosted
+    runs-on: [self-hosted, dind]
     timeout-minutes: 60
 
     steps:
