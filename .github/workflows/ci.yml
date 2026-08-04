@@ -21,7 +21,7 @@ jobs:
   # package *imports and runs*, which is what the compat job below checks.
   checks:
     name: Lint + typecheck
-    runs-on: self-hosted
+    runs-on: [self-hosted, python]
     timeout-minutes: 20
 
     steps:
@@ -63,7 +63,7 @@ jobs:
   # runner time to test strictly less.
   build:
     name: Build wheel
-    runs-on: self-hosted
+    runs-on: [self-hosted, python]
     timeout-minutes: 15
 
     steps:
@@ -115,7 +115,7 @@ jobs:
   # executes matrix legs one at a time.
   compat:
     name: Install + import on ${{ matrix.python-version }}
-    runs-on: self-hosted
+    runs-on: [self-hosted, python]
     timeout-minutes: 20
     needs: build
     strategy:
