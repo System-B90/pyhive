@@ -7,8 +7,7 @@ on:
 
 jobs:
   verify-version:
-    runs-on: self-hosted
-    timeout-minutes: 15
+    runs-on: [self-hosted, light]
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
