@@ -18,7 +18,7 @@ jobs:
   # artifact works on 3.11-3.14, by installing and importing it there.
   build:
     name: Build wheel
-    runs-on: self-hosted
+    runs-on: [self-hosted, python]
     timeout-minutes: 15
 
     steps:
@@ -69,7 +69,7 @@ jobs:
 
   publish:
     name: Publish wheel
-    runs-on: self-hosted
+    runs-on: [self-hosted, light]
     timeout-minutes: 15
     needs: build
     steps:
@@ -90,7 +90,7 @@ jobs:
 
   update-index:
     name: Update pip index in .github repo
-    runs-on: self-hosted
+    runs-on: [self-hosted, python]
     timeout-minutes: 15
     needs: publish
     steps:
