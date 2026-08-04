@@ -24,8 +24,7 @@ env:
 
 jobs:
   sync:
-    runs-on: self-hosted
-    timeout-minutes: 45
+    runs-on: [self-hosted, python]
     steps:
       - uses: actions/checkout@v7
         with:
