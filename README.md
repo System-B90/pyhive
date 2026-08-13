@@ -16,6 +16,7 @@ It provides:
 - `6.2.0`
 - `6.4.0`
 - `7.1.0`
+- `7.2.0`
 <!-- SUPPORTED_API_VERSIONS_END -->
 
 ## Install

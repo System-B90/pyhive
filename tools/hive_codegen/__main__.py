@@ -73,6 +73,7 @@ def _cmd_sync(args: argparse.Namespace) -> int:
     if args.drift_out:
         Path(args.drift_out).write_text(report.to_markdown() + "\n", encoding="utf-8")
 
+    project_changed = False
     if not args.check:
         (output_dir / "enums.py").write_text(render_enums_module(spec), encoding="utf-8")
         (output_dir / "models.py").write_text(render_models_module(spec, config), encoding="utf-8")
@@ -80,8 +81,14 @@ def _cmd_sync(args: argparse.Namespace) -> int:
         _format(output_dir)
 
         if not args.no_apply:
-            bump = "major" if report.has_breaking else "minor"
+            if report.has_breaking:
+                bump = "major"
+            elif report.is_empty:
+                bump = "patch"
+            else:
+                bump = "minor"
             summary = apply_release_to_project(repo_root, version, bump)
+            project_changed = summary.get("supported_added") == "True"
             print("\nProject files:", summary)
 
     if args.github_output:
@@ -90,7 +97,7 @@ def _cmd_sync(args: argparse.Namespace) -> int:
             {
                 "api_version": version,
                 "has_breaking": "true" if report.has_breaking else "false",
-                "has_changes": "false" if report.is_empty else "true",
+                "has_changes": "true" if (not report.is_empty or project_changed) else "false",
             },
         )
 
