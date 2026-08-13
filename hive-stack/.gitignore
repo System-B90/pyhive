@@ -1,0 +1,5 @@
+# Runtime state produced by the stack, not source
+.env.override
+db/
+metrics/
+dummy/
