@@ -136,7 +136,7 @@ python ..\.github\scripts\publish.py . patch   # or: minor / major
 
 Requires `master` to be clean and checked out locally, and a git identity that can push directly (bypasses the PR flow, not branch protection).
 
-Verify the release landed: `gh run list --branch vX.Y.Z` in the pyhive repo, and check `https://raw.githubusercontent.com/System-B90/.github/main/pypi/pyhivelms/index.html` lists the new wheel.
+Verify the release landed: `gh run list --branch vX.Y.Z` in the pyhive repo, and check `https://system-b90.github.io/.github/pypi/pyhivelms/` (GitHub Pages) lists the new wheel.
 
 ## Code conventions
 
