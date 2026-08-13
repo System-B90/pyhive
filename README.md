@@ -21,10 +21,30 @@ It provides:
 
 ## Install
 
-Install a tagged release from the org's pip index:
+Install a tagged release from the org's pip index, hosted on GitHub Pages:
 
 ```pwsh
-pip install PyHiveLMS --index-url https://raw.githubusercontent.com/System-B90/.github/main/pypi/
+pip install PyHiveLMS --index-url https://system-b90.github.io/.github/pypi/
+```
+
+To make it permanent, add the index to your pip config instead of passing it every time:
+
+```pwsh
+pip config set global.extra-index-url https://system-b90.github.io/.github/pypi/
+pip install PyHiveLMS
+```
+
+Or add it to `requirements.txt`:
+
+```
+--extra-index-url https://system-b90.github.io/.github/pypi/
+PyHiveLMS
+```
+
+Upgrade to the latest published wheel:
+
+```pwsh
+pip install --upgrade PyHiveLMS --index-url https://system-b90.github.io/.github/pypi/
 ```
 
 Or install an unreleased ref directly from GitHub:
@@ -32,6 +52,8 @@ Or install an unreleased ref directly from GitHub:
 ```pwsh
 pip install git+https://github.com/System-B90/pyhive.git
 ```
+
+Published wheels are browsable at <https://system-b90.github.io/.github/pypi/pyhivelms/>.
 
 ## Quickstart
 
