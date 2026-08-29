@@ -323,6 +323,16 @@ class AuthenticatedHiveClient:
             raise TypeError("Expected JSON object from PATCH response")
         return data
 
+    def post_empty(self, endpoint: str) -> None:
+        """POST an empty body and discard the (empty) response."""
+        response = self._post(endpoint, {})
+        response.raise_for_status()
+
+    def put_empty(self, endpoint: str) -> None:
+        """PUT an empty body and discard the (empty) response."""
+        response = self._put(endpoint, {})
+        response.raise_for_status()
+
     def __repr__(self) -> str:
         """Return a short representation including username and hive_url.
 

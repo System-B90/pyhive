@@ -16,10 +16,17 @@ from .classes import ClassesClientMixin
 from .exercises import ExerciseClientMixin
 from .fields import FieldsClientMixin
 from .help import HelpClientMixin
+from .lessons import LessonClientMixin
 from .modules import ModuleClientMixin
+from .notifications import NotificationClientMixin
 from .programs import ProgramClientMixin
 from .queues import QueuesClientMixin
+from .schedule import ScheduleClientMixin
+from .seating import SeatingClientMixin
+from .sso_admin import SsoAdminClientMixin
 from .subjects import SubjectClientMixin
+from .system import SystemClientMixin
+from .tags import TagClientMixin
 from .users import UserClientMixin
 from .version import VersionClientMixin
 
@@ -41,6 +48,13 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
     QueuesClientMixin,
     HelpClientMixin,
     VersionClientMixin,
+    LessonClientMixin,
+    NotificationClientMixin,
+    ScheduleClientMixin,
+    SeatingClientMixin,
+    SsoAdminClientMixin,
+    SystemClientMixin,
+    TagClientMixin,
 ):
     """Aggregated HTTP client for accessing Hive API resources."""
 
