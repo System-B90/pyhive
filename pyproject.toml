@@ -22,7 +22,7 @@ dependencies = [
 readme = "README.md"
 
 [project.optional-dependencies]
-dev = ["pytest>=9.0.2", "pytest-httpx>=0.36.0", "types-python-dateutil>=0.1.0"]
+dev = ["pytest>=9.0.2", "pytest-httpx>=0.36.0", "types-python-dateutil>=0.1.0", "pytest-cov>=6.2.1"]
 codegen = ["datamodel-code-generator[http]>=0.66", "pyyaml>=6.0"]
 # Pinned exactly, on purpose. CI used to `pip install ruff pylint mypy`
 # unpinned, so an upstream release that adds or promotes a rule turned the

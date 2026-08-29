@@ -14,6 +14,7 @@ from pyhive.src.types.user import User
 from tests.common import get_client_params
 
 
+@pytest.mark.integration
 def test_client_url():
     hive_url = "https://hive.org"
     with HiveClient(
@@ -175,6 +176,7 @@ def test_get_hive_version(client: HiveClient):
     assert re.match(r"^\d+\.\d+\.\d+", version)
 
 
+@pytest.mark.integration
 def test_invalid_hive_version_raises(monkeypatch: pytest.MonkeyPatch):
     from pyhive.src.api_versions import LATEST_API_VERSION, MIN_API_VERSION
 
@@ -189,6 +191,7 @@ def test_invalid_hive_version_raises(monkeypatch: pytest.MonkeyPatch):
     assert f"{MIN_API_VERSION} .. {LATEST_API_VERSION}" in msg
 
 
+@pytest.mark.integration
 def test_skip_version_check(monkeypatch: pytest.MonkeyPatch):
     invalid = "0.0.0-unsupported"
     monkeypatch.setattr(HiveClient, "get_hive_version", lambda self: invalid)  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]

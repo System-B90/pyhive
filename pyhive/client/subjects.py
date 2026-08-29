@@ -1,8 +1,9 @@
 """
 Subject resource mixin for HiveClient.
 
-Provides methods for listing and retrieving Subject records via the Hive API.
-Intended for use as a mixin on the main HiveClient only.
+Provides methods for listing, retrieving, creating and deleting Subject
+records via the Hive API. Intended for use as a mixin on the main HiveClient
+only.
 """
 
 from collections.abc import Iterable
@@ -26,6 +27,10 @@ class SubjectClientMixin(ClientCoreMixin):
         List all or filtered subjects via the Hive API. Supports filtering by program.
     get_subject(subject_id)
         Retrieve a single subject record by its id.
+    create_subject(...)
+        Create a new subject under a parent program.
+    delete_subject(subject)
+        Delete a subject by id or instance.
     """
 
     def get_subjects(

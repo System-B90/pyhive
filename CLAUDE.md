@@ -33,7 +33,9 @@ pyhive/
     ├── state.py                         # CLIState singleton (use_json, username, password, …)
     ├── client_factory.py                # get_hive_client() — credential priority chain
     ├── formatter.py                     # print_result / print_error_and_exit / print_formatted_list
-    └── users.py                         # `pyhive users` subcommand group
+    └── <resource>.py                    # One subcommand group per resource (users, assignments,
+                                          # classes, exercises, modules, programs, subjects), wired
+                                          # into the root app in cli/cli.py
 tests/
     conftest.py                          # Integration test fixtures (create/teardown real resources)
     common.py                            # get_client_params(), random helpers, EXERCISE_DATA_LIST
@@ -107,10 +109,14 @@ hatch build               # build wheel (triggers version generation hook)
 ### Test
 
 ```pwsh
-pytest -q
+pytest -q                          # everything, including live-server integration tests
+pytest tests -q -m "not integration"   # offline unit tests only (what CI runs)
+pytest tools/hive_codegen/tests -q     # codegen unit tests (also offline)
 ```
 
-Tests are **integration tests** against a live Hive server (`https://hive.org`). Credentials are hardcoded in `tests/common.py::get_client_params()`. There is no mock layer — tests create and tear down real resources via fixtures in `tests/conftest.py`.
+Most of `tests/` is **integration tests** against a live Hive server (`https://hive.org`). Credentials are hardcoded in `tests/common.py::get_client_params()`. There is no mock layer for these — tests create and tear down real resources via fixtures in `tests/conftest.py`. A handful of files (`test_authenticated_hive_client.py`, `test_sso_utils.py`, `test_client_factory.py`, `test_client_shared.py`, `test_utils.py`, and `cli/`) are fully offline, using `pytest-httpx` or stubs.
+
+`tests/conftest.py::pytest_collection_modifyitems` auto-applies the `integration` pytest marker to any test that (transitively) requests the session-scoped `client` fixture, so the offline/live split doesn't need per-test markers. CI (`.github/workflows/ci.yml`, job `checks`) runs `pytest tests -q -m "not integration"` plus the codegen suite; it never touches the live server.
 
 ### Lint / type-check
 

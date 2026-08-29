@@ -1,6 +1,7 @@
 """Help requests mixin for HiveClient.
 
-Provides listing and retrieval of Help request records via the Hive API.
+Provides listing, retrieval, creation and deletion of Help request records
+(and chats) via the Hive API.
 """
 
 from collections.abc import Iterable
@@ -35,8 +36,17 @@ class HelpClientMixin(ClientCoreMixin):
         List help responses for a given help request.
     get_help_response(help, response_id)
         Retrieve a single help response by id for a given help request.
-    get_help_response_student_files(help, response_id)
-        Retrieve files attached to a specific help response (raw JSON).
+    get_help_response_student_file(help_id, response_id)
+        Retrieve the file attached to a specific help response, as raw bytes
+        (or ``None`` if not found).
+    create_help_request(...)
+        Create a new help request.
+    create_chat(...)
+        Create a new chat-type help request.
+    delete_help_request(help_request)
+        Delete a help request by id or instance.
+    delete_chat(chat)
+        Delete a chat by id or instance.
     """
 
     def get_help_requests(  # pylint: disable=too-many-arguments,too-many-locals

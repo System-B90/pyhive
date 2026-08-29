@@ -1,8 +1,9 @@
 """
 Exercise resource mixin for HiveClient.
 
-Provides listing and retrieval of Exercise records, with rich filtering, via the Hive API.
-Intended for mixing into the main HiveClient only.
+Provides listing and retrieval of Exercise records, with rich filtering, plus
+creation and deletion, via the Hive API. Intended for mixing into the main
+HiveClient only.
 """
 
 from collections.abc import Iterable
@@ -30,6 +31,10 @@ class ExerciseClientMixin(ClientCoreMixin):
         List all or filtered exercises via the Hive API. Supports advanced hierarchical filtering.
     get_exercise(exercise_id)
         Retrieve a single exercise by id.
+    create_exercise(...)
+        Create a new exercise under a parent module.
+    delete_exercise(exercise)
+        Delete an exercise by id or instance.
     """
 
     # NOTE: Intended to be used only as part of the HiveClient composite class
