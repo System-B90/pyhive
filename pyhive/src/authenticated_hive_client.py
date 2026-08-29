@@ -316,6 +316,13 @@ class AuthenticatedHiveClient:
             raise TypeError("Expected JSON object from PUT response")
         return data
 
+    def patch(self, endpoint: str, data: dict[Any, Any]) -> dict[Any, Any]:
+        """High-level PATCH that returns parsed JSON from the response."""
+        data = self._patch(endpoint, data).json()
+        if not isinstance(data, dict):
+            raise TypeError("Expected JSON object from PATCH response")
+        return data
+
     def __repr__(self) -> str:
         """Return a short representation including username and hive_url.
 
