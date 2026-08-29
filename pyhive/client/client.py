@@ -97,8 +97,12 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
         scenarios, prefer :meth:`from_sso`, which performs the browser-based
         Hive SSO flow and then creates the client from the resulting token.
 
-        Automatic token refresh is *not* supported in this mode: if the token
-        expires, create a new :class:`HiveClient` with a freshly-issued token.
+        By default (no ``refresh_token``/``auth_strategy``) this uses the
+        bare token as-is: automatic refresh is *not* supported, and if it
+        expires you must create a new :class:`HiveClient` with a
+        freshly-issued token. Passing ``auth_strategy="sso"`` or
+        ``"cache"`` together with a ``refresh_token`` enables automatic
+        refresh on a 401 (the same mechanism :meth:`from_sso` uses).
         """
 
         return cls(

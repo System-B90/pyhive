@@ -1,8 +1,8 @@
 """
 Program resource mixin for HiveClient.
 
-Provides methods for listing and retrieving Program records via the Hive API.
-Designed to be mixed into the main HiveClient only.
+Provides methods for listing, retrieving, creating and deleting Program
+records via the Hive API. Designed to be mixed into the main HiveClient only.
 """
 
 from collections.abc import Iterable
@@ -27,6 +27,10 @@ class ProgramClientMixin(ClientCoreMixin):
         List all or filtered programs via the Hive API.
     get_program(program_id)
         Retrieve a single program record by its id.
+    create_program(...)
+        Create a new program.
+    delete_program(program)
+        Delete a program by id or instance.
     """
 
     def get_programs(

@@ -1,6 +1,7 @@
 """Users mixin for HiveClient.
 
-Provides listing and retrieval of user records from the management API.
+Provides listing, retrieval, creation, update and deletion of user records
+from the management API, plus student-specific helpers.
 """
 
 from collections.abc import Iterable
@@ -22,7 +23,9 @@ if TYPE_CHECKING:
 
 
 class UserClientMixin(ClientCoreMixin):
-    """Mixin that exposes user management endpoints (list, get, me)."""
+    """Mixin that exposes user management endpoints (list, get, me, get_students,
+    get_user_by_name, get_student, create_user, create_student, delete_user,
+    update_user, set_users_queue)."""
 
     def get_users(  # pylint: disable=too-many-arguments
         self,

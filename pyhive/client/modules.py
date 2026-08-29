@@ -1,8 +1,8 @@
 """
 Module resource mixin for HiveClient.
 
-Adds methods for listing and retrieving Module records via the Hive API. Intended for use
-as a mixin on the main HiveClient only.
+Adds methods for listing, retrieving, creating and deleting Module records via
+the Hive API. Intended for use as a mixin on the main HiveClient only.
 """
 
 from collections.abc import Iterable
@@ -27,6 +27,10 @@ class ModuleClientMixin(ClientCoreMixin):
         List all or filtered modules; supports filtering by subject and parent program.
     get_module(module_id)
         Retrieve a single module record by id.
+    create_module(...)
+        Create a new module under a parent subject.
+    delete_module(module)
+        Delete a module by id or instance.
     """
 
     def get_modules(  # pylint: disable=too-many-arguments,too-many-positional-arguments

@@ -1,6 +1,6 @@
 """Queues mixin for HiveClient.
 
-Provides retrieval of queue records.
+Provides retrieval, creation and deletion of queue records.
 """
 
 from typing import TYPE_CHECKING, Optional
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 class QueuesClientMixin(ClientCoreMixin):
-    """Mixin that exposes queue retrieval endpoints."""
+    """Mixin that exposes queue retrieval, creation and deletion endpoints."""
 
     def get_queue(self, queue_id: int) -> Queue:
         """Return a single queue by ``queue_id``."""

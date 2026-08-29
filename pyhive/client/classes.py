@@ -1,7 +1,9 @@
 """
 Class resource mixin for HiveClient.
 
-Provides listing and retrieval of Class records from the Hive API. Use only as a mixin for the main HiveClient.
+Provides listing, retrieval, creation, update and deletion of Class records,
+plus importing users into a class, via the Hive API. Use only as a mixin for
+the main HiveClient.
 """
 
 from collections.abc import Iterable
@@ -28,6 +30,14 @@ class ClassesClientMixin(ClientCoreMixin):
         List all or filtered classes via the Hive API. Supports multiple relationship filters.
     get_class(class_id)
         Retrieve a single class by id.
+    create_class(...)
+        Create a new class.
+    update_class(...)
+        Update fields on an existing class.
+    delete_class(class_)
+        Delete a class by id or instance.
+    import_users_to_class(...)
+        Bulk-import users into a class.
     """
 
     def get_classes(
