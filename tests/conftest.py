@@ -1,3 +1,12 @@
+"""
+Name: conftest.py
+Purpose: Shared pytest fixtures. Fixtures below that depend (directly or
+    transitively) on the session-scoped ``client`` fixture talk to a live
+    Hive server (see tests/common.py::get_client_params()); every test that
+    requests one of them is auto-marked "integration" so CI can select the
+    offline-only subset with `-m "not integration"`.
+"""
+
 import random
 import uuid
 
@@ -233,3 +242,12 @@ def large_program(client: HiveClient):
         checker.delete()
     except Exception:
         pass
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Auto-mark any test that (transitively) requests the live ``client`` fixture."""
+
+    for item in items:
+        fixture_names = getattr(item, "fixturenames", ())
+        if "client" in fixture_names:
+            item.add_marker(pytest.mark.integration)

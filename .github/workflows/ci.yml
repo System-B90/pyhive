@@ -53,6 +53,16 @@ jobs:
       - name: Codegen unit tests
         run: pytest tools/hive_codegen/tests -q
 
+      # tests/ is otherwise a live-server integration suite (see
+      # tests/common.py::get_client_params(), hardcoded against https://hive.org)
+      # and cannot run here. tests/conftest.py::pytest_collection_modifyitems
+      # auto-marks every test that pulls in the session-scoped `client`
+      # fixture as `integration`, so this selects only the offline, mocked
+      # unit tests (auth strategies, token refresh/retry, SSO exchange,
+      # credential resolution) and fails the build on a regression there.
+      - name: Offline SDK unit tests
+        run: pytest tests -q -m "not integration" --cov=pyhive --cov-report=term-missing
+
       - name: Import smoke test
         run: python -c "import pyhive, pyhive.types as t; print('OK', len(t.__all__), 'public types')"
 
