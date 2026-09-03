@@ -68,8 +68,18 @@ def _refresh_token_on_unauthorized(func: F) -> F:
             self._refresh_access_token()  # pylint: disable=protected-access
             response = func(self, *args, **kwargs)
         if response.status_code == httpx.codes.BAD_REQUEST.value:
+            # Decode defensively: an f-string calls response.json() *before*
+            # the HTTPStatusError is constructed, so a non-JSON 400 body (an
+            # HTML error page from a proxy, a plain-text message, an empty
+            # body) raised JSONDecodeError from here instead. That is not an
+            # HTTPStatusError, so post()'s handler could not catch it and
+            # callers saw a bare decode error with no status or endpoint.
+            try:
+                detail: Any = response.json()
+            except ValueError:
+                detail = response.text
             raise HTTPStatusError(
-                f"Bad request! {response.json()}",
+                f"Bad request! {detail}",
                 request=response.request,
                 response=response,
             )
@@ -289,13 +299,16 @@ class AuthenticatedHiveClient:
         """
         try:
             resp = self._post(endpoint, data)
+            # Not the 400 path: the decorator on _post already raised for that.
+            # This still covers every other 4xx/5xx.
             resp.raise_for_status()
         except HTTPStatusError as exc:
             # If status code is 400, raise with response JSON
             if exc.response.status_code == 400:
                 try:
                     error_json = exc.response.json()
-                except Exception:  # pylint: disable=broad-except
+                except ValueError:
+                    # httpx raises json.JSONDecodeError, a ValueError subclass.
                     error_json = exc.response.text
                 raise ValueError(f"HTTP 400 Error: {error_json}") from exc
             # Otherwise, re-raise the original HTTP error
