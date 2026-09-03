@@ -261,6 +261,15 @@ def test_get_list_json_passes_through(httpx_mock):
 
 
 def test_post_400_non_json_body_falls_back_to_text(httpx_mock):
+    """A non-JSON 400 body reaches the caller as text, not a decode error.
+
+    Proxies, gateways and nginx answer 400 with an HTML page, a plain-text
+    message or nothing at all. The decorator used to interpolate
+    ``response.json()`` directly into the HTTPStatusError message, so the
+    decode blew up *before* the HTTPStatusError existed; post() could not
+    catch it and the caller got a bare JSONDecodeError naming neither the
+    status nor the endpoint.
+    """
     httpx_mock.add_response(
         method="POST",
         url=f"{HIVE_URL}/api/foo",
@@ -271,8 +280,41 @@ def test_post_400_non_json_body_falls_back_to_text(httpx_mock):
 
     client = _client(existing_token="access-1")
 
-    # exc.response.json() raises inside the except block, so the fallback
-    # to exc.response.text never triggers -- the JSONDecodeError message
-    # (from the failed .json() call) is what ends up in the ValueError.
-    with pytest.raises(ValueError, match="Expecting value"):
+    with pytest.raises(ValueError, match="HTTP 400 Error: not json"):
         client.post("/api/foo", {"a": 1})
+
+
+def test_post_400_empty_body_reports_the_status(httpx_mock):
+    """An empty 400 body is the other shape that used to fail to decode."""
+    httpx_mock.add_response(
+        method="POST",
+        url=f"{HIVE_URL}/api/foo",
+        content=b"",
+        status_code=400,
+    )
+
+    client = _client(existing_token="access-1")
+
+    with pytest.raises(ValueError, match="HTTP 400 Error:"):
+        client.post("/api/foo", {"a": 1})
+
+
+def test_post_400_non_json_body_does_not_leak_decode_error(httpx_mock):
+    """Whatever escapes post() must not be a JSONDecodeError."""
+    import json
+
+    httpx_mock.add_response(
+        method="POST",
+        url=f"{HIVE_URL}/api/foo",
+        content=b"<html>gateway said no</html>",
+        status_code=400,
+        headers={"content-type": "text/html"},
+    )
+
+    client = _client(existing_token="access-1")
+
+    with pytest.raises(ValueError) as excinfo:
+        client.post("/api/foo", {"a": 1})
+
+    assert not isinstance(excinfo.value, json.JSONDecodeError)
+    assert "gateway said no" in str(excinfo.value)
