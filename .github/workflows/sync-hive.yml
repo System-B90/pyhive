@@ -24,7 +24,7 @@ env:
 
 jobs:
   sync:
-    runs-on: [self-hosted, python]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:

@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
 from pydantic import Field, PrivateAttr, model_validator
 
-from ._generated.models import CourseUser as _UserBase
 from ._generated.enums import GenderEnum, StatusEnum
+from ._generated.models import CourseUser as _UserBase
 
 if TYPE_CHECKING:
     from ...client import HiveClient
