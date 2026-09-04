@@ -8,9 +8,10 @@ Author: Michael K. Steinberg
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
 
-from pydantic import Field, PrivateAttr
+from pydantic import Field, PrivateAttr, model_validator
 
 from ._generated.models import CourseUser as _UserBase
+from ._generated.enums import GenderEnum, StatusEnum
 
 if TYPE_CHECKING:
     from ...client import HiveClient
@@ -20,11 +21,34 @@ if TYPE_CHECKING:
     from .queue import Queue, QueueLike
 
 
+#: Enum-typed fields Hive serialises as "" when they were never set on the user.
+_UNSET_AS_EMPTY_STRING = ("gender", "status")
+
+
 class User(_UserBase):
     """Hive management course user. Data fields are inherited from the generated
     ``CourseUser`` base; this layer adds lazy relations and helpers."""
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
+
+    # The spec declares these required and enum-typed, but Hive answers with ""
+    # for a user whose value was never set -- users created through SSO or by
+    # another service, rather than through the course UI. Validation then failed
+    # for the *whole listing*, so a single such user made `get_users()` raise
+    # and took every caller iterating it down with it.
+    gender: GenderEnum | None = None  # type: ignore[assignment]
+    status: StatusEnum | None = None  # type: ignore[assignment]
+
+    @model_validator(mode="before")
+    @classmethod
+    def _empty_enum_strings_are_unset(cls, data: Any) -> Any:
+        """Read Hive's "" for an unset enum field as ``None``."""
+        if not isinstance(data, dict):
+            return data
+        for field in _UNSET_AS_EMPTY_STRING:
+            if data.get(field) == "":
+                data[field] = None
+        return data
 
     _current_assignment: "Assignment | None" = PrivateAttr(default=None)
     _mentees: "list[User] | None" = PrivateAttr(default=None)
