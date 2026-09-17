@@ -948,7 +948,7 @@
         "operationId": "schedule_events_list",
         "query_params": {
           "end__lte": "string",
-          "lesson__id": "integer",
+          "lesson__id": "string",
           "start__gte": "string"
         }
       },
@@ -972,6 +972,12 @@
       },
       "put": {
         "operationId": "schedule_events_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/ics/": {
+      "get": {
+        "operationId": "schedule_ics_retrieve",
         "query_params": {}
       }
     },
@@ -1031,6 +1037,48 @@
       },
       "put": {
         "operationId": "schedule_lessons_rules_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/sso/applications/": {
+      "get": {
+        "operationId": "sso_applications_list",
+        "query_params": {}
+      },
+      "post": {
+        "operationId": "sso_applications_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/sso/applications/{id}/": {
+      "delete": {
+        "operationId": "sso_applications_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "sso_applications_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "sso_applications_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "sso_applications_update",
+        "query_params": {}
+      }
+    },
+    "/api/core/sso/client-info/": {
+      "get": {
+        "operationId": "sso_client_info_retrieve",
+        "query_params": {
+          "client_id": "string"
+        }
+      }
+    },
+    "/api/core/sso/exchange/": {
+      "post": {
+        "operationId": "sso_exchange_create",
         "query_params": {}
       }
     },
@@ -1606,6 +1654,23 @@
         }
       }
     },
+    "ClientInfoResponse": {
+      "curated_model": "ClientInfoResponse",
+      "fields": {
+        "name": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "name"
+        },
+        "scopes": {
+          "nullable": false,
+          "required": true,
+          "type": "object",
+          "wire": "scopes"
+        }
+      }
+    },
     "CourseTokenObtainPair": {
       "curated_model": "CourseTokenObtainPair",
       "fields": {
@@ -1796,7 +1861,7 @@
         "category_id": {
           "nullable": true,
           "required": false,
-          "type": "integer",
+          "type": "string",
           "wire": "category_id"
         },
         "category_name": {
@@ -1831,14 +1896,14 @@
         },
         "id": {
           "nullable": false,
-          "required": true,
-          "type": "integer",
+          "required": false,
+          "type": "string",
           "wire": "id"
         },
         "lesson_id": {
           "nullable": true,
           "required": false,
-          "type": "integer",
+          "type": "string",
           "wire": "lesson_id"
         },
         "locked": {
@@ -1879,13 +1944,13 @@
         "event_id": {
           "nullable": false,
           "required": true,
-          "type": "integer",
+          "type": "string",
           "wire": "event_id"
         },
         "id": {
           "nullable": false,
-          "required": true,
-          "type": "integer",
+          "required": false,
+          "type": "string",
           "wire": "id"
         }
       }
@@ -1913,8 +1978,8 @@
         },
         "id": {
           "nullable": false,
-          "required": true,
-          "type": "integer",
+          "required": false,
+          "type": "string",
           "wire": "id"
         },
         "name": {
@@ -1943,13 +2008,13 @@
         "event_id": {
           "nullable": false,
           "required": true,
-          "type": "integer",
+          "type": "string",
           "wire": "event_id"
         },
         "id": {
           "nullable": false,
-          "required": true,
-          "type": "integer",
+          "required": false,
+          "type": "string",
           "wire": "id"
         },
         "instructor_id": {
@@ -1971,8 +2036,8 @@
         },
         "id": {
           "nullable": false,
-          "required": true,
-          "type": "integer",
+          "required": false,
+          "type": "string",
           "wire": "id"
         },
         "name": {
@@ -1989,19 +2054,19 @@
         "event_id": {
           "nullable": false,
           "required": true,
-          "type": "integer",
+          "type": "string",
           "wire": "event_id"
         },
         "id": {
           "nullable": false,
-          "required": true,
-          "type": "integer",
+          "required": false,
+          "type": "string",
           "wire": "id"
         },
         "tag_id": {
           "nullable": false,
           "required": true,
-          "type": "integer",
+          "type": "string",
           "wire": "tag_id"
         }
       }
@@ -2586,8 +2651,8 @@
         },
         "id": {
           "nullable": false,
-          "required": true,
-          "type": "integer",
+          "required": false,
+          "type": "string",
           "wire": "id"
         },
         "module_id": {
@@ -2640,13 +2705,13 @@
         "id": {
           "nullable": false,
           "required": true,
-          "type": "integer",
+          "type": "string",
           "wire": "id"
         },
         "parent_rule": {
           "nullable": true,
           "required": false,
-          "type": "integer",
+          "type": "string",
           "wire": "parent_rule"
         },
         "queue_data": {
@@ -3313,6 +3378,76 @@
         }
       }
     },
+    "SSOApplication": {
+      "curated_model": "SSOApplication",
+      "fields": {
+        "client_id": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "client_id"
+        },
+        "client_secret": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "client_secret"
+        },
+        "id": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "id"
+        },
+        "name": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "name"
+        },
+        "owner": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "owner"
+        },
+        "redirect_uris": {
+          "nullable": false,
+          "required": false,
+          "type": "string",
+          "wire": "redirect_uris"
+        },
+        "skip_authorization": {
+          "nullable": false,
+          "required": true,
+          "type": "boolean",
+          "wire": "skip_authorization"
+        }
+      }
+    },
+    "SSOTokenExchangeResponse": {
+      "curated_model": "SSOTokenExchangeResponse",
+      "fields": {
+        "access_token": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "access_token"
+        },
+        "expires_at": {
+          "nullable": false,
+          "required": true,
+          "type": "integer",
+          "wire": "expires_at"
+        },
+        "refresh_token": {
+          "nullable": false,
+          "required": true,
+          "type": "string",
+          "wire": "refresh_token"
+        }
+      }
+    },
     "Seating": {
       "curated_model": "Seating",
       "fields": {
@@ -3500,5 +3635,5 @@
       }
     }
   },
-  "version": "7.1.0"
+  "version": "7.3.0"
 }
