@@ -10,10 +10,11 @@ from typing import TYPE_CHECKING
 from ..src.types.lesson import Lesson
 from ..src.types.lesson_rule import LessonRule
 from .client_shared import ClientCoreMixin
-from .utils import resolve_item_or_id
+from .utils import UUIDLike, resolve_item_or_id, resolve_item_or_uuid
 
 if TYPE_CHECKING:
     from ..src.types.module import ModuleLike
+
 
 class LessonClientMixin(ClientCoreMixin):
     """Mixin that exposes lesson endpoints."""
@@ -35,12 +36,14 @@ class LessonClientMixin(ClientCoreMixin):
             module__id=module__id,
         )
 
-    def get_lesson(self, lesson_id: int) -> Lesson:
+    def get_lesson(self, lesson_id: "UUIDLike | Lesson") -> Lesson:
         """Return a single ``Lesson`` by its id."""
         from ..client import HiveClient
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
-        data = self.get(f"/api/core/schedule/lessons/{lesson_id}/")
+        data = self.get(
+            f"/api/core/schedule/lessons/{resolve_item_or_uuid(lesson_id)}/"
+        )
         assert isinstance(data, dict)
         return Lesson.from_dict(data, hive_client=self)
 
@@ -64,25 +67,25 @@ class LessonClientMixin(ClientCoreMixin):
             self.post("/api/core/schedule/lessons/", payload), hive_client=self
         )
 
-    def update_lesson(self, lesson: "int | Lesson", **fields: object) -> Lesson:
+    def update_lesson(self, lesson: "UUIDLike | Lesson", **fields: object) -> Lesson:
         """Partially update a lesson with the given fields (name/description)."""
         from ..client import HiveClient
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
-        lesson_id = resolve_item_or_id(lesson)
+        lesson_id = resolve_item_or_uuid(lesson)
         data = self.patch(f"/api/core/schedule/lessons/{lesson_id}/", dict(fields))
         assert isinstance(data, dict)
         return Lesson.from_dict(data, hive_client=self)
 
-    def delete_lesson(self, lesson_id: int) -> None:
+    def delete_lesson(self, lesson_id: "UUIDLike | Lesson") -> None:
         """Delete a lesson by id."""
-        self.delete(f"/api/core/schedule/lessons/{lesson_id}/")
+        self.delete(f"/api/core/schedule/lessons/{resolve_item_or_uuid(lesson_id)}/")
 
     # --- Rules ---
 
-    def get_lesson_rules(self, *, lesson: "int | Lesson") -> Iterable[LessonRule]:
+    def get_lesson_rules(self, *, lesson: "UUIDLike | Lesson") -> Iterable[LessonRule]:
         """Yield the queue rules configured for ``lesson`` (id or instance)."""
-        lesson_id = resolve_item_or_id(lesson)
+        lesson_id = resolve_item_or_uuid(lesson)
         return self._get_core_items(
             f"/api/core/schedule/lessons/{lesson_id}/rules/",
             LessonRule,
@@ -91,8 +94,8 @@ class LessonClientMixin(ClientCoreMixin):
     def create_lesson_rule(
         self,
         *,
-        lesson: "int | Lesson",
-        parent_rule: int | None = None,
+        lesson: "UUIDLike | Lesson",
+        parent_rule: UUIDLike | None = None,
         student_groups: list[int] | None = None,
         queue: int | None = None,
     ) -> LessonRule:
@@ -100,9 +103,10 @@ class LessonClientMixin(ClientCoreMixin):
         from ..client import HiveClient
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
-        lesson_id = resolve_item_or_id(lesson)
+        lesson_id = resolve_item_or_uuid(lesson)
+        parent_rule_id = resolve_item_or_uuid(parent_rule)
         payload: dict[str, object] = {
-            "parent_rule": parent_rule,
+            "parent_rule": str(parent_rule_id) if parent_rule_id is not None else None,
             "student_groups": student_groups if student_groups is not None else [],
             "queue": queue,
         }
@@ -113,22 +117,27 @@ class LessonClientMixin(ClientCoreMixin):
     def update_lesson_rule(
         self,
         *,
-        lesson: "int | Lesson",
-        rule_id: int,
+        lesson: "UUIDLike | Lesson",
+        rule_id: "UUIDLike | LessonRule",
         **fields: object,
     ) -> LessonRule:
         """Partially update a lesson rule with the given fields."""
         from ..client import HiveClient
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
-        lesson_id = resolve_item_or_id(lesson)
+        lesson_id = resolve_item_or_uuid(lesson)
         data = self.patch(
-            f"/api/core/schedule/lessons/{lesson_id}/rules/{rule_id}/", dict(fields)
+            f"/api/core/schedule/lessons/{lesson_id}/rules/{resolve_item_or_uuid(rule_id)}/",
+            dict(fields),
         )
         assert isinstance(data, dict)
         return LessonRule.from_dict(data, hive_client=self)
 
-    def delete_lesson_rule(self, *, lesson: "int | Lesson", rule_id: int) -> None:
+    def delete_lesson_rule(
+        self, *, lesson: "UUIDLike | Lesson", rule_id: "UUIDLike | LessonRule"
+    ) -> None:
         """Delete a lesson rule by id."""
-        lesson_id = resolve_item_or_id(lesson)
-        self.delete(f"/api/core/schedule/lessons/{lesson_id}/rules/{rule_id}/")
+        lesson_id = resolve_item_or_uuid(lesson)
+        self.delete(
+            f"/api/core/schedule/lessons/{lesson_id}/rules/{resolve_item_or_uuid(rule_id)}/"
+        )

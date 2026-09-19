@@ -17,13 +17,20 @@ from pyhive.src.types.schedule_event import ScheduleEvent
 
 HIVE_URL = "https://hive.example.com"
 
-EVENT_CATEGORY = {"id": 1, "name": "Cat", "color": "#fff"}
-EVENT_ATTENDEE = {"id": 1, "event_id": 1, "attendee_class_id": 2}
-EVENT_INSTRUCTOR = {"id": 1, "event_id": 1, "instructor_id": 2}
-EVENT_TAG = {"id": 1, "name": "Tag", "color": "#000"}
-EVENT_TAGGING = {"id": 1, "event_id": 1, "tag_id": 1}
+EVENT_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+CATEGORY_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+TAG_ID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+TAGGING_ID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+ATTENDEE_ID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
+INSTRUCTOR_LINK_ID = "ffffffff-ffff-4fff-8fff-ffffffffffff"
+
+EVENT_CATEGORY = {"id": CATEGORY_ID, "name": "Cat", "color": "#fff"}
+EVENT_ATTENDEE = {"id": ATTENDEE_ID, "event_id": EVENT_ID, "attendee_class_id": 2}
+EVENT_INSTRUCTOR = {"id": INSTRUCTOR_LINK_ID, "event_id": EVENT_ID, "instructor_id": 2}
+EVENT_TAG = {"id": TAG_ID, "name": "Tag", "color": "#000"}
+EVENT_TAGGING = {"id": TAGGING_ID, "event_id": EVENT_ID, "tag_id": TAG_ID}
 SCHEDULE_EVENT = {
-    "id": 1,
+    "id": EVENT_ID,
     "start": "2026-01-01T10:00:00Z",
     "end": "2026-01-01T11:00:00Z",
     "attendees": [],
@@ -67,9 +74,9 @@ def test_get_schedule_events(httpx_mock: Any) -> None:
 def test_get_schedule_event(httpx_mock: Any) -> None:
     client = _client(httpx_mock)
     httpx_mock.add_response(
-        url=f"{HIVE_URL}/api/core/schedule/events/1/", json=SCHEDULE_EVENT
+        url=f"{HIVE_URL}/api/core/schedule/events/{EVENT_ID}/", json=SCHEDULE_EVENT
     )
-    event = client.get_schedule_event(1)
+    event = client.get_schedule_event(EVENT_ID)
     assert isinstance(event, ScheduleEvent)
 
 
@@ -87,9 +94,11 @@ def test_create_schedule_event(httpx_mock: Any) -> None:
 def test_delete_schedule_event(httpx_mock: Any) -> None:
     client = _client(httpx_mock)
     httpx_mock.add_response(
-        method="DELETE", url=f"{HIVE_URL}/api/core/schedule/events/1/", status_code=204
+        method="DELETE",
+        url=f"{HIVE_URL}/api/core/schedule/events/{EVENT_ID}/",
+        status_code=204,
     )
-    client.delete_schedule_event(1)
+    client.delete_schedule_event(EVENT_ID)
 
 
 def test_get_event_categories(httpx_mock: Any) -> None:
@@ -104,16 +113,19 @@ def test_get_event_categories(httpx_mock: Any) -> None:
 def test_get_event_category(httpx_mock: Any) -> None:
     client = _client(httpx_mock)
     httpx_mock.add_response(
-        url=f"{HIVE_URL}/api/core/schedule/categories/1/", json=EVENT_CATEGORY
+        url=f"{HIVE_URL}/api/core/schedule/categories/{CATEGORY_ID}/",
+        json=EVENT_CATEGORY,
     )
-    category = client.get_event_category(1)
+    category = client.get_event_category(CATEGORY_ID)
     assert isinstance(category, EventCategory)
 
 
 def test_create_event_category(httpx_mock: Any) -> None:
     client = _client(httpx_mock)
     httpx_mock.add_response(
-        method="POST", url=f"{HIVE_URL}/api/core/schedule/categories/", json=EVENT_CATEGORY
+        method="POST",
+        url=f"{HIVE_URL}/api/core/schedule/categories/",
+        json=EVENT_CATEGORY,
     )
     category = client.create_event_category("Cat", "#fff")
     assert isinstance(category, EventCategory)
@@ -123,7 +135,7 @@ def test_update_event_category(httpx_mock: Any) -> None:
     client = _client(httpx_mock)
     httpx_mock.add_response(
         method="PATCH",
-        url=f"{HIVE_URL}/api/core/schedule/categories/1/",
+        url=f"{HIVE_URL}/api/core/schedule/categories/{CATEGORY_ID}/",
         json=EVENT_CATEGORY,
     )
     category = EventCategory.from_dict(EVENT_CATEGORY, hive_client=client)
@@ -135,10 +147,10 @@ def test_delete_event_category(httpx_mock: Any) -> None:
     client = _client(httpx_mock)
     httpx_mock.add_response(
         method="DELETE",
-        url=f"{HIVE_URL}/api/core/schedule/categories/1/",
+        url=f"{HIVE_URL}/api/core/schedule/categories/{CATEGORY_ID}/",
         status_code=204,
     )
-    client.delete_event_category(1)
+    client.delete_event_category(CATEGORY_ID)
 
 
 def test_event_attendee_crud(httpx_mock: Any) -> None:
@@ -153,14 +165,14 @@ def test_event_attendee_crud(httpx_mock: Any) -> None:
     )
     httpx_mock.add_response(
         method="DELETE",
-        url=f"{HIVE_URL}/api/core/schedule/event-attendees/1/",
+        url=f"{HIVE_URL}/api/core/schedule/event-attendees/{ATTENDEE_ID}/",
         status_code=204,
     )
     assert list(client.get_event_attendees()) == [
         EventAttendee.from_dict(EVENT_ATTENDEE, hive_client=client)
     ]
-    assert isinstance(client.create_event_attendee(1, 2), EventAttendee)
-    client.delete_event_attendee(1)
+    assert isinstance(client.create_event_attendee(EVENT_ID, 2), EventAttendee)
+    client.delete_event_attendee(ATTENDEE_ID)
 
 
 def test_event_instructor_crud(httpx_mock: Any) -> None:
@@ -175,20 +187,20 @@ def test_event_instructor_crud(httpx_mock: Any) -> None:
     )
     httpx_mock.add_response(
         method="DELETE",
-        url=f"{HIVE_URL}/api/core/schedule/event-instructors/1/",
+        url=f"{HIVE_URL}/api/core/schedule/event-instructors/{INSTRUCTOR_LINK_ID}/",
         status_code=204,
     )
     assert list(client.get_event_instructors()) == [
         EventInstructor.from_dict(EVENT_INSTRUCTOR, hive_client=client)
     ]
-    assert isinstance(client.create_event_instructor(1, 2), EventInstructor)
-    client.delete_event_instructor(1)
+    assert isinstance(client.create_event_instructor(EVENT_ID, 2), EventInstructor)
+    client.delete_event_instructor(INSTRUCTOR_LINK_ID)
 
 
 def test_event_tag_crud(httpx_mock: Any) -> None:
     client = _client(httpx_mock)
     httpx_mock.add_response(
-        url=f"{HIVE_URL}/api/core/schedule/event-tags/1/", json=EVENT_TAG
+        url=f"{HIVE_URL}/api/core/schedule/event-tags/{TAG_ID}/", json=EVENT_TAG
     )
     httpx_mock.add_response(
         url=f"{HIVE_URL}/api/core/schedule/event-tags/", json=[EVENT_TAG]
@@ -197,20 +209,22 @@ def test_event_tag_crud(httpx_mock: Any) -> None:
         method="POST", url=f"{HIVE_URL}/api/core/schedule/event-tags/", json=EVENT_TAG
     )
     httpx_mock.add_response(
-        method="PATCH", url=f"{HIVE_URL}/api/core/schedule/event-tags/1/", json=EVENT_TAG
+        method="PATCH",
+        url=f"{HIVE_URL}/api/core/schedule/event-tags/{TAG_ID}/",
+        json=EVENT_TAG,
     )
     httpx_mock.add_response(
         method="DELETE",
-        url=f"{HIVE_URL}/api/core/schedule/event-tags/1/",
+        url=f"{HIVE_URL}/api/core/schedule/event-tags/{TAG_ID}/",
         status_code=204,
     )
-    assert isinstance(client.get_event_tag(1), EventTag)
+    assert isinstance(client.get_event_tag(TAG_ID), EventTag)
     assert list(client.get_event_tags()) == [
         EventTag.from_dict(EVENT_TAG, hive_client=client)
     ]
     assert isinstance(client.create_event_tag("Tag", "#000"), EventTag)
-    assert isinstance(client.update_event_tag(1, name="Tag2"), EventTag)
-    client.delete_event_tag(1)
+    assert isinstance(client.update_event_tag(TAG_ID, name="Tag2"), EventTag)
+    client.delete_event_tag(TAG_ID)
 
 
 def test_event_tagging_crud(httpx_mock: Any) -> None:
@@ -225,14 +239,14 @@ def test_event_tagging_crud(httpx_mock: Any) -> None:
     )
     httpx_mock.add_response(
         method="DELETE",
-        url=f"{HIVE_URL}/api/core/schedule/event-taggings/1/",
+        url=f"{HIVE_URL}/api/core/schedule/event-taggings/{TAGGING_ID}/",
         status_code=204,
     )
     assert list(client.get_event_taggings()) == [
         EventTagging.from_dict(EVENT_TAGGING, hive_client=client)
     ]
-    assert isinstance(client.create_event_tagging(1, 1), EventTagging)
-    client.delete_event_tagging(1)
+    assert isinstance(client.create_event_tagging(EVENT_ID, TAG_ID), EventTagging)
+    client.delete_event_tagging(TAGGING_ID)
 
 
 def test_create_daily_review(httpx_mock: Any) -> None:

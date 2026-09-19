@@ -12,13 +12,19 @@ from typing import TYPE_CHECKING
 from ..src.types.event_category import EventCategory
 from ..src.types.schedule_event import ScheduleEvent
 from .client_shared import ClientCoreMixin
+from .utils import UUIDLike, resolve_item_or_uuid
 
 if TYPE_CHECKING:
     from ..src.types.event_attendee import EventAttendee
     from ..src.types.event_instructor import EventInstructor
     from ..src.types.event_tag import EventTag
     from ..src.types.event_tagging import EventTagging
+    from ..src.types.lesson import Lesson
     from ..src.types.module import Module
+
+
+def _optional_str(value: UUIDLike | None) -> str | None:
+    return None if value is None else str(value)
 
 
 class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-methods
@@ -29,7 +35,7 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
         *,
         start__gte: datetime.datetime | None = None,
         end__lte: datetime.datetime | None = None,
-        lesson__id: int | None = None,
+        lesson__id: "UUIDLike | Lesson | None" = None,
     ) -> Iterable[ScheduleEvent]:
         """Yield ``ScheduleEvent`` objects in the given time window."""
         return self._get_core_items(
@@ -37,15 +43,15 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
             ScheduleEvent,
             start__gte=start__gte.isoformat() if start__gte is not None else None,
             end__lte=end__lte.isoformat() if end__lte is not None else None,
-            lesson__id=lesson__id,
+            lesson__id=_optional_str(resolve_item_or_uuid(lesson__id)),
         )
 
-    def get_schedule_event(self, event_id: int) -> ScheduleEvent:
+    def get_schedule_event(self, event_id: "UUIDLike | ScheduleEvent") -> ScheduleEvent:
         """Return a single ``ScheduleEvent`` by its id."""
         from ..client import HiveClient
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
-        data = self.get(f"/api/core/schedule/events/{event_id}/")
+        data = self.get(f"/api/core/schedule/events/{resolve_item_or_uuid(event_id)}/")
         assert isinstance(data, dict)
         return ScheduleEvent.from_dict(data, hive_client=self)
 
@@ -55,9 +61,9 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
         end: datetime.datetime,
         *,
         title: str | None = None,
-        category: int | None = None,
+        category: "UUIDLike | EventCategory | None" = None,
         room: int | None = None,
-        lesson: int | None = None,
+        lesson: "UUIDLike | Lesson | None" = None,
         hidden_from_students: bool = False,
         locked: bool = False,
         description: str = "",
@@ -70,9 +76,9 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
             "title": title,
             "start": start.isoformat(),
             "end": end.isoformat(),
-            "category_id": category,
+            "category_id": _optional_str(resolve_item_or_uuid(category)),
             "room_id": room,
-            "lesson_id": lesson,
+            "lesson_id": _optional_str(resolve_item_or_uuid(lesson)),
             "hidden_from_students": hidden_from_students,
             "locked": locked,
             "description": description,
@@ -81,9 +87,9 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
             self.post("/api/core/schedule/events/", payload), hive_client=self
         )
 
-    def delete_schedule_event(self, event_id: int) -> None:
+    def delete_schedule_event(self, event_id: "UUIDLike | ScheduleEvent") -> None:
         """Delete a schedule event by id."""
-        self.delete(f"/api/core/schedule/events/{event_id}/")
+        self.delete(f"/api/core/schedule/events/{resolve_item_or_uuid(event_id)}/")
 
     # --- Categories ---
 
@@ -91,12 +97,16 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
         """Yield all event categories."""
         return self._get_core_items("/api/core/schedule/categories/", EventCategory)
 
-    def get_event_category(self, category_id: int) -> EventCategory:
+    def get_event_category(
+        self, category_id: "UUIDLike | EventCategory"
+    ) -> EventCategory:
         """Return a single event category by id."""
         from ..client import HiveClient
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
-        data = self.get(f"/api/core/schedule/categories/{category_id}/")
+        data = self.get(
+            f"/api/core/schedule/categories/{resolve_item_or_uuid(category_id)}/"
+        )
         assert isinstance(data, dict)
         return EventCategory.from_dict(data, hive_client=self)
 
@@ -127,7 +137,7 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
         )
 
     def update_event_category(
-        self, category: EventCategory, **fields: object
+        self, category: "UUIDLike | EventCategory", **fields: object
     ) -> EventCategory:
         """Partially update an event category with the given fields."""
         from ..client import HiveClient
@@ -136,13 +146,17 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
         payload: dict[str, object] = {
             k: v.value if hasattr(v, "value") else v for k, v in fields.items()
         }
-        data = self.patch(f"/api/core/schedule/categories/{category.id}/", payload)
+        data = self.patch(
+            f"/api/core/schedule/categories/{resolve_item_or_uuid(category)}/", payload
+        )
         assert isinstance(data, dict)
         return EventCategory.from_dict(data, hive_client=self)
 
-    def delete_event_category(self, category_id: int) -> None:
+    def delete_event_category(self, category_id: "UUIDLike | EventCategory") -> None:
         """Delete an event category by id."""
-        self.delete(f"/api/core/schedule/categories/{category_id}/")
+        self.delete(
+            f"/api/core/schedule/categories/{resolve_item_or_uuid(category_id)}/"
+        )
 
     # --- Attendees / instructors / tags / taggings ---
 
@@ -154,7 +168,9 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
             "/api/core/schedule/event-attendees/", EventAttendee
         )
 
-    def create_event_attendee(self, event: int, attendee_class: int) -> "EventAttendee":
+    def create_event_attendee(
+        self, event: "UUIDLike | ScheduleEvent", attendee_class: int
+    ) -> "EventAttendee":
         """Attach an attending class to an event."""
         from ..client import HiveClient
         from ..src.types.event_attendee import EventAttendee
@@ -163,14 +179,19 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
         return EventAttendee.from_dict(
             self.post(
                 "/api/core/schedule/event-attendees/",
-                {"event_id": event, "attendee_class_id": attendee_class},
+                {
+                    "event_id": str(resolve_item_or_uuid(event)),
+                    "attendee_class_id": attendee_class,
+                },
             ),
             hive_client=self,
         )
 
-    def delete_event_attendee(self, attendee_id: int) -> None:
+    def delete_event_attendee(self, attendee_id: "UUIDLike | EventAttendee") -> None:
         """Remove an event-attendee link by id."""
-        self.delete(f"/api/core/schedule/event-attendees/{attendee_id}/")
+        self.delete(
+            f"/api/core/schedule/event-attendees/{resolve_item_or_uuid(attendee_id)}/"
+        )
 
     def get_event_instructors(self) -> "Iterable[EventInstructor]":
         """Yield all event-instructor links."""
@@ -180,7 +201,9 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
             "/api/core/schedule/event-instructors/", EventInstructor
         )
 
-    def create_event_instructor(self, event: int, instructor: int) -> "EventInstructor":
+    def create_event_instructor(
+        self, event: "UUIDLike | ScheduleEvent", instructor: int
+    ) -> "EventInstructor":
         """Attach an instructing user to an event."""
         from ..client import HiveClient
         from ..src.types.event_instructor import EventInstructor
@@ -189,14 +212,20 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
         return EventInstructor.from_dict(
             self.post(
                 "/api/core/schedule/event-instructors/",
-                {"event_id": event, "instructor_id": instructor},
+                {
+                    "event_id": str(resolve_item_or_uuid(event)),
+                    "instructor_id": instructor,
+                },
             ),
             hive_client=self,
         )
 
-    def delete_event_instructor(self, instructor_link_id: int) -> None:
+    def delete_event_instructor(
+        self, instructor_link_id: "UUIDLike | EventInstructor"
+    ) -> None:
         """Remove an event-instructor link by id."""
-        self.delete(f"/api/core/schedule/event-instructors/{instructor_link_id}/")
+        link_id = resolve_item_or_uuid(instructor_link_id)
+        self.delete(f"/api/core/schedule/event-instructors/{link_id}/")
 
     def get_event_tags(self) -> "Iterable[EventTag]":
         """Yield all event tags."""
@@ -204,13 +233,15 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
 
         return self._get_core_items("/api/core/schedule/event-tags/", EventTag)
 
-    def get_event_tag(self, tag_id: int) -> "EventTag":
+    def get_event_tag(self, tag_id: "UUIDLike | EventTag") -> "EventTag":
         """Return a single event tag by id."""
         from ..client import HiveClient
         from ..src.types.event_tag import EventTag
 
         assert isinstance(self, HiveClient), "self must be an instance of HiveClient"
-        data = self.get(f"/api/core/schedule/event-tags/{tag_id}/")
+        data = self.get(
+            f"/api/core/schedule/event-tags/{resolve_item_or_uuid(tag_id)}/"
+        )
         assert isinstance(data, dict)
         return EventTag.from_dict(data, hive_client=self)
 
@@ -226,7 +257,11 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
         )
 
     def update_event_tag(
-        self, tag_id: int, *, name: str | None = None, color: str | None = None
+        self,
+        tag_id: "UUIDLike | EventTag",
+        *,
+        name: str | None = None,
+        color: str | None = None,
     ) -> "EventTag":
         """Partially update an event tag."""
         from ..client import HiveClient
@@ -238,13 +273,15 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
             payload["name"] = name
         if color is not None:
             payload["color"] = color
-        data = self.patch(f"/api/core/schedule/event-tags/{tag_id}/", payload)
+        data = self.patch(
+            f"/api/core/schedule/event-tags/{resolve_item_or_uuid(tag_id)}/", payload
+        )
         assert isinstance(data, dict)
         return EventTag.from_dict(data, hive_client=self)
 
-    def delete_event_tag(self, tag_id: int) -> None:
+    def delete_event_tag(self, tag_id: "UUIDLike | EventTag") -> None:
         """Delete an event tag by id."""
-        self.delete(f"/api/core/schedule/event-tags/{tag_id}/")
+        self.delete(f"/api/core/schedule/event-tags/{resolve_item_or_uuid(tag_id)}/")
 
     def get_event_taggings(self) -> "Iterable[EventTagging]":
         """Yield all event-tagging links."""
@@ -252,7 +289,9 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
 
         return self._get_core_items("/api/core/schedule/event-taggings/", EventTagging)
 
-    def create_event_tagging(self, event: int, tag: int) -> "EventTagging":
+    def create_event_tagging(
+        self, event: "UUIDLike | ScheduleEvent", tag: "UUIDLike | EventTag"
+    ) -> "EventTagging":
         """Attach an event tag to an event."""
         from ..client import HiveClient
         from ..src.types.event_tagging import EventTagging
@@ -261,14 +300,19 @@ class ScheduleClientMixin(ClientCoreMixin):  # pylint: disable=too-many-public-m
         return EventTagging.from_dict(
             self.post(
                 "/api/core/schedule/event-taggings/",
-                {"event_id": event, "tag_id": tag},
+                {
+                    "event_id": str(resolve_item_or_uuid(event)),
+                    "tag_id": str(resolve_item_or_uuid(tag)),
+                },
             ),
             hive_client=self,
         )
 
-    def delete_event_tagging(self, tagging_id: int) -> None:
+    def delete_event_tagging(self, tagging_id: "UUIDLike | EventTagging") -> None:
         """Remove an event-tagging link by id."""
-        self.delete(f"/api/core/schedule/event-taggings/{tagging_id}/")
+        self.delete(
+            f"/api/core/schedule/event-taggings/{resolve_item_or_uuid(tagging_id)}/"
+        )
 
     # --- Daily review ---
 
