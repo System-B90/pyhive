@@ -16,10 +16,10 @@ from .utils import UUIDLike, resolve_item_or_uuid
 
 if TYPE_CHECKING:
     from ..src.types.event_attendee import EventAttendee
-    from ..src.types.lesson import Lesson
     from ..src.types.event_instructor import EventInstructor
     from ..src.types.event_tag import EventTag
     from ..src.types.event_tagging import EventTagging
+    from ..src.types.lesson import Lesson
     from ..src.types.module import Module
 
 
