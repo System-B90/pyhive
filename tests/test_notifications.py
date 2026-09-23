@@ -42,7 +42,9 @@ def _client(httpx_mock: Any) -> HiveClient:
 
 def test_get_notifications(httpx_mock: Any) -> None:
     client = _client(httpx_mock)
-    httpx_mock.add_response(url=f"{HIVE_URL}/api/core/notification/", json=[NOTIFICATION])
+    httpx_mock.add_response(
+        url=f"{HIVE_URL}/api/core/notification/", json=[NOTIFICATION]
+    )
     notifications = list(client.get_notifications())
     assert notifications == [Notification.from_dict(NOTIFICATION, hive_client=client)]
 

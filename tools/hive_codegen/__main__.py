@@ -38,7 +38,13 @@ def _format(output_dir: Path) -> None:
     for tool in (["black", "-q"], ["ruff", "format"]):
         try:
             subprocess.run(
-                [sys.executable, "-m", *tool, str(output_dir / "enums.py"), str(output_dir / "models.py")],
+                [
+                    sys.executable,
+                    "-m",
+                    *tool,
+                    str(output_dir / "enums.py"),
+                    str(output_dir / "models.py"),
+                ],
                 check=True,
                 capture_output=True,
             )
@@ -62,7 +68,8 @@ def _cmd_sync(args: argparse.Namespace) -> int:
     output_dir = config.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "__init__.py").write_text(
-        '"""Auto-generated PyHive core layer. Do not edit by hand."""\n', encoding="utf-8"
+        '"""Auto-generated PyHive core layer. Do not edit by hand."""\n',
+        encoding="utf-8",
     )
 
     old_manifest = load_manifest(output_dir / "manifest.json")
@@ -75,8 +82,12 @@ def _cmd_sync(args: argparse.Namespace) -> int:
 
     project_changed = False
     if not args.check:
-        (output_dir / "enums.py").write_text(render_enums_module(spec), encoding="utf-8")
-        (output_dir / "models.py").write_text(render_models_module(spec, config), encoding="utf-8")
+        (output_dir / "enums.py").write_text(
+            render_enums_module(spec), encoding="utf-8"
+        )
+        (output_dir / "models.py").write_text(
+            render_models_module(spec, config), encoding="utf-8"
+        )
         write_manifest(new_manifest, output_dir)
         _format(output_dir)
 
@@ -97,7 +108,9 @@ def _cmd_sync(args: argparse.Namespace) -> int:
             {
                 "api_version": version,
                 "has_breaking": "true" if report.has_breaking else "false",
-                "has_changes": "true" if (not report.is_empty or project_changed) else "false",
+                "has_changes": "true"
+                if (not report.is_empty or project_changed)
+                else "false",
             },
         )
 
@@ -111,11 +124,23 @@ def main(argv: list[str] | None = None) -> int:
     sync = sub.add_parser("sync", help="regenerate the core layer from a spec")
     sync.add_argument("--spec", required=True, help="path to Hive's api/core.yaml")
     sync.add_argument("--repo-root", default=".", help="PyHive repo root")
-    sync.add_argument("--version", default=None, help="override API version (default: spec info.version)")
-    sync.add_argument("--check", action="store_true", help="report drift without writing files")
-    sync.add_argument("--no-apply", action="store_true", help="skip pyproject/README/version edits")
-    sync.add_argument("--drift-out", default=None, help="write the drift report markdown here")
-    sync.add_argument("--github-output", default=None, help="append key=value outputs here")
+    sync.add_argument(
+        "--version",
+        default=None,
+        help="override API version (default: spec info.version)",
+    )
+    sync.add_argument(
+        "--check", action="store_true", help="report drift without writing files"
+    )
+    sync.add_argument(
+        "--no-apply", action="store_true", help="skip pyproject/README/version edits"
+    )
+    sync.add_argument(
+        "--drift-out", default=None, help="write the drift report markdown here"
+    )
+    sync.add_argument(
+        "--github-output", default=None, help="append key=value outputs here"
+    )
     sync.set_defaults(func=_cmd_sync)
 
     args = parser.parse_args(argv)

@@ -1,5 +1,6 @@
 from typing import Literal, LiteralString
 
+import httpx
 import pytest
 
 from pyhive.client import HiveClient
@@ -47,7 +48,7 @@ def test_get_subjects_by_nonexistent_name(client: HiveClient):
 )
 def test_get_subjects_by_parent_program(
     client: HiveClient,
-    filter_arg: Literal["parent_program__id__in"] | Literal["parent_program"],
+    filter_arg: Literal["parent_program__id__in", "parent_program"],
     attr_name: Literal["parent_program_id"],
 ):
     all_programs = list(client.get_programs())
@@ -113,20 +114,10 @@ def test_subjects_both_program_filters_match_allowed(client: HiveClient):
 def test_create_subject(
     client: HiveClient,
     program: Program,
-    symbol: LiteralString | Literal["MATH"] | Literal["SCI"] | Literal["PHY"],
-    name: (
-        Literal["Mathematics"]
-        | Literal["Science"]
-        | Literal["LongSymbol"]
-        | Literal["Physics"]
-    ),
-    color: (
-        Literal["#FF0000"]
-        | Literal["#00FF00"]
-        | Literal["#ABCDEF"]
-        | Literal["#FFEEAA"]
-    ),
-    segel_brief: LiteralString | Literal[""] | Literal["Excellent progress"],
+    symbol: Literal["MATH", "SCI", "PHY"] | LiteralString,
+    name: Literal["Mathematics", "Science", "LongSymbol", "Physics"],
+    color: Literal["#FF0000", "#00FF00", "#ABCDEF", "#FFEEAA"],
+    segel_brief: Literal["", "Excellent progress"] | LiteralString,
 ):
     subject = client.create_subject(
         symbol=symbol, name=name, program=program, color=color, segel_brief=segel_brief
@@ -171,8 +162,8 @@ def test_delete_subject(client: HiveClient, program: Program):
 
 def test_delete_subject_invalid_input(client: HiveClient):
     """Deleting a non-existent subject or invalid input should raise an error."""
-    with pytest.raises(Exception):
-        client.delete_subject(999999)  # Likely 404
+    with pytest.raises(httpx.HTTPStatusError):
+        client.delete_subject(999999)  # 404
     with pytest.raises(AssertionError):
         client.delete_subject(None)  # pyright: ignore[reportArgumentType]
     with pytest.raises(TypeError):
@@ -185,5 +176,5 @@ def test_delete_subject_twice(client: HiveClient, program: Program):
     """Deleting a subject twice should fail the second time gracefully."""
     subject = client.create_subject("TWICE", "DeleteTwice", program, "#456456")
     client.delete_subject(subject)
-    with pytest.raises(Exception):
+    with pytest.raises(httpx.HTTPStatusError):
         client.delete_subject(subject)  # Second deletion should fail

@@ -1,3 +1,4 @@
+import httpx
 import pytest
 
 from pyhive.client import HiveClient
@@ -115,7 +116,7 @@ def test_update_user(client: HiveClient, mentor: User, program: Program):
         assert user == updated_user, "User's are not equal!"
 
         updated_user.delete()
-        with pytest.raises(Exception):
+        with pytest.raises(httpx.HTTPStatusError):
             user.delete()
     except Exception:
         user.delete()

@@ -6,6 +6,7 @@ Author: Michael K. Steinberg
 """
 
 import pytest
+
 from pyhive.client import HiveClient
 
 

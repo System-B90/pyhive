@@ -28,7 +28,9 @@ from .spec import Spec, filtered_spec_document
 _TOP_CLASS_RE = re.compile(r"^class\s+(\w+)\b", re.MULTILINE)
 
 
-def _run_dmcg(spec_doc_path: Path, aliases_path: Path, base_class: str, out_path: Path) -> None:
+def _run_dmcg(
+    spec_doc_path: Path, aliases_path: Path, base_class: str, out_path: Path
+) -> None:
     cmd = [
         sys.executable,
         "-m",
@@ -108,7 +110,7 @@ def _postprocess(raw: str, spec: Spec) -> str:
     # dmcg renders an import header then the class blocks; split at the first class.
     first = _TOP_CLASS_RE.search(raw)
     header_raw = raw[: first.start()] if first else ""
-    body = raw[first.start():] if first else raw
+    body = raw[first.start() :] if first else raw
 
     # Collapse primitive RootModel wrappers (e.g. a constrained-string `Choice`)
     # back to the primitive, matching PyHive's plain `str`/`int` fields.

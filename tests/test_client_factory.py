@@ -34,7 +34,9 @@ class FakeClient:
     @classmethod
     def _record(cls, method: str, **kwargs: Any) -> "FakeClient":
         cls.last_call = {"method": method, **kwargs}
-        return cls(access_token=kwargs.get("api_token") or "pw-access", refresh_token="")
+        return cls(
+            access_token=kwargs.get("api_token") or "pw-access", refresh_token=""
+        )
 
     def __call__(self, *args: Any, **kwargs: Any) -> "FakeClient":  # pragma: no cover
         raise NotImplementedError
@@ -104,7 +106,9 @@ def test_username_password_takes_priority(monkeypatch, fresh_state):
     assert calls["method"] == "password"
 
 
-def test_explicit_token_overrides_env_and_keyring(monkeypatch, fresh_state, fake_keyring):
+def test_explicit_token_overrides_env_and_keyring(
+    monkeypatch, fresh_state, fake_keyring
+):
     calls = _patch_hive_client(monkeypatch)
     fresh_state.access_token = "explicit-token"
     fake_keyring.set_password(
@@ -142,7 +146,9 @@ def test_env_token_overrides_keyring(monkeypatch, fresh_state, fake_keyring):
     assert calls["auth_strategy"] is None
 
 
-def test_cached_tokens_used_with_cache_auth_strategy(monkeypatch, fresh_state, fake_keyring):
+def test_cached_tokens_used_with_cache_auth_strategy(
+    monkeypatch, fresh_state, fake_keyring
+):
     calls = _patch_hive_client(monkeypatch)
     fake_keyring.set_password(
         client_factory.KEYRING_SERVICE, client_factory.KEYRING_ACCOUNT, "cached-access"
@@ -161,7 +167,9 @@ def test_cached_tokens_used_with_cache_auth_strategy(monkeypatch, fresh_state, f
     assert calls["auth_strategy"] == "cache"
 
 
-def test_missing_refresh_token_falls_back_to_sso(monkeypatch, fresh_state, fake_keyring):
+def test_missing_refresh_token_falls_back_to_sso(
+    monkeypatch, fresh_state, fake_keyring
+):
     """A cached access token with no matching refresh token cannot support
     the 'cache' auth strategy, so we must not hand it to from_api_token
     without a refresh token (which would silently degrade to token_only)."""
@@ -192,7 +200,9 @@ def test_cache_token_flag_stores_access_and_refresh_tokens(
     client_factory.get_hive_client("https://hive.org", verify=False)
 
     assert (
-        fake_keyring.get_password(client_factory.KEYRING_SERVICE, client_factory.KEYRING_ACCOUNT)
+        fake_keyring.get_password(
+            client_factory.KEYRING_SERVICE, client_factory.KEYRING_ACCOUNT
+        )
         == "sso-access"
     )
     assert (
@@ -210,7 +220,9 @@ def test_cache_token_flag_off_does_not_store(monkeypatch, fresh_state, fake_keyr
     client_factory.get_hive_client("https://hive.org", verify=False)
 
     assert (
-        fake_keyring.get_password(client_factory.KEYRING_SERVICE, client_factory.KEYRING_ACCOUNT)
+        fake_keyring.get_password(
+            client_factory.KEYRING_SERVICE, client_factory.KEYRING_ACCOUNT
+        )
         is None
     )
 

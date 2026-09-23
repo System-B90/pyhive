@@ -147,12 +147,7 @@ def test_assignments_conflict_mentor_filters(client: HiveClient, kwargs: Any):
 )
 def test_assignments_conflicts(
     client: HiveClient,
-    conflict_case: (
-        Literal["module"]
-        | Literal["subject"]
-        | Literal["user_classes"]
-        | Literal["user_id"]
-    ),
+    conflict_case: (Literal["module", "subject", "user_classes", "user_id"]),
 ):
     name, arg1, arg2 = conflict_case
 
@@ -161,7 +156,7 @@ def test_assignments_conflicts(
         assert items
         item = items[0]
         with pytest.raises(AssertionError):
-            list(client.get_assignments(**{arg1: item, arg2: getattr(item, "id") + 1}))
+            list(client.get_assignments(**{arg1: item, arg2: item.id + 1}))
     elif name == "user_id":
         with pytest.raises(AssertionError):
             list(client.get_assignments(**{arg1: [5], arg2: 1}))  # pyright: ignore[reportUnknownArgumentType]

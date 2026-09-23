@@ -33,14 +33,16 @@ def test_get_exercise_by_id(client: HiveClient):
 )
 def test_get_exercises_by_parent(
     client: HiveClient,
-    getter_name: Literal["get_modules"] | Literal["get_subjects"],
+    getter_name: Literal["get_modules", "get_subjects"],
     filter_arg: (
-        Literal["parent_module__id"]
-        | Literal["parent_module"]
-        | Literal["parent_module__parent_subject__id"]
-        | Literal["parent_subject"]
+        Literal[
+            "parent_module__id",
+            "parent_module",
+            "parent_module__parent_subject__id",
+            "parent_subject",
+        ]
     ),
-    attr_name: Literal["parent_module_id"] | Literal["parent_subject_id"],
+    attr_name: Literal["parent_module_id", "parent_subject_id"],
 ):
     items = list(getattr(client, getter_name)())
     if not items:
@@ -79,7 +81,7 @@ def test_get_exercises_by_nonexistent_name(client: HiveClient):
     ],
 )
 def test_exercises_conflict(
-    client: HiveClient, conflict_case: Literal["module"] | Literal["subject"]
+    client: HiveClient, conflict_case: Literal["module", "subject"]
 ):
     name, obj_arg, id_arg = conflict_case
     items = list(getattr(client, f"get_{name}s")())

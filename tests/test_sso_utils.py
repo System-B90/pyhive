@@ -5,12 +5,14 @@ Created: 2026-03-29
 Author: Michael K. Steinberg
 """
 
-import pytest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import patch
+
+import pytest
+
 from pyhive.client.sso_utils import (
-    _generate_pkce_pair,
     _exchange_code_for_token,
+    _generate_pkce_pair,
     get_sso_token,
 )
 
@@ -49,7 +51,7 @@ def test_exchange_code_for_token_success(httpx_mock):
 
     assert access == "jwt_simplejwt_123"
     assert refresh == "mock_refresh"
-    assert expires == datetime.fromtimestamp(mock_timestamp, tz=timezone.utc)
+    assert expires == datetime.fromtimestamp(mock_timestamp, tz=UTC)
 
 
 def test_exchange_code_for_token_missing_opaque_token(httpx_mock):
@@ -126,7 +128,7 @@ def test_exchange_code_for_token_exchange_http_error(httpx_mock):
 @patch("pyhive.client.sso_utils._start_local_callback_server")
 def test_get_sso_token_orchestration(mock_server, mock_browser):
     hive_url = "https://hive.example.com"
-    mock_dt = datetime(2026, 3, 29, tzinfo=timezone.utc)
+    mock_dt = datetime(2026, 3, 29, tzinfo=UTC)
     mock_server.return_value = ("access_123", "refresh_123", mock_dt)
 
     access, refresh, expires = get_sso_token(hive_url)

@@ -95,7 +95,9 @@ def delete_exercise(
         def text_output() -> None:
             typer.secho(f"\nExercise '{exercise_id}' deleted.", fg=typer.colors.GREEN)
 
-        print_result({"deleted_exercise_id": exercise_id, "status": "success"}, text_output)
+        print_result(
+            {"deleted_exercise_id": exercise_id, "status": "success"}, text_output
+        )
 
     except Exception as e:  # pylint: disable=broad-exception-caught
         print_error_and_exit(

@@ -1,6 +1,6 @@
 import random
 import time
-from typing import Any, Optional
+from typing import Any
 
 import pytest
 
@@ -163,7 +163,7 @@ def test_modules_both_program_filters_match_allowed(
 
 @pytest.mark.parametrize("exercise_data", EXERCISE_DATA_LIST)
 def test_create_exercise_in_module(module: Module, exercise_data: dict[str, Any]):
-    exercise: Optional[Exercise] = None
+    exercise: Exercise | None = None
     try:
         exercise = module.create_exercise(**exercise_data)
         assert exercise.parent_module == module
