@@ -40,7 +40,9 @@ def list_assignments(
         )
 
         def text_output() -> None:
-            typer.secho(f"\nFound {len(assignments)} assignments:", fg=typer.colors.GREEN)
+            typer.secho(
+                f"\nFound {len(assignments)} assignments:", fg=typer.colors.GREEN
+            )
             print_formatted_list(
                 data=assignments,
                 template="- [{id}]  user:{user}  ex:{exercise}  {assignment_status}",

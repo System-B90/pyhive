@@ -29,7 +29,9 @@ from hive_codegen.enums import member_name
         (5, "Admin", True, "ADMIN"),
     ],
 )
-def test_member_name(value: object, label: str | None, is_int: bool, expected: str) -> None:
+def test_member_name(
+    value: object, label: str | None, is_int: bool, expected: str
+) -> None:
     assert member_name(value, label, is_int) == expected
 
 
@@ -58,10 +60,17 @@ def test_drift_additive_changes() -> None:
         "7.1.0",
         enums={"E": {"is_int": False, "members": {"A": "A", "B": "B"}}},
         models={
-            "M": {"fields": {"id": {"type": "int", "required": True}, "note": {"type": "str", "required": False}}},
+            "M": {
+                "fields": {
+                    "id": {"type": "int", "required": True},
+                    "note": {"type": "str", "required": False},
+                }
+            },
             "N": {"fields": {}},
         },
-        endpoints={"/api/core/x/": {"get": {"operationId": "x", "query_params": {"q": "str"}}}},
+        endpoints={
+            "/api/core/x/": {"get": {"operationId": "x", "query_params": {"q": "str"}}}
+        },
     )
     report = classify(old, new)
     assert not report.has_breaking
@@ -75,7 +84,14 @@ def test_drift_breaking_changes() -> None:
     old = _manifest(
         "7.0.0",
         enums={"E": {"is_int": False, "members": {"A": "A", "B": "B"}}},
-        models={"M": {"fields": {"id": {"type": "int", "required": True}, "x": {"type": "int", "required": True}}}},
+        models={
+            "M": {
+                "fields": {
+                    "id": {"type": "int", "required": True},
+                    "x": {"type": "int", "required": True},
+                }
+            }
+        },
     )
     new = _manifest(
         "7.1.0",

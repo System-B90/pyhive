@@ -7,6 +7,7 @@ Purpose: Shared pytest fixtures. Fixtures below that depend (directly or
     offline-only subset with `-m "not integration"`.
 """
 
+import contextlib
 import random
 import uuid
 
@@ -45,10 +46,10 @@ def mentor(client: HiveClient):
         gender=GenderEnum.NONBINARY,
     )
     yield mentor
-    try:
+    # Teardown is best effort: a test may already have deleted the resource,
+    # and a failed cleanup must not turn a passing test into an error.
+    with contextlib.suppress(Exception):
         mentor.delete()
-    except Exception:
-        pass
 
 
 @pytest.fixture
@@ -61,10 +62,8 @@ def checker(client: HiveClient):
         gender=GenderEnum.NONBINARY,
     )
     yield checker
-    try:
+    with contextlib.suppress(Exception):
         checker.delete()
-    except Exception:
-        pass
 
 
 @pytest.fixture
@@ -72,10 +71,8 @@ def program(client: HiveClient, checker: User):
     name_suffix = uuid.uuid4().hex[:8]
     program = client.create_program(name=f"TestProgram{name_suffix}", checker=checker)
     yield program
-    try:
+    with contextlib.suppress(Exception):
         program.delete()
-    except Exception:
-        pass
 
 
 @pytest.fixture
@@ -90,10 +87,8 @@ def student(client: HiveClient, program: Program, mentor: User):
         number=random.randint(500, 9999),
     )
     yield student
-    try:
+    with contextlib.suppress(Exception):
         student.delete()
-    except Exception:
-        pass
 
 
 @pytest.fixture
@@ -107,10 +102,8 @@ def subject(client: HiveClient, program: Program):
         program=program,
     )
     yield subject
-    try:
+    with contextlib.suppress(Exception):
         subject.delete()
-    except Exception:
-        pass
 
 
 @pytest.fixture
@@ -122,10 +115,8 @@ def module(client: HiveClient, subject: Subject):
         parent_subject=subject,
     )
     yield module
-    try:
+    with contextlib.suppress(Exception):
         module.delete()
-    except Exception:
-        pass
 
 
 @pytest.fixture
@@ -137,10 +128,8 @@ def exercise(client: HiveClient, module: Module):
         parent_module=module,
     )
     yield exercise
-    try:
+    with contextlib.suppress(Exception):
         exercise.delete()
-    except Exception:
-        pass
 
 
 @pytest.fixture(scope="session")
@@ -224,24 +213,16 @@ def large_program(client: HiveClient):
     finally:
         # Cleanup phase (only if necessary)
         for subj in created_subjects:
-            try:
+            with contextlib.suppress(Exception):
                 subj.delete()
-            except Exception:
-                pass
         for user in created_users:
-            try:
+            with contextlib.suppress(Exception):
                 user.delete()
-            except Exception:
-                pass
-        try:
+        with contextlib.suppress(Exception):
             program.delete()
-        except Exception:
-            pass
 
-    try:
+    with contextlib.suppress(Exception):
         checker.delete()
-    except Exception:
-        pass
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:

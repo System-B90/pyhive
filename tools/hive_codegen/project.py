@@ -5,8 +5,12 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-_SUPPORTED_RE = re.compile(r"(?P<head>\[tool\.api_versions\]\s*\nsupported\s*=\s*)\[(?P<body>[^\]]*)\]")
-_PKG_VERSION_RE = re.compile(r'(?m)^(?P<head>version\s*=\s*")(?P<ver>\d+\.\d+\.\d+)(?P<tail>")')
+_SUPPORTED_RE = re.compile(
+    r"(?P<head>\[tool\.api_versions\]\s*\nsupported\s*=\s*)\[(?P<body>[^\]]*)\]"
+)
+_PKG_VERSION_RE = re.compile(
+    r'(?m)^(?P<head>version\s*=\s*")(?P<ver>\d+\.\d+\.\d+)(?P<tail>")'
+)
 _README_BLOCK_RE = re.compile(
     r"(?P<start><!-- SUPPORTED_API_VERSIONS_START -->\n).*?(?P<end><!-- SUPPORTED_API_VERSIONS_END -->)",
     re.DOTALL,
@@ -32,7 +36,9 @@ def add_supported_version(pyproject_text: str, version: str) -> tuple[str, bool]
         return pyproject_text, False
     new = sorted({*current, version}, key=semver_key)
     rendered = "[" + ", ".join(f'"{v}"' for v in new) + "]"
-    updated = _SUPPORTED_RE.sub(lambda m: m.group("head") + rendered, pyproject_text, count=1)
+    updated = _SUPPORTED_RE.sub(
+        lambda m: m.group("head") + rendered, pyproject_text, count=1
+    )
     return updated, True
 
 
@@ -51,7 +57,9 @@ def bump_package_version(pyproject_text: str, part: str) -> tuple[str, str]:
         patch += 1
     new_version = f"{major}.{minor}.{patch}"
     updated = _PKG_VERSION_RE.sub(
-        lambda mm: f"{mm.group('head')}{new_version}{mm.group('tail')}", pyproject_text, count=1
+        lambda mm: f"{mm.group('head')}{new_version}{mm.group('tail')}",
+        pyproject_text,
+        count=1,
     )
     return updated, new_version
 

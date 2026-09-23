@@ -30,16 +30,23 @@ class DriftReport:
         return not (self.additive or self.breaking or self.notes)
 
     def to_markdown(self) -> str:
-        lines = [f"### Hive API drift: `{self.from_version or '∅'}` → `{self.to_version}`", ""]
+        lines = [
+            f"### Hive API drift: `{self.from_version or '∅'}` → `{self.to_version}`",
+            "",
+        ]
         if self.is_empty:
             lines.append("_No schema changes detected._")
             return "\n".join(lines)
         if self.breaking:
-            lines.append(f"#### ⛔ Breaking ({len(self.breaking)}) — manual review required")
+            lines.append(
+                f"#### ⛔ Breaking ({len(self.breaking)}) — manual review required"
+            )
             lines += [f"- {item}" for item in self.breaking]
             lines.append("")
         if self.additive:
-            lines.append(f"#### ✅ Additive ({len(self.additive)}) — safe to auto-merge")
+            lines.append(
+                f"#### ✅ Additive ({len(self.additive)}) — safe to auto-merge"
+            )
             lines += [f"- {item}" for item in self.additive]
             lines.append("")
         if self.notes:
@@ -77,7 +84,9 @@ def _diff_models(old: dict[str, Any], new: dict[str, Any], r: DriftReport) -> No
                     f"({nf[fname]['type']}) — review create payloads"
                 )
             else:
-                r.additive.append(f"Model `{name}`: new field `{fname}` ({nf[fname]['type']})")
+                r.additive.append(
+                    f"Model `{name}`: new field `{fname}` ({nf[fname]['type']})"
+                )
         for fname in of.keys() - nf.keys():
             r.breaking.append(f"Model `{name}`: removed field `{fname}`")
         for fname in of.keys() & nf.keys():
@@ -99,11 +108,18 @@ def _diff_endpoints(old: dict[str, Any], new: dict[str, Any], r: DriftReport) ->
         for method in old[path].keys() - new[path].keys():
             r.breaking.append(f"Endpoint `{path}`: removed method `{method.upper()}`")
         for method in old[path].keys() & new[path].keys():
-            op, npr = old[path][method]["query_params"], new[path][method]["query_params"]
+            op, npr = (
+                old[path][method]["query_params"],
+                new[path][method]["query_params"],
+            )
             for param in npr.keys() - op.keys():
-                r.additive.append(f"`{method.upper()} {path}`: new query param `{param}`")
+                r.additive.append(
+                    f"`{method.upper()} {path}`: new query param `{param}`"
+                )
             for param in op.keys() - npr.keys():
-                r.breaking.append(f"`{method.upper()} {path}`: removed query param `{param}`")
+                r.breaking.append(
+                    f"`{method.upper()} {path}`: removed query param `{param}`"
+                )
 
 
 def classify(old: dict[str, Any] | None, new: dict[str, Any]) -> DriftReport:

@@ -86,7 +86,8 @@ def test_create_schedule_event(httpx_mock: Any) -> None:
         method="POST", url=f"{HIVE_URL}/api/core/schedule/events/", json=SCHEDULE_EVENT
     )
     event = client.create_schedule_event(
-        datetime.datetime(2026, 1, 1, 10), datetime.datetime(2026, 1, 1, 11)
+        datetime.datetime(2026, 1, 1, 10, tzinfo=datetime.UTC),
+        datetime.datetime(2026, 1, 1, 11, tzinfo=datetime.UTC),
     )
     assert isinstance(event, ScheduleEvent)
 

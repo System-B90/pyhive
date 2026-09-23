@@ -29,7 +29,7 @@ codegen = ["datamodel-code-generator[http]>=0.66", "pyyaml>=6.0"]
 # build red on an unrelated PR, with no repo change to point at — which is
 # exactly what happened when ruff started reporting 177 findings on code that
 # had passed the day before. Bump these deliberately, in their own PR.
-lint = ["ruff==0.16.3", "pylint==4.0.6", "mypy==2.3.0"]
+lint = ["ruff==0.16.8", "pylint==4.0.6", "mypy==2.3.0"]
 
 [project.scripts]
 pyhive = "pyhive.cli.cli:main"

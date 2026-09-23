@@ -59,7 +59,7 @@ def test_get_help_response_student_file(client: HiveClient):
 
 
 def test_create_and_delete_new_chat(client: HiveClient) -> None:
-    student = list(client.get_students())[0]
+    student = next(iter(client.get_students()))
     CHAT_TITLE = f"Test Chat with {student.first_name}"
     chat = client.create_chat(with_user=student, title=CHAT_TITLE)
     try:

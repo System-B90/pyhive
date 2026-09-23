@@ -95,7 +95,9 @@ def delete_program(
         def text_output() -> None:
             typer.secho(f"\nProgram '{program_id}' deleted.", fg=typer.colors.GREEN)
 
-        print_result({"deleted_program_id": program_id, "status": "success"}, text_output)
+        print_result(
+            {"deleted_program_id": program_id, "status": "success"}, text_output
+        )
 
     except Exception as e:  # pylint: disable=broad-exception-caught
         print_error_and_exit(

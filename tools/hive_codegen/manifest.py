@@ -72,7 +72,9 @@ def build_manifest(spec: Spec, config: Config) -> dict[str, Any]:
 
 def write_manifest(manifest: dict[str, Any], output_dir: Path) -> Path:
     path = output_dir / MANIFEST_NAME
-    path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return path
 
 
