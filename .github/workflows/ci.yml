@@ -29,7 +29,7 @@ jobs:
   # Interpreter compatibility is a real question, but it's about whether the
   # package *imports and runs*, which is what the compat job below checks.
   checks:
-    name: Lint + typecheck
+    name: Lint + Typecheck
     runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     timeout-minutes: 20
 
@@ -80,7 +80,7 @@ jobs:
   # 3.11-only stdlib use (typing.Self, datetime.UTC, tomllib) in code paths
   # an import alone never reaches.
   unit-min-python:
-    name: Offline unit tests on 3.10
+    name: Offline Unit Tests on 3.10
     runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     timeout-minutes: 15
 
@@ -106,7 +106,7 @@ jobs:
   # produced four identical artifacts and never installed any of them — 4x the
   # runner time to test strictly less.
   build:
-    name: Build wheel
+    name: Build Wheel
     runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     timeout-minutes: 15
 
@@ -158,7 +158,7 @@ jobs:
   # prebuilt wheel is also seconds of work, which matters when the runner
   # executes matrix legs one at a time.
   compat:
-    name: Install + import on ${{ matrix.python-version }}
+    name: Install + Import on ${{ matrix.python-version }}
     runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     timeout-minutes: 20
     needs: build

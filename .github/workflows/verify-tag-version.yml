@@ -17,6 +17,7 @@ on:
 
 jobs:
   verify-version:
+    name: Verify Tag Version
     runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "light"]') }}
     steps:
       - name: Checkout code

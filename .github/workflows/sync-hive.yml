@@ -1,4 +1,4 @@
-name: Sync from Hive release
+name: Sync Hive Release
 
 # Regenerates PyHive's core layer from Hive's OpenAPI spec when a new Hive
 # version is released, opens a PR, and auto-merges it when the change is purely
@@ -32,6 +32,7 @@ env:
 
 jobs:
   sync:
+    name: Sync Hive Release
     runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     steps:
       - uses: actions/checkout@v7

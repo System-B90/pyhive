@@ -1,4 +1,4 @@
-name: Publish GitHub Release
+name: Publish
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
   # Build it once instead; ci.yml's compat job is what actually proves the
   # artifact works on 3.10-3.14, by installing and importing it there.
   build:
-    name: Build wheel
+    name: Build Wheel
     runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     timeout-minutes: 15
 
@@ -77,7 +77,7 @@ jobs:
           path: dist/*
 
   publish:
-    name: Publish wheel
+    name: Publish Wheel
     runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "light"]') }}
     timeout-minutes: 15
     needs: build
@@ -98,7 +98,7 @@ jobs:
           generate_release_notes: true
 
   update-index:
-    name: Update pip index in .github repo
+    name: Update Pip Index in .github Repo
     runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     timeout-minutes: 15
     needs: publish
