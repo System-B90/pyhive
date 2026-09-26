@@ -6,6 +6,7 @@ Author: Michael K. Steinberg
 """
 
 from typing import TYPE_CHECKING, Annotated, Any, TypeVar
+from uuid import UUID
 
 from pydantic import Field
 from typing_extensions import Self
@@ -19,6 +20,11 @@ if TYPE_CHECKING:
 
 class EventTagging(_EventTaggingBase):
     """Links a schedule event (``event_id``) to an event tag (``tag_id``)."""
+
+    # Hive < 7.3.0 serves integer ids here; 7.3.0+ serves UUIDs.
+    id: UUID | int | None = None  # type: ignore[assignment]
+    event_id: UUID | int  # type: ignore[assignment]
+    tag_id: UUID | int  # type: ignore[assignment]
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
 

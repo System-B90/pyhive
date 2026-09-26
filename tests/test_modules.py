@@ -35,15 +35,14 @@ def test_module_exercises(module: Module) -> None:
 
 
 @pytest.mark.usefixtures("client")
-def test_get_module_by_name(client: HiveClient):
-    MODULE_NAME = "כחול לבן"
-    modules = list(client.get_modules(module_name=MODULE_NAME))
-    assert len(modules) == 1, f"Expected exactly one module with name '{MODULE_NAME}'"
-    module = modules[0]
-    assert isinstance(module, Module)
-    assert module.name == MODULE_NAME
-    assert module.parent_subject_name == "Apple"
-    assert module.parent_subject_symbol == "A"
+def test_get_module_by_name(client: HiveClient, module: Module, subject: Subject):
+    modules = list(client.get_modules(module_name=module.name))
+    assert len(modules) == 1, f"Expected exactly one module with name '{module.name}'"
+    fetched = modules[0]
+    assert isinstance(fetched, Module)
+    assert fetched.id == module.id
+    assert fetched.parent_subject_name == subject.name
+    assert fetched.parent_subject_symbol == subject.symbol
 
 
 @pytest.mark.usefixtures("client")

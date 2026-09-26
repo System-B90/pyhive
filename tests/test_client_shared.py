@@ -6,9 +6,8 @@ Purpose: Unit tests for ClientCoreMixin._get_core_items (pagination, query-param
 
 from typing import Any
 
-from typing_extensions import Self
-
 import pytest
+from typing_extensions import Self
 
 from pyhive.client import HiveClient
 from pyhive.src.types.core_item import HiveCoreItem

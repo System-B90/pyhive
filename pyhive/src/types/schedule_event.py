@@ -6,6 +6,7 @@ Author: Michael K. Steinberg
 """
 
 from typing import TYPE_CHECKING, Annotated, Any, TypeVar
+from uuid import UUID
 
 from pydantic import Field
 from typing_extensions import Self
@@ -18,6 +19,11 @@ if TYPE_CHECKING:
 
 class ScheduleEvent(_ScheduleEventBase):
     """A calendar event (category/room/lesson links, attendees). Data fields are inherited."""
+
+    # Hive < 7.3.0 serves integer ids here; 7.3.0+ serves UUIDs.
+    id: UUID | int | None = None  # type: ignore[assignment]
+    category_id: UUID | int | None = None  # type: ignore[assignment]
+    lesson_id: UUID | int | None = None  # type: ignore[assignment]
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
 
