@@ -16,11 +16,9 @@ from tests.common import get_client_params
 
 @pytest.mark.integration
 def test_client_url():
-    hive_url = "https://hive.org"
-    with HiveClient(
-        "michaelks", "Password1", hive_url, verify=False, skip_version_check=True
-    ) as client:
-        assert client.hive_url == hive_url
+    params = get_client_params()
+    with HiveClient(**params) as client:
+        assert client.hive_url == params["hive_url"]
 
 
 def test_get_classes(client: HiveClient):
@@ -61,35 +59,32 @@ def test_get_user_by_id(client: HiveClient):
     assert fetched.id == user.id
 
 
-def test_get_exercises(client: HiveClient):
+def test_get_exercises(client: HiveClient, exercise: Exercise):
     exercises = list(client.get_exercises())
-    assert exercises
+    assert exercise.id in {e.id for e in exercises}
     assert all(isinstance(e, Exercise) for e in exercises)
 
 
-def test_get_exercise_by_id(client: HiveClient):
-    exercise = next(iter(client.get_exercises()))
+def test_get_exercise_by_id(client: HiveClient, exercise: Exercise):
     fetched = client.get_exercise(exercise.id)
     assert isinstance(fetched, Exercise)
     assert fetched.id == exercise.id
 
 
-def test_get_exercise_fields(client: HiveClient):
-    exercise = next(iter(client.get_exercises()))
+def test_get_exercise_fields(client: HiveClient, exercise: Exercise):
     fields = list(client.get_exercise_fields(exercise))
+    assert fields
     assert all(isinstance(f, FormField) for f in fields)
 
 
-def test_get_exercise_field_by_id(client: HiveClient):
-    found = False
-    for exercise in client.get_exercises():
-        for field in client.get_exercise_fields(exercise):
-            fetched = client.get_exercise_field(exercise, field.id)
-            assert isinstance(fetched, FormField)
-            assert fetched.id == field.id
-            assert field == fetched
-            found = True
-    assert found, "No exercise fields available to test."
+def test_get_exercise_field_by_id(client: HiveClient, exercise: Exercise):
+    # Hive gives every new exercise a default "Comment" field.
+    fields = list(client.get_exercise_fields(exercise))
+    assert fields, "No exercise fields available to test."
+    for field in fields:
+        fetched = client.get_exercise_field(exercise, field.id)
+        assert isinstance(fetched, FormField)
+        assert fetched == field
 
 
 def test_get_assignments(client: HiveClient):

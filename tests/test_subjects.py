@@ -1,9 +1,8 @@
 from typing import Literal
 
-from typing_extensions import LiteralString
-
 import httpx
 import pytest
+from typing_extensions import LiteralString
 
 from pyhive.client import HiveClient
 from pyhive.types import Program, Subject

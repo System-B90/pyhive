@@ -7,8 +7,8 @@ from ..src.types.core_item import HiveCoreItem
 
 CoreItemTypeT = TypeVar("CoreItemTypeT", bound="HiveCoreItem")
 
-UUIDLike = UUID | str
-""" A UUID primary key, or its string form as accepted by the Hive API. """
+UUIDLike = UUID | str | int
+""" A UUID primary key or its string form (Hive >= 7.3.0), or an integer id (older Hive). """
 
 
 @overload
@@ -50,13 +50,13 @@ def resolve_item_or_uuid(item_or_id: None) -> None: ...
 
 
 @overload
-def resolve_item_or_uuid(item_or_id: "HiveCoreItem | UUIDLike") -> UUID: ...
+def resolve_item_or_uuid(item_or_id: "HiveCoreItem | UUIDLike") -> UUID | int: ...
 
 
 def resolve_item_or_uuid(
     item_or_id: "HiveCoreItem | UUIDLike | None",
-) -> UUID | None:
-    """Return the UUID represented by ``item_or_id`` (item, ``UUID`` or string).
+) -> UUID | int | None:
+    """Return the UUID (or pre-7.3.0 integer id) represented by ``item_or_id``.
 
     If ``item_or_id`` is ``None``, returns ``None``. If a ``HiveCoreItem`` is provided, its ``id`` is returned.
     """
@@ -67,12 +67,12 @@ def resolve_item_or_uuid(
         if item_id is None:
             raise ValueError(f"{type(item_or_id).__name__} has no id")
         item_or_id = cast(UUIDLike, item_id)
-    if isinstance(item_or_id, UUID):
+    if isinstance(item_or_id, UUID | int):
         return item_or_id
     if isinstance(item_or_id, str):  # pyright: ignore[reportUnnecessaryIsInstance]
-        return UUID(item_or_id)
+        return int(item_or_id) if item_or_id.isdigit() else UUID(item_or_id)
     raise TypeError(
-        f"Expected HiveCoreItem, UUID or str, got {type(item_or_id).__name__}"
+        f"Expected HiveCoreItem, UUID, str or int, got {type(item_or_id).__name__}"
     )
 
 
