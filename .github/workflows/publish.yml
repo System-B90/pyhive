@@ -5,6 +5,15 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      runner:
+        description: 'Runner environment to execute on'
+        required: false
+        default: 'self-hosted'
+        type: choice
+        options:
+          - self-hosted
+          - github-hosted
 
 permissions:
   contents: write
@@ -18,10 +27,7 @@ jobs:
   # artifact works on 3.10-3.14, by installing and importing it there.
   build:
     name: Build wheel
-    # GitHub-hosted while the org's single self-hosted runner is offline.
-    # Nothing in this workflow needs that box: the jobs are plain Python with
-    # standard actions, and the suites selected here are the offline ones.
-    runs-on: ubuntu-latest
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "python"]') }}
     timeout-minutes: 15
 
     steps:
@@ -72,7 +78,7 @@ jobs:
 
   publish:
     name: Publish wheel
-    runs-on: ubuntu-latest
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "light"]') }}
     timeout-minutes: 15
     needs: build
     steps:
@@ -93,7 +99,7 @@ jobs:
 
   update-index:
     name: Update pip index in .github repo
-    runs-on: ubuntu-latest
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "python"]') }}
     timeout-minutes: 15
     needs: publish
     steps:
