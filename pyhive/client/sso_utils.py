@@ -12,7 +12,7 @@ import secrets
 import time
 import urllib.parse
 import webbrowser
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from threading import Thread
 from typing import TYPE_CHECKING, Any
 
@@ -133,7 +133,7 @@ def _exchange_code_for_token(
                 "Exchange response is missing 'access_token', 'refresh_token', or 'expires_at'."
             )
 
-        expires_at_dt = datetime.fromtimestamp(expires_at_timestamp, tz=UTC)
+        expires_at_dt = datetime.fromtimestamp(expires_at_timestamp, tz=timezone.utc)
 
         return str(jwt_access_token), str(jwt_refresh_token), expires_at_dt
 

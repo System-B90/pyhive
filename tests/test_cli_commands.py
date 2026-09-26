@@ -6,7 +6,7 @@ Purpose: Unit tests for representative CLI command groups (list / get / delete /
 """
 
 import json
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import pytest
@@ -176,7 +176,7 @@ def test_token_command_keyring_write_warning(monkeypatch):
     monkeypatch.setattr(
         cli_module,
         "get_sso_token",
-        lambda **kw: ("acc", "ref", datetime(2026, 1, 1, tzinfo=UTC)),
+        lambda **kw: ("acc", "ref", datetime(2026, 1, 1, tzinfo=timezone.utc)),
     )
 
     def _raise(*args: Any, **kwargs: Any) -> None:
