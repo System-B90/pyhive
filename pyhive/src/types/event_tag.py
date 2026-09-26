@@ -7,9 +7,8 @@ Author: Michael K. Steinberg
 
 from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
-from typing_extensions import Self
-
 from pydantic import Field
+from typing_extensions import Self
 
 from ._generated.models import EventTag as _EventTagBase
 

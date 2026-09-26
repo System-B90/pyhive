@@ -7,9 +7,8 @@ Author: Michael K. Steinberg
 
 from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
-from typing_extensions import Self
-
 from pydantic import Field, PrivateAttr
+from typing_extensions import Self
 
 from ._generated.models import Class as _ClassBase
 

@@ -8,9 +8,8 @@ Author: Michael K. Steinberg
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
-from typing_extensions import Self
-
 from pydantic import Field, PrivateAttr, model_validator
+from typing_extensions import Self
 
 from ._generated.enums import GenderEnum, StatusEnum
 from ._generated.models import CourseUser as _UserBase

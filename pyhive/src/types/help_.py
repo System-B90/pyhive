@@ -7,9 +7,8 @@ Author: Michael K. Steinberg
 
 from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
-from typing_extensions import Self
-
 from pydantic import Field, PrivateAttr
+from typing_extensions import Self
 
 from ._generated.models import Help as _HelpBase
 from .help_response_segel_nested import HelpResponseSegelNested

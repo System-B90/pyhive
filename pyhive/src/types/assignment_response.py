@@ -8,9 +8,8 @@ Author: Michael K. Steinberg
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
-from typing_extensions import Self
-
 from pydantic import Field, PrivateAttr
+from typing_extensions import Self
 
 from ._generated.models import AssignmentResponse as _AssignmentResponseBase
 from .assignment_response_content import AssignmentResponseContent

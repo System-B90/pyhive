@@ -8,9 +8,8 @@ Author: Michael K. Steinberg
 import datetime
 from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
-from typing_extensions import Self
-
 from pydantic import Field
+from typing_extensions import Self
 
 from .core_item import HiveCoreItem
 from .enums.help_response_type_enum import HelpResponseTypeEnum
