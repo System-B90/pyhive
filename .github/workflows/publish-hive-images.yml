@@ -65,7 +65,7 @@ env:
 jobs:
   publish:
     name: Publish Hive Images
-    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "dind"]') }}
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux"]') }}
     timeout-minutes: 60
 
     steps:
