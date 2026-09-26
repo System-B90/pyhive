@@ -1,6 +1,6 @@
 """
 Name: formatter.py
-Purpose: Utility functions for standardizing CLI text and JSON output using Python 3.11+ typing.
+Purpose: Utility functions for standardizing CLI text and JSON output using Python 3.10+ typing.
 Created: 2026-04-07
 Author: Michael K. Steinberg
 """

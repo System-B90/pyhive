@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Generate supported API versions file"""
 
-import tomllib
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10
+    import tomli as tomllib
 from pathlib import Path
 
 from hatchling.builders.hooks.plugin.interface import (

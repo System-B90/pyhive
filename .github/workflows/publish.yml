@@ -15,7 +15,7 @@ jobs:
   # same filename — which `merge-multiple: true` then collapsed back into one
   # by overwriting it three times. The "aggregation" was aggregating one wheel.
   # Build it once instead; ci.yml's compat job is what actually proves the
-  # artifact works on 3.11-3.14, by installing and importing it there.
+  # artifact works on 3.10-3.14, by installing and importing it there.
   build:
     name: Build wheel
     # GitHub-hosted while the org's single self-hosted runner is offline.

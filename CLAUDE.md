@@ -110,13 +110,13 @@ hatch build               # build wheel (triggers version generation hook)
 
 ```pwsh
 pytest -q                          # everything, including live-server integration tests
-pytest tests -q -m "not integration"   # offline unit tests only (what CI runs)
+pytest tests -q -m "not integration"   # offline unit tests only (what CI runs, on 3.11 and 3.10)
 pytest tools/hive_codegen/tests -q     # codegen unit tests (also offline)
 ```
 
 Most of `tests/` is **integration tests** against a live Hive server (`https://hive.org`). Credentials are hardcoded in `tests/common.py::get_client_params()`. There is no mock layer for these — tests create and tear down real resources via fixtures in `tests/conftest.py`. A handful of files (`test_authenticated_hive_client.py`, `test_sso_utils.py`, `test_client_factory.py`, `test_client_shared.py`, `test_utils.py`, and `cli/`) are fully offline, using `pytest-httpx` or stubs.
 
-`tests/conftest.py::pytest_collection_modifyitems` auto-applies the `integration` pytest marker to any test that (transitively) requests the session-scoped `client` fixture, so the offline/live split doesn't need per-test markers. CI (`.github/workflows/ci.yml`, job `checks`) runs `pytest tests -q -m "not integration"` plus the codegen suite; it never touches the live server.
+`tests/conftest.py::pytest_collection_modifyitems` auto-applies the `integration` pytest marker to any test that (transitively) requests the session-scoped `client` fixture, so the offline/live split doesn't need per-test markers. CI (`.github/workflows/ci.yml`) runs `pytest tests -q -m "not integration"` on 3.11 (job `checks`, alongside the codegen suite) and on 3.10 (job `unit-min-python`); it never touches the live server.
 
 ### Lint / type-check
 
@@ -129,7 +129,7 @@ Ruff ignored rules (project-wide): `BLE001` (broad-except), `RET504` (unnecessar
 
 ### Publish
 
-Releasing is a version bump + tag; CI (`.github/workflows/publish.yml`) does the rest — builds wheels for 3.11–3.14, cuts the GitHub Release, and pushes the wheel + regenerated index into `System-B90/.github`'s `pypi/pyhivelms/` (PEP 503 requires the normalized project name — `pyhivelms`, not the import name `pyhive`).
+Releasing is a version bump + tag; CI (`.github/workflows/publish.yml`) does the rest — builds a universal wheel (compat-tested on 3.10–3.14), cuts the GitHub Release, and pushes the wheel + regenerated index into `System-B90/.github`'s `pypi/pyhivelms/` (PEP 503 requires the normalized project name — `pyhivelms`, not the import name `pyhive`).
 
 ```pwsh
 python ..\.github\scripts\publish.py . patch   # or: minor / major
@@ -146,7 +146,7 @@ Verify the release landed: `gh run list --branch vX.Y.Z` in the pyhive repo, and
 
 ## Code conventions
 
-- **Python ≥ 3.11**: use `X | Y` union syntax, built-in generics (`list[X]`, `dict[K, V]`), not `Union`/`List`/`Dict`.
+- **Python ≥ 3.10**: use `X | Y` union syntax, built-in generics (`list[X]`, `dict[K, V]`), not `Union`/`List`/`Dict`. No 3.11+ stdlib: import `Self`/`LiteralString` from `typing_extensions`, use `timezone.utc` not `datetime.UTC`, and guard `tomllib` with a `tomli` fallback. `tools/hive_codegen` is dev-only and may stay on 3.11+.
 - **Full annotations required** everywhere — mypy strict mode enforces this.
 - **No comments** unless the *why* is non-obvious (hidden constraint, workaround, subtle invariant). Never describe *what* the code does.
 - **No multi-line docstrings** for internal helpers; one-line max for public methods.

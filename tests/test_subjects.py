@@ -1,4 +1,6 @@
-from typing import Literal, LiteralString
+from typing import Literal
+
+from typing_extensions import LiteralString
 
 import httpx
 import pytest

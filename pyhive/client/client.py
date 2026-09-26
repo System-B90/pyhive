@@ -1,7 +1,9 @@
 """High-level Hive API client aggregator."""
 
 from types import TracebackType
-from typing import TYPE_CHECKING, Literal, Optional, Self, Union
+from typing import TYPE_CHECKING, Literal, Optional, Union
+
+from typing_extensions import Self
 
 from pyhive.client.sso_utils import generate_sso_client_credentials, get_sso_token
 

@@ -6,9 +6,10 @@ Author: Michael K. Steinberg
 """
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
 from pydantic import Field, PrivateAttr
+from typing_extensions import Self
 
 from ._generated.models import Subject as _SubjectBase
 

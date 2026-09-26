@@ -5,9 +5,10 @@ Created: 2026-04-05
 Author: Michael K. Steinberg
 """
 
-from typing import TYPE_CHECKING, Annotated, Any, Self, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
 from pydantic import Field, PrivateAttr
+from typing_extensions import Self
 
 from ._generated.models import NotificationNested as _NotificationNestedBase
 

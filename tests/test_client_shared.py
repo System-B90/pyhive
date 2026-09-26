@@ -4,7 +4,9 @@ Purpose: Unit tests for ClientCoreMixin._get_core_items (pagination, query-param
     normalization, malformed-payload handling) — offline, pytest-httpx only.
 """
 
-from typing import Any, Self
+from typing import Any
+
+from typing_extensions import Self
 
 import pytest
 
