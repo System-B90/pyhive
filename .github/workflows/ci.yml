@@ -5,6 +5,15 @@ on:
   push:
     branches: [master, dev]
   workflow_dispatch:
+    inputs:
+      runner:
+        description: 'Runner environment to execute on'
+        required: false
+        default: 'self-hosted'
+        type: choice
+        options:
+          - self-hosted
+          - github-hosted
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -21,10 +30,7 @@ jobs:
   # package *imports and runs*, which is what the compat job below checks.
   checks:
     name: Lint + typecheck
-    # GitHub-hosted while the org's single self-hosted runner is offline.
-    # Nothing in this workflow needs that box: the jobs are plain Python with
-    # standard actions, and the suites selected here are the offline ones.
-    runs-on: ubuntu-latest
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     timeout-minutes: 20
 
     steps:
@@ -75,7 +81,7 @@ jobs:
   # an import alone never reaches.
   unit-min-python:
     name: Offline unit tests on 3.10
-    runs-on: ubuntu-latest
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     timeout-minutes: 15
 
     steps:
@@ -101,7 +107,7 @@ jobs:
   # runner time to test strictly less.
   build:
     name: Build wheel
-    runs-on: ubuntu-latest
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     timeout-minutes: 15
 
     steps:
@@ -153,7 +159,7 @@ jobs:
   # executes matrix legs one at a time.
   compat:
     name: Install + import on ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     timeout-minutes: 20
     needs: build
     strategy:

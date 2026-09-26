@@ -3,11 +3,21 @@ name: Sync API Versions
 on:
   push:
     branches: ["main", "master"]
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'Runner environment to execute on'
+        required: false
+        default: 'self-hosted'
+        type: choice
+        options:
+          - self-hosted
+          - github-hosted
 
 jobs:
   update-readme:
     name: Update README with supported API versions
-    runs-on: ubuntu-latest
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     permissions:
       contents: write
 
