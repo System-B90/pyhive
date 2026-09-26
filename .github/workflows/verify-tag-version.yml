@@ -17,7 +17,7 @@ on:
 
 jobs:
   verify-version:
-    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "light"]') }}
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "light"]') }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7

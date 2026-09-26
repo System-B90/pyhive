@@ -64,7 +64,7 @@ env:
 
 jobs:
   publish:
-    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "dind"]') }}
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "dind"]') }}
     timeout-minutes: 60
 
     steps:

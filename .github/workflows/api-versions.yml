@@ -17,7 +17,7 @@ on:
 jobs:
   update-readme:
     name: Update README with supported API versions
-    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "python"]') }}
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     permissions:
       contents: write
 

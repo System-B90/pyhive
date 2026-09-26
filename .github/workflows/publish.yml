@@ -27,7 +27,7 @@ jobs:
   # artifact works on 3.10-3.14, by installing and importing it there.
   build:
     name: Build wheel
-    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "python"]') }}
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     timeout-minutes: 15
 
     steps:
@@ -78,7 +78,7 @@ jobs:
 
   publish:
     name: Publish wheel
-    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "light"]') }}
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "light"]') }}
     timeout-minutes: 15
     needs: build
     steps:
@@ -99,7 +99,7 @@ jobs:
 
   update-index:
     name: Update pip index in .github repo
-    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "python"]') }}
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
     timeout-minutes: 15
     needs: publish
     steps:
