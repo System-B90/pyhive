@@ -24,6 +24,8 @@ class ScheduleEvent(_ScheduleEventBase):
     id: UUID | int | None = None  # type: ignore[assignment]
     category_id: UUID | int | None = None  # type: ignore[assignment]
     lesson_id: UUID | int | None = None  # type: ignore[assignment]
+    # The spec says str, but Hive serves null for events without a category.
+    category_name: str | None = None  # type: ignore[assignment]
 
     hive_client: Annotated["HiveClient", Field(exclude=True, repr=False)]
 
