@@ -30,7 +30,7 @@ on:
       hive-ref:
         description: Hive branch/ref to build.
         required: false
-        default: feature/sso
+        default: feature/hive-idp
       force:
         description: Rebuild and push even if images for the current Hive commit already exist.
         type: boolean
@@ -56,7 +56,7 @@ concurrency:
 
 env:
   HIVE_REPO: hivelms/Hive
-  HIVE_REF: ${{ inputs.hive-ref || 'feature/sso' }}
+  HIVE_REF: ${{ inputs.hive-ref || 'feature/hive-idp' }}
   REGISTRY: ghcr.io
   REGISTRY_PREFIX: ghcr.io/system-b90/hive
   # Representative image used to test whether this SHA is already published.
