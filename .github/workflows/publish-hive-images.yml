@@ -275,6 +275,44 @@ jobs:
           echo "${{ steps.hive_sha.outputs.sha }}" > hive-stack/HIVE_SHA
           echo "$HIVE_REF" > hive-stack/HIVE_REF
 
+      # Hive's upstream compose publishes on every interface and has no
+      # hive.org alias. The shared Hive needs both: nginx and Postgres on the
+      # 127.0.0.6 loopback alias (so Bluz can own 127.0.0.3 on the same host),
+      # and hive.org as nginx's network alias so other stacks' containers on
+      # hive_hive-net resolve the name the cert is for (#17). The export above
+      # replaces hive-stack/ wholesale, which silently dropped all of this
+      # (eaf153ad), so it is re-applied every run and fails loudly when Hive's
+      # files stop matching.
+      - name: Apply shared-host patches to the Hive stack config
+        if: steps.published.outputs.skip != 'true'
+        shell: python
+        run: |
+          from pathlib import Path
+
+          STACK = Path("hive-stack")
+
+
+          def patch(path: str, old: str, new: str) -> None:
+              """Replace exactly one `old` with `new`; a no-op when already applied."""
+              file = STACK / path
+              text = file.read_bytes().decode("utf-8")
+              if new in text:
+                  return
+              if text.count(old) != 1:
+                  raise SystemExit(f"{path}: expected exactly one {old!r} to patch")
+              file.write_bytes(text.replace(old, new).encode("utf-8"))
+
+
+          patch("docker-compose.yaml", "      - 80:80\n", "      - 127.0.0.6:80:80\n")
+          patch("docker-compose.yaml", "      - 443:443\n", "      - 127.0.0.6:443:443\n")
+          patch(
+              "docker-compose.yaml",
+              '      - "NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/"\n    networks:\n      - hive-net\n',
+              '      - "NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/"\n    networks:\n      hive-net:\n        aliases:\n          - hive.org\n',
+          )
+          patch("docker-compose-images.yaml", "      - 5432:5432\n", "      - 127.0.0.6:5432:5432\n")
+          patch("images/nginx/nginx.conf", "allow 127.0.0.1;", "allow 127.0.0.1/24;")
+
       - name: Commit Hive stack config
         if: steps.published.outputs.skip != 'true'
         run: |
