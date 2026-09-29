@@ -108,14 +108,16 @@ services:
     image: hive/nginx
     container_name: hive-nginx
     ports:
-      - 80:80
-      - 443:443
+      - 127.0.0.6:80:80
+      - 127.0.0.6:443:443
     <<: *env_file
     environment:
       - "NGINX_HOST=${HIVE_HOSTNAME_PLAIN}"
       - "NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/"
     networks:
-      - hive-net
+      hive-net:
+        aliases:
+          - hive.org
     depends_on:
       frontend:
         condition: service_started
