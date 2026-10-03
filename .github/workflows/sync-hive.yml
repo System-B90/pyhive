@@ -87,18 +87,8 @@ jobs:
             --spec core.yaml --repo-root . \
             --drift-out drift.md \
             --github-output "$GITHUB_OUTPUT" || true
-          # Regenerate the supported-versions module from the updated pyproject.
-          python - <<'PY'
-          import tomllib
-          from pathlib import Path
-          versions = tomllib.loads(Path("pyproject.toml").read_text("utf-8"))["tool"]["api_versions"]["supported"]
-          Path("pyhive/src/_generated_versions.py").write_text(
-              "SUPPORTED_API_VERSIONS = " + repr(versions) + "\n"
-              "MIN_API_VERSION = SUPPORTED_API_VERSIONS[0]\n"
-              "LATEST_API_VERSION = SUPPORTED_API_VERSIONS[-1]\n",
-              encoding="utf-8",
-          )
-          PY
+          # Regenerate the supported-versions module from the updated hive_versions.toml.
+          python scripts/generate_versions.py
           rm -f core.yaml
 
       - name: Stop if no changes

@@ -7,11 +7,7 @@ from typing_extensions import Self
 
 from pyhive.client.sso_utils import generate_sso_client_credentials, get_sso_token
 
-from ..src.api_versions import (
-    LATEST_API_VERSION,
-    MIN_API_VERSION,
-    SUPPORTED_API_VERSIONS,
-)
+from ..src.api_versions import generation_for
 from .assignment_responses import AssignmentResponsesClientMixin
 from .assignments import AssignmentClientMixin
 from .classes import ClassesClientMixin
@@ -213,22 +209,16 @@ class HiveClient(  # pylint: disable=too-many-ancestors,abstract-method
         self._session.__exit__(type_, value, traceback)
 
     def _api_version_check(self) -> None:
-        """Validate that the Hive server API version is supported.
+        """Validate that the Hive server runs a release PyHive has verified.
 
-        Fetches the server version via ``get_hive_version`` and verifies it is present
-        in ``SUPPORTED_API_VERSIONS``. If unsupported, raises a RuntimeError with
-        guidance to align the client and server versions.
+        Fetches the server version via ``get_hive_version`` and looks it up,
+        by exact match, in the ``hive_versions.toml`` table.
 
         Raises:
-            RuntimeError: If the server API version is not supported by this client.
+            UnverifiedHiveVersionError: (a ``RuntimeError``) if the server
+                version is not in the table.
         """
-        version_str = self.get_hive_version()
-        if version_str not in SUPPORTED_API_VERSIONS:
-            supported_range = f"{MIN_API_VERSION} .. {LATEST_API_VERSION}"
-            raise RuntimeError(
-                f"Unsupported Hive API version '{version_str}'. Supported versions: {supported_range}. "
-                f"Please upgrade/downgrade the server or use a compatible client."
-            )
+        generation_for(self.get_hive_version())
 
     def register_sso_service(
         self,

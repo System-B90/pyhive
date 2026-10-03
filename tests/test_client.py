@@ -168,17 +168,17 @@ def test_get_hive_version(client: HiveClient):
 
 @pytest.mark.integration
 def test_invalid_hive_version_raises(monkeypatch: pytest.MonkeyPatch):
-    from pyhive.src.api_versions import LATEST_API_VERSION, MIN_API_VERSION
+    from pyhive.src.api_versions import LATEST_API_VERSION, UnverifiedHiveVersionError
 
     invalid = "0.0.0-unsupported"
     monkeypatch.setattr(HiveClient, "get_hive_version", lambda self: invalid)  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
     params = get_client_params()
     params["skip_version_check"] = False
-    with pytest.raises(RuntimeError) as exc:
+    with pytest.raises(UnverifiedHiveVersionError) as exc:
         HiveClient(**params)
     msg = str(exc.value)
     assert f"Unsupported Hive API version '{invalid}'" in msg
-    assert f"{MIN_API_VERSION} .. {LATEST_API_VERSION}" in msg
+    assert LATEST_API_VERSION in msg
 
 
 @pytest.mark.integration

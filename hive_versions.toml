@@ -1,0 +1,22 @@
+# The one source of truth for which Hive releases PyHive supports (#42).
+#
+# Every verified Hive release gets its own exact entry, mapped to the API
+# generation that serves it. Hive's version numbers are NOT semver (7.3.0, a
+# "minor" bump, changed every id from int to UUID), so nothing may infer
+# compatibility from a version number: no ranges, no "same major" logic. A new
+# Hive release is supported only once it is listed here, even when additive.
+#
+# A generation is an internal name for one breaking Hive API shape. Users see
+# Hive versions, never generation names. Today one codebase serves every
+# generation; the per-generation backend packages are the follow-up work.
+#
+# Read by the build hook (scripts/generate_versions.py), which renders
+# pyhive/src/_generated_versions.py, and edited by tools/hive_codegen on sync.
+
+[versions]
+"5.1.2" = "gen1"
+"6.2.0" = "gen1"
+"6.4.0" = "gen1"
+"7.1.0" = "gen1"
+"7.2.0" = "gen1"
+"7.3.0" = "gen2"
