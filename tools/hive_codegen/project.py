@@ -1,13 +1,13 @@
-"""Update PyHive project files (pyproject.toml, README.md) for a new release."""
+"""Update PyHive project files (hive_versions.toml, pyproject.toml, README.md) for a new release."""
 
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
-_SUPPORTED_RE = re.compile(
-    r"(?P<head>\[tool\.api_versions\]\s*\nsupported\s*=\s*)\[(?P<body>[^\]]*)\]"
-)
+import tomllib
+
+_VERSIONS_SECTION_RE = re.compile(r"(?ms)^\[versions\]\s*\n(?P<body>.*?)(?=^\[|\Z)")
 _PKG_VERSION_RE = re.compile(
     r'(?m)^(?P<head>version\s*=\s*")(?P<ver>\d+\.\d+\.\d+)(?P<tail>")'
 )
@@ -21,24 +21,40 @@ def semver_key(v: str) -> tuple[int, ...]:
     return tuple(int(p) for p in v.split(".")[:3])
 
 
-def parse_supported(pyproject_text: str) -> list[str]:
-    m = _SUPPORTED_RE.search(pyproject_text)
-    if not m:
-        return []
-    return re.findall(r'"([^"]+)"', m.group("body"))
+def parse_version_table(table_text: str) -> dict[str, str]:
+    """The ``[versions]`` table of ``hive_versions.toml``: exact Hive version -> generation."""
+
+    return dict(tomllib.loads(table_text).get("versions", {}))
 
 
-def add_supported_version(pyproject_text: str, version: str) -> tuple[str, bool]:
-    """Add ``version`` to ``[tool.api_versions].supported`` (sorted). Returns (text, changed)."""
+def parse_supported(table_text: str) -> list[str]:
+    return sorted(parse_version_table(table_text), key=semver_key)
 
-    current = parse_supported(pyproject_text)
-    if version in current:
-        return pyproject_text, False
-    new = sorted({*current, version}, key=semver_key)
-    rendered = "[" + ", ".join(f'"{v}"' for v in new) + "]"
-    updated = _SUPPORTED_RE.sub(
-        lambda m: m.group("head") + rendered, pyproject_text, count=1
-    )
+
+def add_supported_version(
+    table_text: str, version: str, generation: str | None = None
+) -> tuple[str, bool]:
+    """Map ``version`` in ``hive_versions.toml``. Returns (text, changed).
+
+    ``generation`` defaults to the one serving the newest listed version,
+    i.e. an additive release. A breaking release needs a new generation,
+    which the caller must pass explicitly; it is never inferred from the
+    version number.
+    """
+
+    table = parse_version_table(table_text)
+    if version in table:
+        return table_text, False
+    if generation is None:
+        if not table:
+            raise ValueError("hive_versions.toml has no [versions] entries to extend")
+        generation = table[max(table, key=semver_key)]
+    table[version] = generation
+    body = "".join(f'"{v}" = "{table[v]}"\n' for v in sorted(table, key=semver_key))
+    match = _VERSIONS_SECTION_RE.search(table_text)
+    if not match:
+        raise ValueError("hive_versions.toml has no [versions] section")
+    updated = table_text[: match.start("body")] + body + table_text[match.end("body") :]
     return updated, True
 
 
@@ -77,19 +93,24 @@ def apply_release_to_project(
     """Apply all project-file edits for a synced Hive release. Returns a summary."""
 
     summary: dict[str, str] = {}
-    pyproject = repo_root / "pyproject.toml"
-    text = pyproject.read_text(encoding="utf-8")
-    text, added = add_supported_version(text, api_version)
+    table_path = repo_root / "hive_versions.toml"
+    table_text, added = add_supported_version(
+        table_path.read_text(encoding="utf-8"), api_version
+    )
     summary["supported_added"] = str(added)
     if added:
-        text, new_pkg = bump_package_version(text, package_bump)
+        table_path.write_text(table_text, encoding="utf-8")
+        pyproject = repo_root / "pyproject.toml"
+        text, new_pkg = bump_package_version(
+            pyproject.read_text(encoding="utf-8"), package_bump
+        )
+        pyproject.write_text(text, encoding="utf-8")
         summary["package_version"] = new_pkg
-    pyproject.write_text(text, encoding="utf-8")
 
     readme = repo_root / "README.md"
     if readme.exists():
         rtext = readme.read_text(encoding="utf-8")
         readme.write_text(
-            update_readme_versions(rtext, parse_supported(text)), encoding="utf-8"
+            update_readme_versions(rtext, parse_supported(table_text)), encoding="utf-8"
         )
     return summary

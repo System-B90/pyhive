@@ -109,22 +109,54 @@ PYPROJECT = """\
 [project]
 name = "PyHiveLMS"
 version = "1.4.0"
+"""
 
-[tool.api_versions]
-supported = ["5.1.2", "6.4.0"]
+VERSIONS_TABLE = """\
+# header comment survives
+[versions]
+"5.1.2" = "gen1"
+"6.4.0" = "gen2"
 """
 
 
-def test_add_supported_version_sorted() -> None:
-    text, changed = project.add_supported_version(PYPROJECT, "6.2.0")
+def test_add_supported_version_sorted_maps_to_latest_generation() -> None:
+    text, changed = project.add_supported_version(VERSIONS_TABLE, "7.0.0")
     assert changed
-    assert project.parse_supported(text) == ["5.1.2", "6.2.0", "6.4.0"]
+    assert project.parse_supported(text) == ["5.1.2", "6.4.0", "7.0.0"]
+    assert project.parse_version_table(text)["7.0.0"] == "gen2"
+    assert text.startswith("# header comment survives\n")
+
+
+def test_add_supported_version_inserts_older_release_in_order() -> None:
+    text, changed = project.add_supported_version(VERSIONS_TABLE, "6.2.0", "gen1")
+    assert changed
+    assert list(project.parse_version_table(text)) == ["5.1.2", "6.2.0", "6.4.0"]
+    assert project.parse_version_table(text)["6.2.0"] == "gen1"
+
+
+def test_add_supported_version_explicit_new_generation() -> None:
+    text, _ = project.add_supported_version(VERSIONS_TABLE, "8.0.0", "gen3")
+    assert project.parse_version_table(text)["8.0.0"] == "gen3"
 
 
 def test_add_supported_version_idempotent() -> None:
-    text, changed = project.add_supported_version(PYPROJECT, "6.4.0")
+    text, changed = project.add_supported_version(VERSIONS_TABLE, "6.4.0")
     assert not changed
-    assert text == PYPROJECT
+    assert text == VERSIONS_TABLE
+
+
+def test_apply_release_to_project(tmp_path: Path) -> None:
+    (tmp_path / "hive_versions.toml").write_text(VERSIONS_TABLE, encoding="utf-8")
+    (tmp_path / "pyproject.toml").write_text(PYPROJECT, encoding="utf-8")
+    summary = project.apply_release_to_project(tmp_path, "7.0.0", "minor")
+    assert summary == {"supported_added": "True", "package_version": "1.5.0"}
+    table = project.parse_version_table(
+        (tmp_path / "hive_versions.toml").read_text("utf-8")
+    )
+    assert table["7.0.0"] == "gen2"
+    again = project.apply_release_to_project(tmp_path, "7.0.0", "minor")
+    assert again == {"supported_added": "False"}
+    assert 'version = "1.5.0"' in (tmp_path / "pyproject.toml").read_text("utf-8")
 
 
 def test_bump_package_version() -> None:

@@ -95,7 +95,7 @@ All list methods return generators. Callers must `list(...)` or iterate explicit
 
 ### Version management
 
-`[tool.api_versions].supported` in `pyproject.toml` is the source of truth. The hatchling build hook at `scripts/generate_versions.py` writes `pyhive/src/_generated_versions.py`. Never edit that file directly. `HiveClient._api_version_check()` validates the live server's version at construction time.
+`hive_versions.toml` (repo root) is the source of truth: an exhaustive table mapping each exact, verified Hive release to the API generation that serves it (#42). Hive versions are not semver, so never infer compatibility from a version number; `pyhive.src.api_versions.generation_for()` is an exact-match lookup that raises `UnverifiedHiveVersionError` for anything unlisted. The hatchling build hook at `scripts/generate_versions.py` writes `pyhive/src/_generated_versions.py`. Never edit that file directly. `HiveClient._api_version_check()` validates the live server's version at construction time.
 
 ## Commands
 
