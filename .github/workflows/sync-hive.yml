@@ -146,19 +146,34 @@ jobs:
           else
             LABEL="automerge"
           fi
-          gh label create "$LABEL" --force >/dev/null 2>&1 || true
+          # Every label this step may add or remove must exist, or `gh pr edit`
+          # fails on it.
+          for name in automerge needs-manual-review; do
+            gh label create "$name" --force >/dev/null 2>&1 || true
+          done
+          gh label create "breaking-generation" --color B60205 --force >/dev/null 2>&1 || true
+
           LABELS="$LABEL"
           TITLE="Sync PyHive to Hive ${VERSION}"
           if [ -n "$NEW_GENERATION" ]; then
-            gh label create "breaking-generation" --color B60205 --force >/dev/null 2>&1 || true
             LABELS="${LABELS},breaking-generation"
             TITLE="${TITLE} (breaking: new generation ${NEW_GENERATION})"
           fi
 
-          PR_URL="$(gh pr create --base master --head "$BRANCH" \
-            --title "$TITLE" \
-            --body-file pr-body.md --label "$LABELS" 2>/dev/null \
-            || gh pr edit "$BRANCH" --body-file pr-body.md --add-label "$LABELS" --json url --jq .url)"
+          if ! PR_URL="$(gh pr create --base master --head "$BRANCH" \
+            --title "$TITLE" --body-file pr-body.md --label "$LABELS" 2>/dev/null)"; then
+            # Rerun against the existing PR: bring its title and labels in line
+            # with this run's drift, dropping labels a previous run set.
+            if [ "$LABEL" = "automerge" ]; then STALE="needs-manual-review"; else STALE="automerge"; fi
+            [ -z "$NEW_GENERATION" ] && STALE="${STALE},breaking-generation"
+            gh pr edit "$BRANCH" --title "$TITLE" --body-file pr-body.md \
+              --add-label "$LABELS" --remove-label "$STALE"
+            PR_URL="$(gh pr view "$BRANCH" --json url --jq .url)"
+            # An earlier additive run may have enabled auto-merge.
+            if [ "$LABEL" != "automerge" ]; then
+              gh pr merge --disable-auto "$BRANCH" >/dev/null 2>&1 || true
+            fi
+          fi
           echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
           echo "label=$LABEL" >> "$GITHUB_OUTPUT"
 
