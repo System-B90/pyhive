@@ -124,9 +124,16 @@ jobs:
 
           BREAKING="${{ steps.sync.outputs.has_breaking }}"
           GATES="${{ steps.gates.outcome }}"
+          NEW_GENERATION="${{ steps.sync.outputs.new_generation }}"
           {
             echo "Automated sync of PyHive's generated core layer to **Hive ${VERSION}**."
             echo
+            if [ -n "$NEW_GENERATION" ]; then
+              echo "> [!WARNING]"
+              echo "> **Breaking API drift.** Hive ${VERSION} is mapped to a new generation, \`${NEW_GENERATION}\`, in \`hive_versions.toml\`,"
+              echo "> not to the previous one. Give it its own backend before merging (#53): the previous generation's code does not serve it."
+              echo
+            fi
             cat drift.md
             echo
             echo "---"
@@ -140,11 +147,18 @@ jobs:
             LABEL="automerge"
           fi
           gh label create "$LABEL" --force >/dev/null 2>&1 || true
+          LABELS="$LABEL"
+          TITLE="Sync PyHive to Hive ${VERSION}"
+          if [ -n "$NEW_GENERATION" ]; then
+            gh label create "breaking-generation" --color B60205 --force >/dev/null 2>&1 || true
+            LABELS="${LABELS},breaking-generation"
+            TITLE="${TITLE} (breaking: new generation ${NEW_GENERATION})"
+          fi
 
           PR_URL="$(gh pr create --base master --head "$BRANCH" \
-            --title "Sync PyHive to Hive ${VERSION}" \
-            --body-file pr-body.md --label "$LABEL" 2>/dev/null \
-            || gh pr edit "$BRANCH" --body-file pr-body.md --add-label "$LABEL" --json url --jq .url)"
+            --title "$TITLE" \
+            --body-file pr-body.md --label "$LABELS" 2>/dev/null \
+            || gh pr edit "$BRANCH" --body-file pr-body.md --add-label "$LABELS" --json url --jq .url)"
           echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
           echo "label=$LABEL" >> "$GITHUB_OUTPUT"
 

@@ -159,6 +159,35 @@ def test_apply_release_to_project(tmp_path: Path) -> None:
     assert 'version = "1.5.0"' in (tmp_path / "pyproject.toml").read_text("utf-8")
 
 
+def test_next_generation() -> None:
+    assert project.next_generation({"5.1.2": "gen1", "7.3.0": "gen2"}) == "gen3"
+    assert project.next_generation({}) == "gen1"
+    assert project.next_generation({"x": "custom", "y": "gen4"}) == "gen5"
+
+
+def test_breaking_release_gets_a_new_generation(tmp_path: Path) -> None:
+    (tmp_path / "hive_versions.toml").write_text(VERSIONS_TABLE, encoding="utf-8")
+    (tmp_path / "pyproject.toml").write_text(PYPROJECT, encoding="utf-8")
+    summary = project.apply_release_to_project(
+        tmp_path, "6.5.0", "major", breaking=True
+    )
+    assert summary["generation"] == "gen3"
+    assert summary["new_generation"] == "True"
+    table = project.parse_version_table(
+        (tmp_path / "hive_versions.toml").read_text("utf-8")
+    )
+    # Never auto-mapped to the previous generation, whatever the number says.
+    assert table["6.5.0"] == "gen3"
+    assert table["6.4.0"] == "gen2"
+
+
+def test_breaking_rerun_keeps_the_existing_mapping(tmp_path: Path) -> None:
+    (tmp_path / "hive_versions.toml").write_text(VERSIONS_TABLE, encoding="utf-8")
+    (tmp_path / "pyproject.toml").write_text(PYPROJECT, encoding="utf-8")
+    again = project.apply_release_to_project(tmp_path, "6.4.0", "major", breaking=True)
+    assert again == {"supported_added": "False"}
+
+
 def test_bump_package_version() -> None:
     text, new = project.bump_package_version(PYPROJECT, "minor")
     assert new == "1.5.0"
