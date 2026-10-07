@@ -1,4 +1,4 @@
-"""Offline unit tests for hive_codegen.manifest (build_manifest, _type_of)."""
+"""Offline unit tests for hive_codegen.manifest (build_manifest, field_type)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from hive_codegen.config import Config
-from hive_codegen.manifest import _type_of, build_manifest
+from hive_codegen.manifest import build_manifest, field_type
 from hive_codegen.spec import EnumSchema, Spec
 
 
@@ -29,31 +29,31 @@ def _config(**overrides: object) -> Config:
     return Config(**defaults)  # type: ignore[arg-type]
 
 
-def test_type_of_ref() -> None:
-    assert _type_of({"$ref": "#/components/schemas/User"}) == "User"
+def testfield_type_ref() -> None:
+    assert field_type({"$ref": "#/components/schemas/User"}) == "User"
 
 
-def test_type_of_combinator_wrapped_ref() -> None:
+def testfield_type_combinator_wrapped_ref() -> None:
     prop = {"allOf": [{"$ref": "#/components/schemas/User"}]}
-    assert _type_of(prop) == "User"
+    assert field_type(prop) == "User"
 
     prop2 = {"oneOf": [{"$ref": "#/components/schemas/User"}]}
-    assert _type_of(prop2) == "User"
+    assert field_type(prop2) == "User"
 
 
-def test_type_of_nested_array() -> None:
+def testfield_type_nested_array() -> None:
     prop = {"type": "array", "items": {"type": "array", "items": {"type": "integer"}}}
-    assert _type_of(prop) == "list[list[integer]]"
+    assert field_type(prop) == "list[list[integer]]"
 
 
-def test_type_of_array_of_ref() -> None:
+def testfield_type_array_of_ref() -> None:
     prop = {"type": "array", "items": {"$ref": "#/components/schemas/User"}}
-    assert _type_of(prop) == "list[User]"
+    assert field_type(prop) == "list[User]"
 
 
-def test_type_of_bare_type() -> None:
-    assert _type_of({"type": "string"}) == "string"
-    assert _type_of({}) == "any"
+def testfield_type_bare_type() -> None:
+    assert field_type({"type": "string"}) == "string"
+    assert field_type({}) == "any"
 
 
 def test_build_manifest_deterministic_and_covers_fields() -> None:

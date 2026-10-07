@@ -5,6 +5,13 @@ enums/members, new endpoints or query params. BREAKING changes require a human:
 removed or retyped fields, removed models/enums/members, removed endpoints or
 params. New *required* fields are reported as additive-with-note (they parse
 fine on read but may need attention for create payloads).
+
+Breaking changes split in two. **Shape** breaks (a removed or retyped field, a
+removed model, a removed enum member or an enum's value type) change what the
+generated models must look like, so the release needs a new API generation.
+**Surface** breaks (a removed endpoint, method, query param or whole enum) still
+need review but leave the models valid, so the release joins the newest
+generation.
 """
 
 from __future__ import annotations
@@ -20,10 +27,24 @@ class DriftReport:
     additive: list[str] = field(default_factory=list)
     breaking: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    # The subset of ``breaking`` that changes the models' shape.
+    shape_breaking: list[str] = field(default_factory=list)
 
     @property
     def has_breaking(self) -> bool:
         return bool(self.breaking)
+
+    @property
+    def needs_new_generation(self) -> bool:
+        """Whether the release's models cannot share the previous generation's."""
+
+        return bool(self.shape_breaking)
+
+    def shape(self, item: str) -> None:
+        """Record a breaking change to the models' shape."""
+
+        self.breaking.append(item)
+        self.shape_breaking.append(item)
 
     @property
     def is_empty(self) -> bool:
@@ -65,16 +86,16 @@ def _diff_enums(old: dict[str, Any], new: dict[str, Any], r: DriftReport) -> Non
         for member in nm.keys() - om.keys():
             r.additive.append(f"Enum `{name}`: new member `{member}` = {nm[member]!r}")
         for member in om.keys() - nm.keys():
-            r.breaking.append(f"Enum `{name}`: removed member `{member}`")
+            r.shape(f"Enum `{name}`: removed member `{member}`")
         if old[name]["is_int"] != new[name]["is_int"]:
-            r.breaking.append(f"Enum `{name}`: value type changed (int<->str)")
+            r.shape(f"Enum `{name}`: value type changed (int<->str)")
 
 
 def _diff_models(old: dict[str, Any], new: dict[str, Any], r: DriftReport) -> None:
     for name in new.keys() - old.keys():
         r.additive.append(f"New model `{name}`")
     for name in old.keys() - new.keys():
-        r.breaking.append(f"Removed model `{name}`")
+        r.shape(f"Removed model `{name}`")
     for name in old.keys() & new.keys():
         of, nf = old[name]["fields"], new[name]["fields"]
         for fname in nf.keys() - of.keys():
@@ -88,10 +109,10 @@ def _diff_models(old: dict[str, Any], new: dict[str, Any], r: DriftReport) -> No
                     f"Model `{name}`: new field `{fname}` ({nf[fname]['type']})"
                 )
         for fname in of.keys() - nf.keys():
-            r.breaking.append(f"Model `{name}`: removed field `{fname}`")
+            r.shape(f"Model `{name}`: removed field `{fname}`")
         for fname in of.keys() & nf.keys():
             if of[fname]["type"] != nf[fname]["type"]:
-                r.breaking.append(
+                r.shape(
                     f"Model `{name}`: field `{fname}` type "
                     f"`{of[fname]['type']}` → `{nf[fname]['type']}`"
                 )

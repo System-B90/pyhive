@@ -127,10 +127,11 @@ def test_add_supported_version_sorted_maps_to_latest_generation() -> None:
     assert text.startswith("# header comment survives\n")
 
 
-def test_add_supported_version_inserts_older_release_in_order() -> None:
+def test_add_supported_version_appends_whatever_the_number() -> None:
+    # Release order, not version order: Hive's numbers are not ordered.
     text, changed = project.add_supported_version(VERSIONS_TABLE, "6.2.0", "gen1")
     assert changed
-    assert list(project.parse_version_table(text)) == ["5.1.2", "6.2.0", "6.4.0"]
+    assert list(project.parse_version_table(text)) == ["5.1.2", "6.4.0", "6.2.0"]
     assert project.parse_version_table(text)["6.2.0"] == "gen1"
 
 
@@ -202,5 +203,5 @@ def test_update_readme_versions() -> None:
         "<!-- SUPPORTED_API_VERSIONS_END -->\nrest\n"
     )
     out = project.update_readme_versions(readme, ["6.4.0", "5.1.2"])
-    assert "- `5.1.2`\n- `6.4.0`" in out
+    assert "- `6.4.0`\n- `5.1.2`" in out
     assert "`old`" not in out

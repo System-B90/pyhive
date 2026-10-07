@@ -17,18 +17,18 @@ _README_BLOCK_RE = re.compile(
 )
 
 
-def semver_key(v: str) -> tuple[int, ...]:
-    return tuple(int(p) for p in v.split(".")[:3])
-
-
 def parse_version_table(table_text: str) -> dict[str, str]:
-    """The ``[versions]`` table of ``hive_versions.toml``: exact Hive version -> generation."""
+    """The ``[versions]`` table of ``hive_versions.toml``: exact Hive version -> generation.
+
+    Entries are in release order, oldest first. Hive's version numbers carry no
+    order or compatibility meaning, so that order is the file's, never a sort.
+    """
 
     return dict(tomllib.loads(table_text).get("versions", {}))
 
 
 def parse_supported(table_text: str) -> list[str]:
-    return sorted(parse_version_table(table_text), key=semver_key)
+    return list(parse_version_table(table_text))
 
 
 _GENERATION_RE = re.compile(r"^gen(\d+)$")
@@ -48,7 +48,8 @@ def add_supported_version(
 ) -> tuple[str, bool]:
     """Map ``version`` in ``hive_versions.toml``. Returns (text, changed).
 
-    ``generation`` defaults to the one serving the newest listed version,
+    The version is appended as the newest release. ``generation`` defaults to
+    the one serving the last listed (newest) release,
     i.e. an additive release. A breaking release needs a new generation,
     which the caller must pass explicitly; it is never inferred from the
     version number.
@@ -60,9 +61,9 @@ def add_supported_version(
     if generation is None:
         if not table:
             raise ValueError("hive_versions.toml has no [versions] entries to extend")
-        generation = table[max(table, key=semver_key)]
+        generation = table[next(reversed(table))]
     table[version] = generation
-    body = "".join(f'"{v}" = "{table[v]}"\n' for v in sorted(table, key=semver_key))
+    body = "".join(f'"{v}" = "{g}"\n' for v, g in table.items())
     match = _VERSIONS_SECTION_RE.search(table_text)
     if not match:
         raise ValueError("hive_versions.toml has no [versions] section")
@@ -93,7 +94,7 @@ def bump_package_version(pyproject_text: str, part: str) -> tuple[str, str]:
 
 
 def update_readme_versions(readme_text: str, versions: list[str]) -> str:
-    bullets = "\n".join(f"- `{v}`" for v in sorted(versions, key=semver_key))
+    bullets = "\n".join(f"- `{v}`" for v in versions)
     return _README_BLOCK_RE.sub(
         lambda m: f"{m.group('start')}{bullets}\n{m.group('end')}", readme_text, count=1
     )

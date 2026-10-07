@@ -9,7 +9,10 @@
       "EventAttendeesType0Item",
       "Queue",
       "QueueItem",
-      "HelpResponseSegelNested"
+      "HelpResponseSegelNested",
+      "SSOApplication",
+      "SSOTokenExchangeResponse",
+      "ClientInfoResponse"
     ]
   },
   "endpoints": {
@@ -1040,48 +1043,6 @@
         "query_params": {}
       }
     },
-    "/api/core/sso/applications/": {
-      "get": {
-        "operationId": "sso_applications_list",
-        "query_params": {}
-      },
-      "post": {
-        "operationId": "sso_applications_create",
-        "query_params": {}
-      }
-    },
-    "/api/core/sso/applications/{id}/": {
-      "delete": {
-        "operationId": "sso_applications_destroy",
-        "query_params": {}
-      },
-      "get": {
-        "operationId": "sso_applications_retrieve",
-        "query_params": {}
-      },
-      "patch": {
-        "operationId": "sso_applications_partial_update",
-        "query_params": {}
-      },
-      "put": {
-        "operationId": "sso_applications_update",
-        "query_params": {}
-      }
-    },
-    "/api/core/sso/client-info/": {
-      "get": {
-        "operationId": "sso_client_info_retrieve",
-        "query_params": {
-          "client_id": "string"
-        }
-      }
-    },
-    "/api/core/sso/exchange/": {
-      "post": {
-        "operationId": "sso_exchange_create",
-        "query_params": {}
-      }
-    },
     "/api/core/tags/": {
       "get": {
         "operationId": "tags_list",
@@ -1651,23 +1612,6 @@
           "required": true,
           "type": "list[integer]",
           "wire": "users"
-        }
-      }
-    },
-    "ClientInfoResponse": {
-      "curated_model": "ClientInfoResponse",
-      "fields": {
-        "name": {
-          "nullable": false,
-          "required": true,
-          "type": "string",
-          "wire": "name"
-        },
-        "scopes": {
-          "nullable": false,
-          "required": true,
-          "type": "object",
-          "wire": "scopes"
         }
       }
     },
@@ -3378,76 +3322,6 @@
         }
       }
     },
-    "SSOApplication": {
-      "curated_model": "SSOApplication",
-      "fields": {
-        "client_id": {
-          "nullable": false,
-          "required": true,
-          "type": "string",
-          "wire": "client_id"
-        },
-        "client_secret": {
-          "nullable": false,
-          "required": true,
-          "type": "string",
-          "wire": "client_secret"
-        },
-        "id": {
-          "nullable": false,
-          "required": true,
-          "type": "integer",
-          "wire": "id"
-        },
-        "name": {
-          "nullable": false,
-          "required": false,
-          "type": "string",
-          "wire": "name"
-        },
-        "owner": {
-          "nullable": true,
-          "required": true,
-          "type": "string",
-          "wire": "owner"
-        },
-        "redirect_uris": {
-          "nullable": false,
-          "required": false,
-          "type": "string",
-          "wire": "redirect_uris"
-        },
-        "skip_authorization": {
-          "nullable": false,
-          "required": true,
-          "type": "boolean",
-          "wire": "skip_authorization"
-        }
-      }
-    },
-    "SSOTokenExchangeResponse": {
-      "curated_model": "SSOTokenExchangeResponse",
-      "fields": {
-        "access_token": {
-          "nullable": false,
-          "required": true,
-          "type": "string",
-          "wire": "access_token"
-        },
-        "expires_at": {
-          "nullable": false,
-          "required": true,
-          "type": "integer",
-          "wire": "expires_at"
-        },
-        "refresh_token": {
-          "nullable": false,
-          "required": true,
-          "type": "string",
-          "wire": "refresh_token"
-        }
-      }
-    },
     "Seating": {
       "curated_model": "Seating",
       "fields": {
@@ -3635,5 +3509,11 @@
       }
     }
   },
-  "version": "7.3.0"
+  "version": "7.3.0",
+  "versions": [
+    "7.0.1",
+    "7.1.0",
+    "7.2.0",
+    "7.3.0"
+  ]
 }

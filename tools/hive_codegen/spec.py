@@ -33,6 +33,14 @@ class Spec:
     enums: dict[str, EnumSchema]
     # endpoint_path -> {method -> {operationId, query_params: {name: type}}}
     endpoints: dict[str, dict[str, Any]]
+    # Every Hive release this spec stands for; more than one once merged.
+    versions: tuple[str, ...] = ()
+
+    @property
+    def label(self) -> str:
+        """Human-readable list of the Hive versions behind this spec."""
+
+        return ", ".join(self.versions) if self.versions else self.version
 
 
 def _labels_from_description(description: str) -> dict[str, str]:
@@ -135,8 +143,12 @@ def _query_param_type(param: dict[str, Any]) -> str:
     return schema.get("type", "str")
 
 
-def load_spec(path: Path, config: Config) -> Spec:
-    """Parse ``api/core.yaml`` into a :class:`Spec`."""
+def load_spec(path: Path, config: Config, version: str | None = None) -> Spec:
+    """Parse ``api/core.yaml`` into a :class:`Spec`.
+
+    ``version`` overrides ``info.version``, which Hive does not always bump
+    (v5.1.2's spec says 5.0.0).
+    """
 
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     schemas: dict[str, dict[str, Any]] = raw.get("components", {}).get("schemas", {})
@@ -177,7 +189,7 @@ def load_spec(path: Path, config: Config) -> Spec:
         if per_method:
             endpoints[epath] = per_method
 
-    version = raw.get("info", {}).get("version", "")
+    version = version or raw.get("info", {}).get("version", "")
     return Spec(
         version=version,
         raw=raw,

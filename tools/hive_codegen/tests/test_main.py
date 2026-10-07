@@ -1,5 +1,5 @@
 """Offline unit tests for hive_codegen.__main__._cmd_sync (version-bump
-decision, exit codes, --check, --github-output)."""
+decision, exit codes, --check, --github-output, the rebuild it triggers)."""
 
 from __future__ import annotations
 
@@ -21,7 +21,8 @@ EMPTY_SPEC = Spec(version="7.2.0", raw={}, object_schemas={}, enums={}, endpoint
 def _args(tmp_path: Path, **overrides: object) -> argparse.Namespace:
     defaults: dict[str, object] = {
         "repo_root": str(tmp_path),
-        "spec": "unused.yaml",
+        "spec": str(tmp_path / "core.yaml"),
+        "specs_dir": str(tmp_path / "specs"),
         "version": None,
         "check": False,
         "no_apply": False,
@@ -53,12 +54,20 @@ def patched_pipeline(monkeypatch, tmp_path: Path):
     )
 
     monkeypatch.setattr(main_module, "load_config", lambda repo_root: config)
-    monkeypatch.setattr(main_module, "load_spec", lambda path, cfg: EMPTY_SPEC)
-    monkeypatch.setattr(main_module, "render_enums_module", lambda spec: "# enums")
     monkeypatch.setattr(
-        main_module, "render_models_module", lambda spec, cfg: "# models"
+        main_module, "load_spec", lambda path, cfg, version=None: EMPTY_SPEC
     )
-    monkeypatch.setattr(main_module, "_format", lambda output_dir: None)
+    (tmp_path / "core.yaml").write_text("openapi: 3.0.3\n", encoding="utf-8")
+    (tmp_path / "hive_versions.toml").write_text(
+        '[versions]\n"7.1.0" = "gen2"\n', encoding="utf-8"
+    )
+    builds: list[Path] = []
+
+    def _fake_build(repo_root: Path, specs_dir: Path) -> bool:
+        builds.append(specs_dir)
+        return False
+
+    monkeypatch.setattr(main_module, "_build", _fake_build)
 
     applied: dict[str, object] = {}
 
@@ -69,7 +78,7 @@ def patched_pipeline(monkeypatch, tmp_path: Path):
         return {"supported_added": "False", **generation}
 
     monkeypatch.setattr(main_module, "apply_release_to_project", _fake_apply)
-    return {"config": config, "applied": applied}
+    return {"config": config, "applied": applied, "builds": builds}
 
 
 def _set_manifests(monkeypatch, old, new):
@@ -135,15 +144,10 @@ def test_check_mode_writes_nothing(monkeypatch, tmp_path, patched_pipeline):
     manifest = {"version": "7.2.0", "enums": {}, "models": {}, "endpoints": {}}
     _set_manifests(monkeypatch, manifest, dict(manifest))
 
-    write_calls: list[object] = []
-    monkeypatch.setattr(
-        main_module, "write_manifest", lambda *a, **kw: write_calls.append(a)
-    )
-
-    rc = main_module._cmd_sync(_args(tmp_path, check=True))
+    rc = main_module._cmd_sync(_args(tmp_path, check=True, specs_dir=None))
 
     assert rc == main_module.EXIT_OK
-    assert write_calls == []
+    assert patched_pipeline["builds"] == []
     assert (
         "applied" not in patched_pipeline or "bump" not in patched_pipeline["applied"]
     )
@@ -155,7 +159,6 @@ def test_check_mode_writes_nothing(monkeypatch, tmp_path, patched_pipeline):
 def test_no_apply_skips_version_bump(monkeypatch, tmp_path, patched_pipeline):
     manifest = {"version": "7.2.0", "enums": {}, "models": {}, "endpoints": {}}
     _set_manifests(monkeypatch, manifest, dict(manifest))
-    monkeypatch.setattr(main_module, "write_manifest", lambda *a, **kw: None)
 
     rc = main_module._cmd_sync(_args(tmp_path, no_apply=True))
 
@@ -177,7 +180,6 @@ def test_github_output_written(monkeypatch, tmp_path, patched_pipeline):
         "endpoints": {},
     }
     _set_manifests(monkeypatch, old, new)
-    monkeypatch.setattr(main_module, "write_manifest", lambda *a, **kw: None)
 
     out_path = tmp_path / "gh_output.txt"
     rc = main_module._cmd_sync(_args(tmp_path, github_output=str(out_path)))
@@ -188,3 +190,43 @@ def test_github_output_written(monkeypatch, tmp_path, patched_pipeline):
     assert "has_breaking=true" in content
     assert "has_changes=true" in content
     assert "new_generation=gen9" in content
+
+
+def test_sync_caches_the_spec_and_rebuilds(monkeypatch, tmp_path, patched_pipeline):
+    manifest = {"version": "7.2.0", "enums": {}, "models": {}, "endpoints": {}}
+    _set_manifests(monkeypatch, manifest, dict(manifest))
+
+    rc = main_module._cmd_sync(_args(tmp_path))
+
+    assert rc == main_module.EXIT_OK
+    assert patched_pipeline["builds"] == [(tmp_path / "specs").resolve()]
+    cached = tmp_path / "specs" / "7.2.0" / "core.yaml"
+    assert cached.read_text(encoding="utf-8") == "openapi: 3.0.3\n"
+
+
+def test_sync_without_specs_dir_refuses_to_write(
+    monkeypatch, tmp_path, patched_pipeline
+):
+    rc = main_module._cmd_sync(_args(tmp_path, specs_dir=None))
+
+    assert rc == main_module.EXIT_BREAKING
+    assert "bump" not in patched_pipeline["applied"]
+
+
+def test_baseline_is_the_newest_generations_manifest(
+    monkeypatch, tmp_path, patched_pipeline
+):
+    seen: list[Path] = []
+    monkeypatch.setattr(
+        main_module, "load_manifest", lambda path: seen.append(path) or None
+    )
+    monkeypatch.setattr(
+        main_module,
+        "build_manifest",
+        lambda spec, cfg: {"version": "7.2.0", "enums": {}, "models": {}},
+    )
+
+    main_module._cmd_sync(_args(tmp_path, check=True))
+
+    output_dir = patched_pipeline["config"].output_dir
+    assert seen == [output_dir / "gen2" / "manifest.json"]

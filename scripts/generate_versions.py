@@ -22,15 +22,11 @@ TABLE = ROOT / "hive_versions.toml"
 DESTINATION = ROOT / "pyhive" / "src" / "_generated_versions.py"
 
 
-def _semver_key(version: str) -> tuple[int, ...]:
-    return tuple(int(part) for part in version.split(".")[:3])
-
-
 def render(table_text: str) -> str:
     """Render the generated module for the ``[versions]`` table in ``table_text``."""
 
-    table: dict[str, str] = tomllib.loads(table_text)["versions"]
-    ordered = dict(sorted(table.items(), key=lambda item: _semver_key(item[0])))
+    # Release order is the table's order: Hive version numbers are not ordered.
+    ordered: dict[str, str] = tomllib.loads(table_text)["versions"]
     return (
         "# Generated from hive_versions.toml by scripts/generate_versions.py. Do not edit.\n"
         f"HIVE_VERSION_GENERATIONS = {ordered!r}\n"

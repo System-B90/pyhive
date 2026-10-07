@@ -1,8 +1,46 @@
 # hive_codegen
 
-Auto-generates PyHive's typed **core layer** from Hive's OpenAPI spec
-(`api/core.yaml`) and keeps PyHive in sync on every Hive release — with no human
-interaction unless a change is genuinely breaking.
+Auto-generates PyHive's typed **core layer** from Hive's OpenAPI spec for
+**every** supported Hive release, one bindings package per API generation, and
+keeps PyHive in sync on every Hive release — with no human interaction unless a
+change is genuinely breaking.
+
+## Quick Start
+
+```pwsh
+pip install -e ".[dev,lint,codegen]"
+$env:PYTHONPATH = "tools"
+# 1. Generate the spec of every release in hive_versions.toml (cached; needs docker)
+python -m hive_codegen extract --hive-repo ../Hive --specs-dir ../hive-specs/specs
+# 2. Rebuild every generation's bindings from those specs
+python -m hive_codegen build --specs-dir ../hive-specs/specs
+```
+
+## Pipeline
+
+```
+hive_versions.toml ──► extract ──► <specs>/<version>/core.yaml ──► build ──► _generated/genN/
+ (release → gen)       (per tag:      (private cache:               (merge each
+                        build core,    System-B90/hive-specs)         generation's specs,
+                        spectacular)                                  render once)
+```
+
+- **Specs come from each tag's backend, not its committed file.** Hive only
+  refreshes `api/core.yaml` when someone runs `generate_api`, so tags lag their
+  backend (v7.3.0's file still has integer Lesson/Event ids). `extract` does
+  what `generate_api` does: it builds that tag's `core` image (`pyhive-spec/*`,
+  never touching a developer's `hive/*`) and runs `manage.py spectacular`.
+  Specs live in the private `System-B90/hive-specs` repo, since Hive is private
+  and this repo is public. Tags never move, so each spec is generated once.
+- **One package per generation, not per release.** `merge.py` unions a
+  generation's specs: a field or model missing from, or optional in, any of its
+  releases becomes optional; enums get every member. Releases of one generation
+  share one `models.py`; only a breaking change costs a new copy.
+- **Hive versions are not ordered.** Release order is the order of
+  `hive_versions.toml`'s entries (sync appends), never a numeric sort.
+- `build` warns (and exits `2`) if the table puts two releases with breaking
+  drift between them in one generation; the merge refuses to paper over a
+  retyped field.
 
 ## The split: generated core + curated ergonomics
 
@@ -13,10 +51,13 @@ kwargs, custom dunders). So generation is split in two:
 ```
 pyhive/src/types/
 ├── _generated/              ← regenerated every release, never hand-edited
-│   ├── enums.py             ← every spec enum, PyHive-style str/IntEnum + __str__
-│   ├── models.py            ← one Pydantic base class per real entity schema
-│   └── manifest.json        ← machine record of schemas/fields/enums/endpoints
-│                              (the drift-detection contract)
+│   ├── genN/                ← one package per API generation
+│   │   ├── enums.py         ← every spec enum, PyHive-style str/IntEnum + __str__
+│   │   ├── models.py        ← one Pydantic base class per real entity schema
+│   │   └── manifest.json    ← merged schemas/fields/enums/endpoints + versions
+│   │                          (the drift-detection contract)
+│   ├── enums.py             ← re-exports the newest generation
+│   └── models.py            ← likewise
 └── <resource>.py            ← curated: `class Exercise(_ExerciseBase): ...`
                                adds hive_client, lazy props, methods, overrides
 ```
@@ -39,19 +80,26 @@ fidelity (`ON_DONE`, `HANICH`, …). All behaviour is driven by
 ## Usage
 
 ```pwsh
-# Regenerate + classify drift + update pyproject/README/version
-python -m hive_codegen sync --spec ../Hive/api/core.yaml --repo-root .
+# Generate missing specs (all listed releases, or --version X ...); --force regenerates
+python -m hive_codegen extract --hive-repo ../Hive --specs-dir SPECS
+
+# Rebuild every generation
+python -m hive_codegen build --specs-dir SPECS
+
+# Add a release: classify drift vs the newest generation, map it in
+# hive_versions.toml (a new genN when breaking), cache its spec, rebuild
+python -m hive_codegen sync --spec SPECS/7.4.0/core.yaml --specs-dir SPECS
 
 # Dry-run: report drift only, write nothing
 python -m hive_codegen sync --spec core.yaml --check
-
-# In CI: emit GitHub outputs and a drift report, skip project-file edits
-python -m hive_codegen sync --spec core.yaml --no-apply \
-    --drift-out drift.md --github-output "$GITHUB_OUTPUT"
 ```
 
-Exit code `0` = no breaking changes (safe to auto-merge); `2` = manual review
-required.
+`sync` and `build` exit `0` when nothing is breaking and `2` when manual review
+is required.
+
+CI: `bindings.yml` rebuilds on table/codegen changes (fails a PR whose committed
+bindings are stale, opens `auto/hive-bindings` on master); `sync-hive.yml` adds
+a new Hive release. Both get specs through `.github/actions/hive-specs`.
 
 ## codegen.toml knobs
 

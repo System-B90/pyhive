@@ -1,22 +1,38 @@
 # The one source of truth for which Hive releases PyHive supports (#42).
 #
 # Every verified Hive release gets its own exact entry, mapped to the API
-# generation that serves it. Hive's version numbers are NOT semver (7.3.0, a
-# "minor" bump, changed every id from int to UUID), so nothing may infer
-# compatibility from a version number: no ranges, no "same major" logic. A new
-# Hive release is supported only once it is listed here, even when additive.
+# generation that serves it. Hive's version numbers carry no meaning: they are
+# not semver (7.0.1, a "patch" bump, changed the Lesson/Event ids from int to
+# UUID) and not even ordered. So nothing may infer order or compatibility from a
+# version number: no ranges, no sorting, no "same major" logic. Entries are in
+# release order, oldest first, and sync appends. A new Hive release is
+# supported only once it is listed here, even when additive.
 #
-# A generation is an internal name for one breaking Hive API shape. Users see
-# Hive versions, never generation names. Today one codebase serves every
-# generation; the per-generation backend packages are the follow-up work.
+# The key is the version the server reports (/api/core/schema/ info.version)
+# and the tag minus its "v". Tags before v5.11.1 report a stale version, so
+# they cannot be told apart at runtime and are not listed.
+#
+# A generation is an internal name for one Hive API model shape. Users see Hive
+# versions, never generation names. A release opens a new generation only when
+# the drift classifier finds a *shape* break (removed or retyped field, removed
+# model or enum member) on the specs generated from each tag's backend
+# (`python -m hive_codegen extract`). 6.4.0 -> 7.0.1 is the only one; the
+# removed query params in 6.0.1/6.2.0 and NullEnum in 6.1.1 are surface breaks.
+# tools/hive_codegen builds one bindings package per generation; the curated
+# layer serves the newest.
 #
 # Read by the build hook (scripts/generate_versions.py), which renders
 # pyhive/src/_generated_versions.py, and edited by tools/hive_codegen on sync.
 
 [versions]
-"5.1.2" = "gen1"
+"5.11.1" = "gen1"
+"5.12.0" = "gen1"
+"6.0.1" = "gen1"
+"6.1.1" = "gen1"
 "6.2.0" = "gen1"
+"6.3.0" = "gen1"
 "6.4.0" = "gen1"
-"7.1.0" = "gen1"
-"7.2.0" = "gen1"
+"7.0.1" = "gen2"
+"7.1.0" = "gen2"
+"7.2.0" = "gen2"
 "7.3.0" = "gen2"

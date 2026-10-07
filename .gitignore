@@ -216,3 +216,7 @@ demo.py
 api_yamls/
 
 .vscode/PythonImportHelper-v2-Completion.json
+
+# Hive + spec-cache checkouts made by the hive-specs action
+.hive/
+.hive-specs/
