@@ -42,6 +42,7 @@
       "get": {
         "operationId": "assignments_latest_list",
         "query_params": {
+          "last": "boolean",
           "last_staff_updated__gt": "string",
           "user__classes__id": "integer",
           "user__id__in": "list[integer]",
@@ -408,6 +409,7 @@
         "operationId": "help_latest_list",
         "query_params": {
           "help_type__in": "list[string]",
+          "last": "boolean",
           "last_staff_updated__gt": "string",
           "user__classes__id": "integer",
           "user__id__in": "list[integer]",
@@ -706,12 +708,6 @@
         "query_params": {}
       }
     },
-    "/api/core/powersync/token/": {
-      "get": {
-        "operationId": "powersync_token_retrieve",
-        "query_params": {}
-      }
-    },
     "/api/core/queues/": {
       "get": {
         "operationId": "queues_list",
@@ -800,31 +796,31 @@
         "query_params": {}
       }
     },
-    "/api/core/schedule/categories/": {
+    "/api/core/schedule/colors/": {
       "get": {
-        "operationId": "schedule_categories_list",
+        "operationId": "schedule_colors_list",
         "query_params": {}
       },
       "post": {
-        "operationId": "schedule_categories_create",
+        "operationId": "schedule_colors_create",
         "query_params": {}
       }
     },
-    "/api/core/schedule/categories/{id}/": {
+    "/api/core/schedule/colors/{id}/": {
       "delete": {
-        "operationId": "schedule_categories_destroy",
+        "operationId": "schedule_colors_destroy",
         "query_params": {}
       },
       "get": {
-        "operationId": "schedule_categories_retrieve",
+        "operationId": "schedule_colors_retrieve",
         "query_params": {}
       },
       "patch": {
-        "operationId": "schedule_categories_partial_update",
+        "operationId": "schedule_colors_partial_update",
         "query_params": {}
       },
       "put": {
-        "operationId": "schedule_categories_update",
+        "operationId": "schedule_colors_update",
         "query_params": {}
       }
     },
@@ -834,124 +830,12 @@
         "query_params": {}
       }
     },
-    "/api/core/schedule/event-attendees/": {
-      "get": {
-        "operationId": "schedule_event_attendees_list",
-        "query_params": {}
-      },
-      "post": {
-        "operationId": "schedule_event_attendees_create",
-        "query_params": {}
-      }
-    },
-    "/api/core/schedule/event-attendees/{id}/": {
-      "delete": {
-        "operationId": "schedule_event_attendees_destroy",
-        "query_params": {}
-      },
-      "get": {
-        "operationId": "schedule_event_attendees_retrieve",
-        "query_params": {}
-      },
-      "patch": {
-        "operationId": "schedule_event_attendees_partial_update",
-        "query_params": {}
-      },
-      "put": {
-        "operationId": "schedule_event_attendees_update",
-        "query_params": {}
-      }
-    },
-    "/api/core/schedule/event-instructors/": {
-      "get": {
-        "operationId": "schedule_event_instructors_list",
-        "query_params": {}
-      },
-      "post": {
-        "operationId": "schedule_event_instructors_create",
-        "query_params": {}
-      }
-    },
-    "/api/core/schedule/event-instructors/{id}/": {
-      "delete": {
-        "operationId": "schedule_event_instructors_destroy",
-        "query_params": {}
-      },
-      "get": {
-        "operationId": "schedule_event_instructors_retrieve",
-        "query_params": {}
-      },
-      "patch": {
-        "operationId": "schedule_event_instructors_partial_update",
-        "query_params": {}
-      },
-      "put": {
-        "operationId": "schedule_event_instructors_update",
-        "query_params": {}
-      }
-    },
-    "/api/core/schedule/event-taggings/": {
-      "get": {
-        "operationId": "schedule_event_taggings_list",
-        "query_params": {}
-      },
-      "post": {
-        "operationId": "schedule_event_taggings_create",
-        "query_params": {}
-      }
-    },
-    "/api/core/schedule/event-taggings/{id}/": {
-      "delete": {
-        "operationId": "schedule_event_taggings_destroy",
-        "query_params": {}
-      },
-      "get": {
-        "operationId": "schedule_event_taggings_retrieve",
-        "query_params": {}
-      },
-      "patch": {
-        "operationId": "schedule_event_taggings_partial_update",
-        "query_params": {}
-      },
-      "put": {
-        "operationId": "schedule_event_taggings_update",
-        "query_params": {}
-      }
-    },
-    "/api/core/schedule/event-tags/": {
-      "get": {
-        "operationId": "schedule_event_tags_list",
-        "query_params": {}
-      },
-      "post": {
-        "operationId": "schedule_event_tags_create",
-        "query_params": {}
-      }
-    },
-    "/api/core/schedule/event-tags/{id}/": {
-      "delete": {
-        "operationId": "schedule_event_tags_destroy",
-        "query_params": {}
-      },
-      "get": {
-        "operationId": "schedule_event_tags_retrieve",
-        "query_params": {}
-      },
-      "patch": {
-        "operationId": "schedule_event_tags_partial_update",
-        "query_params": {}
-      },
-      "put": {
-        "operationId": "schedule_event_tags_update",
-        "query_params": {}
-      }
-    },
     "/api/core/schedule/events/": {
       "get": {
         "operationId": "schedule_events_list",
         "query_params": {
           "end__lte": "string",
-          "lesson__id": "string",
+          "lesson__id": "integer",
           "start__gte": "string"
         }
       },
@@ -978,9 +862,36 @@
         "query_params": {}
       }
     },
-    "/api/core/schedule/ics/": {
+    "/api/core/schedule/kiosk/": {
       "get": {
-        "operationId": "schedule_ics_retrieve",
+        "operationId": "schedule_kiosk_list",
+        "query_params": {
+          "end__lte": "string",
+          "lesson__id": "integer",
+          "start__gte": "string",
+          "work_name": "boolean"
+        }
+      },
+      "post": {
+        "operationId": "schedule_kiosk_create",
+        "query_params": {}
+      }
+    },
+    "/api/core/schedule/kiosk/{id}/": {
+      "delete": {
+        "operationId": "schedule_kiosk_destroy",
+        "query_params": {}
+      },
+      "get": {
+        "operationId": "schedule_kiosk_retrieve",
+        "query_params": {}
+      },
+      "patch": {
+        "operationId": "schedule_kiosk_partial_update",
+        "query_params": {}
+      },
+      "put": {
+        "operationId": "schedule_kiosk_update",
         "query_params": {}
       }
     },
@@ -1139,6 +1050,14 @@
         "CHECKER": 2,
         "HANICH": 1,
         "SEGEL": 3
+      }
+    },
+    "EventTypeEnum": {
+      "is_int": false,
+      "members": {
+        "VALUE_\u05d4\u05e8\u05e6\u05d0\u05d4": "\u05d4\u05e8\u05e6\u05d0\u05d4",
+        "VALUE_\u05e2\u05e2": "\u05e2\u05e2",
+        "VALUE_\u05e4\u05ea\u05d1\u05e1": "\u05e4\u05ea\u05d1\u05e1"
       }
     },
     "ExercisePreviewTypes": {
@@ -1797,34 +1716,16 @@
       "curated_model": "Event",
       "fields": {
         "attendees": {
-          "nullable": false,
+          "nullable": true,
           "required": true,
           "type": "list[object]",
           "wire": "attendees"
         },
-        "category_id": {
-          "nullable": true,
-          "required": false,
-          "type": "string",
-          "wire": "category_id"
-        },
-        "category_name": {
-          "nullable": false,
-          "required": true,
-          "type": "string",
-          "wire": "category_name"
-        },
         "color": {
-          "nullable": false,
+          "nullable": true,
           "required": true,
           "type": "string",
           "wire": "color"
-        },
-        "description": {
-          "nullable": true,
-          "required": false,
-          "type": "string",
-          "wire": "description"
         },
         "end": {
           "nullable": false,
@@ -1832,35 +1733,23 @@
           "type": "string",
           "wire": "end"
         },
-        "hidden_from_students": {
-          "nullable": false,
-          "required": false,
-          "type": "boolean",
-          "wire": "hidden_from_students"
+        "lesson_name": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "lesson_name"
         },
-        "id": {
+        "location": {
           "nullable": false,
           "required": false,
           "type": "string",
-          "wire": "id"
+          "wire": "location"
         },
-        "lesson_id": {
+        "module_id": {
           "nullable": true,
-          "required": false,
-          "type": "string",
-          "wire": "lesson_id"
-        },
-        "locked": {
-          "nullable": false,
-          "required": false,
-          "type": "boolean",
-          "wire": "locked"
-        },
-        "room_id": {
-          "nullable": true,
-          "required": false,
+          "required": true,
           "type": "integer",
-          "wire": "room_id"
+          "wire": "module_id"
         },
         "start": {
           "nullable": false,
@@ -1868,109 +1757,34 @@
           "type": "string",
           "wire": "start"
         },
+        "subject_id": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "subject_id"
+        },
+        "subject_name": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "subject_name"
+        },
         "title": {
-          "nullable": false,
-          "required": false,
+          "nullable": true,
+          "required": true,
           "type": "string",
           "wire": "title"
+        },
+        "type_": {
+          "nullable": false,
+          "required": true,
+          "type": "EventTypeEnum",
+          "wire": "type"
         }
       }
     },
-    "EventAttendee": {
-      "curated_model": "EventAttendee",
-      "fields": {
-        "attendee_class_id": {
-          "nullable": false,
-          "required": true,
-          "type": "integer",
-          "wire": "attendee_class_id"
-        },
-        "event_id": {
-          "nullable": false,
-          "required": true,
-          "type": "string",
-          "wire": "event_id"
-        },
-        "id": {
-          "nullable": false,
-          "required": false,
-          "type": "string",
-          "wire": "id"
-        }
-      }
-    },
-    "EventCategory": {
-      "curated_model": "EventCategory",
-      "fields": {
-        "color": {
-          "nullable": false,
-          "required": true,
-          "type": "string",
-          "wire": "color"
-        },
-        "has_lesson": {
-          "nullable": false,
-          "required": false,
-          "type": "boolean",
-          "wire": "has_lesson"
-        },
-        "hide_details_in_review": {
-          "nullable": false,
-          "required": false,
-          "type": "boolean",
-          "wire": "hide_details_in_review"
-        },
-        "id": {
-          "nullable": false,
-          "required": false,
-          "type": "string",
-          "wire": "id"
-        },
-        "name": {
-          "nullable": false,
-          "required": true,
-          "type": "string",
-          "wire": "name"
-        },
-        "students_see_subject": {
-          "nullable": false,
-          "required": false,
-          "type": "boolean",
-          "wire": "students_see_subject"
-        },
-        "visible_to_students": {
-          "nullable": false,
-          "required": false,
-          "type": "boolean",
-          "wire": "visible_to_students"
-        }
-      }
-    },
-    "EventInstructor": {
-      "curated_model": "EventInstructor",
-      "fields": {
-        "event_id": {
-          "nullable": false,
-          "required": true,
-          "type": "string",
-          "wire": "event_id"
-        },
-        "id": {
-          "nullable": false,
-          "required": false,
-          "type": "string",
-          "wire": "id"
-        },
-        "instructor_id": {
-          "nullable": false,
-          "required": true,
-          "type": "integer",
-          "wire": "instructor_id"
-        }
-      }
-    },
-    "EventTag": {
-      "curated_model": "EventTag",
+    "EventColor": {
+      "curated_model": "EventColor",
       "fields": {
         "color": {
           "nullable": false,
@@ -1980,8 +1794,8 @@
         },
         "id": {
           "nullable": false,
-          "required": false,
-          "type": "string",
+          "required": true,
+          "type": "integer",
           "wire": "id"
         },
         "name": {
@@ -1992,26 +1806,62 @@
         }
       }
     },
-    "EventTagging": {
-      "curated_model": "EventTagging",
+    "EventKiosk": {
+      "curated_model": "EventKiosk",
       "fields": {
-        "event_id": {
+        "attendees": {
+          "nullable": true,
+          "required": true,
+          "type": "list[object]",
+          "wire": "attendees"
+        },
+        "color": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "color"
+        },
+        "end": {
           "nullable": false,
           "required": true,
           "type": "string",
-          "wire": "event_id"
+          "wire": "end"
         },
-        "id": {
+        "location": {
           "nullable": false,
           "required": false,
           "type": "string",
-          "wire": "id"
+          "wire": "location"
         },
-        "tag_id": {
+        "start": {
           "nullable": false,
           "required": true,
           "type": "string",
-          "wire": "tag_id"
+          "wire": "start"
+        },
+        "subject_id": {
+          "nullable": true,
+          "required": true,
+          "type": "integer",
+          "wire": "subject_id"
+        },
+        "subject_name": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "subject_name"
+        },
+        "title": {
+          "nullable": true,
+          "required": true,
+          "type": "string",
+          "wire": "title"
+        },
+        "type_": {
+          "nullable": false,
+          "required": true,
+          "type": "EventTypeEnum",
+          "wire": "type"
         }
       }
     },
@@ -2595,15 +2445,15 @@
         },
         "id": {
           "nullable": false,
-          "required": false,
-          "type": "string",
+          "required": true,
+          "type": "integer",
           "wire": "id"
         },
         "module_id": {
           "nullable": false,
           "required": true,
           "type": "integer",
-          "wire": "module_id"
+          "wire": "module"
         },
         "module_name": {
           "nullable": false,
@@ -2649,13 +2499,13 @@
         "id": {
           "nullable": false,
           "required": true,
-          "type": "string",
+          "type": "integer",
           "wire": "id"
         },
         "parent_rule": {
           "nullable": true,
           "required": false,
-          "type": "string",
+          "type": "integer",
           "wire": "parent_rule"
         },
         "queue_data": {
@@ -3039,29 +2889,6 @@
         }
       }
     },
-    "PowerSyncToken": {
-      "curated_model": "PowerSyncToken",
-      "fields": {
-        "endpoint": {
-          "nullable": false,
-          "required": true,
-          "type": "string",
-          "wire": "endpoint"
-        },
-        "expiresAt": {
-          "nullable": false,
-          "required": true,
-          "type": "integer",
-          "wire": "expiresAt"
-        },
-        "token": {
-          "nullable": false,
-          "required": true,
-          "type": "string",
-          "wire": "token"
-        }
-      }
-    },
     "Program": {
       "curated_model": "Program",
       "fields": {
@@ -3124,6 +2951,12 @@
           "required": false,
           "type": "boolean",
           "wire": "hanich_schedule"
+        },
+        "hanich_work_name": {
+          "nullable": false,
+          "required": false,
+          "type": "boolean",
+          "wire": "hanich_work_name"
         },
         "id": {
           "nullable": false,
@@ -3509,11 +3342,11 @@
       }
     }
   },
-  "version": "7.3.0",
+  "version": "6.4.0",
   "versions": [
-    "7.0.1",
-    "7.1.0",
-    "7.2.0",
-    "7.3.0"
+    "6.1.1",
+    "6.2.0",
+    "6.3.0",
+    "6.4.0"
   ]
 }

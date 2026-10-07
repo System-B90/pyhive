@@ -14,10 +14,12 @@
 #
 # A generation is an internal name for one Hive API model shape. Users see Hive
 # versions, never generation names. A release opens a new generation only when
-# the drift classifier finds a *shape* break (removed or retyped field, removed
-# model or enum member) on the specs generated from each tag's backend
-# (`python -m hive_codegen extract`). 6.4.0 -> 7.0.1 is the only one; the
-# removed query params in 6.0.1/6.2.0 and NullEnum in 6.1.1 are surface breaks.
+# the drift classifier finds a *shape* break (removed or retyped field, a field
+# switching between T and T | None, removed model or enum member) on the specs
+# generated from each tag's backend (`python -m hive_codegen extract`):
+# 6.0.1 -> 6.1.1 (Notification.response_type stopped being nullable) and
+# 6.4.0 -> 7.0.1 (UUID ids, removed Event fields/models). The removed query
+# params in 6.0.1/6.2.0 are surface breaks.
 # tools/hive_codegen builds one bindings package per generation; the curated
 # layer serves the newest.
 #
@@ -28,11 +30,11 @@
 "5.11.1" = "gen1"
 "5.12.0" = "gen1"
 "6.0.1" = "gen1"
-"6.1.1" = "gen1"
-"6.2.0" = "gen1"
-"6.3.0" = "gen1"
-"6.4.0" = "gen1"
-"7.0.1" = "gen2"
-"7.1.0" = "gen2"
-"7.2.0" = "gen2"
-"7.3.0" = "gen2"
+"6.1.1" = "gen2"
+"6.2.0" = "gen2"
+"6.3.0" = "gen2"
+"6.4.0" = "gen2"
+"7.0.1" = "gen3"
+"7.1.0" = "gen3"
+"7.2.0" = "gen3"
+"7.3.0" = "gen3"

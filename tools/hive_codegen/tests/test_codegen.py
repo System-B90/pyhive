@@ -103,6 +103,44 @@ def test_drift_breaking_changes() -> None:
     assert any("removed member `B`" in b for b in report.breaking)
     assert any("removed field `x`" in b for b in report.breaking)
     assert any("type" in b and "`id`" in b for b in report.breaking)
+    assert report.needs_new_generation
+
+
+def _field(required: bool, nullable: bool) -> dict:
+    return {"type": "string", "required": required, "nullable": nullable}
+
+
+def test_drift_required_field_losing_nullability_is_a_shape_break() -> None:
+    # Hive 6.0.1 -> 6.1.1: Notification.response_type stopped accepting null.
+    old = _manifest("6.0.1", models={"N": {"fields": {"r": _field(True, True)}}})
+    new = _manifest("6.1.1", models={"N": {"fields": {"r": _field(True, False)}}})
+    report = classify(old, new)
+    assert report.needs_new_generation
+    assert any("accepts None" in b and "`r`" in b for b in report.shape_breaking)
+
+
+def test_drift_optional_field_nullability_is_not_a_shape_break() -> None:
+    # Optional fields render `T | None = None` either way (Exercise.autocheck_tag).
+    old = _manifest("5.12.0", models={"E": {"fields": {"t": _field(False, True)}}})
+    new = _manifest("6.0.1", models={"E": {"fields": {"t": _field(False, False)}}})
+    assert not classify(old, new).has_breaking
+
+
+def test_drift_removed_query_param_is_a_surface_break() -> None:
+    endpoint = "/api/core/x/"
+    old = _manifest(
+        "6.1.1",
+        endpoints={
+            endpoint: {"get": {"operationId": "x", "query_params": {"last": "str"}}}
+        },
+    )
+    new = _manifest(
+        "6.2.0",
+        endpoints={endpoint: {"get": {"operationId": "x", "query_params": {}}}},
+    )
+    report = classify(old, new)
+    assert report.has_breaking
+    assert not report.needs_new_generation
 
 
 PYPROJECT = """\

@@ -59,7 +59,7 @@ def patched_pipeline(monkeypatch, tmp_path: Path):
     )
     (tmp_path / "core.yaml").write_text("openapi: 3.0.3\n", encoding="utf-8")
     (tmp_path / "hive_versions.toml").write_text(
-        '[versions]\n"7.1.0" = "gen2"\n', encoding="utf-8"
+        '[versions]\n"7.1.0" = "gen3"\n', encoding="utf-8"
     )
     builds: list[Path] = []
 
@@ -229,4 +229,4 @@ def test_baseline_is_the_newest_generations_manifest(
     main_module._cmd_sync(_args(tmp_path, check=True))
 
     output_dir = patched_pipeline["config"].output_dir
-    assert seen == [output_dir / "gen2" / "manifest.json"]
+    assert seen == [output_dir / "gen3" / "manifest.json"]

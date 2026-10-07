@@ -7,7 +7,8 @@ params. New *required* fields are reported as additive-with-note (they parse
 fine on read but may need attention for create payloads).
 
 Breaking changes split in two. **Shape** breaks (a removed or retyped field, a
-removed model, a removed enum member or an enum's value type) change what the
+field switching between ``T`` and ``T | None``, a removed model, a removed enum member or
+an enum's value type) change what the
 generated models must look like, so the release needs a new API generation.
 **Surface** breaks (a removed endpoint, method, query param or whole enum) still
 need review but leave the models valid, so the release joins the newest
@@ -116,6 +117,19 @@ def _diff_models(old: dict[str, Any], new: dict[str, Any], r: DriftReport) -> No
                     f"Model `{name}`: field `{fname}` type "
                     f"`{of[fname]['type']}` → `{nf[fname]['type']}`"
                 )
+            elif _accepts_none(of[fname]) != _accepts_none(nf[fname]):
+                # One side's model is `T`, the other's `T | None`: one server
+                # sends null (or omits it) where the other never does.
+                r.shape(
+                    f"Model `{name}`: field `{fname}` accepts None "
+                    f"`{_accepts_none(of[fname])}` → `{_accepts_none(nf[fname])}`"
+                )
+
+
+def _accepts_none(fld: dict[str, Any]) -> bool:
+    """Whether the generated field is ``T | None``: optional or nullable."""
+
+    return not fld.get("required", False) or bool(fld.get("nullable", False))
 
 
 def _diff_endpoints(old: dict[str, Any], new: dict[str, Any], r: DriftReport) -> None:

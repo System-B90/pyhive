@@ -75,16 +75,19 @@ def test_render_keeps_the_tables_release_order() -> None:
     assert namespace["LATEST_API_VERSION"] == "9.1.0"
 
 
-@pytest.mark.parametrize(
-    "version", ["5.11.1", "5.12.0", "6.0.1", "6.1.1", "6.2.0", "6.3.0", "6.4.0"]
-)
-def test_integer_id_releases_map_to_gen1(version: str) -> None:
+@pytest.mark.parametrize("version", ["5.11.1", "5.12.0", "6.0.1"])
+def test_nullable_notification_releases_map_to_gen1(version: str) -> None:
     assert generation_for(version) == "gen1"
 
 
-@pytest.mark.parametrize("version", ["7.0.1", "7.1.0", "7.2.0", "7.3.0"])
-def test_uuid_releases_map_to_gen2(version: str) -> None:
+@pytest.mark.parametrize("version", ["6.1.1", "6.2.0", "6.3.0", "6.4.0"])
+def test_integer_id_releases_map_to_gen2(version: str) -> None:
     assert generation_for(version) == "gen2"
+
+
+@pytest.mark.parametrize("version", ["7.0.1", "7.1.0", "7.2.0", "7.3.0"])
+def test_uuid_releases_map_to_gen3(version: str) -> None:
+    assert generation_for(version) == "gen3"
 
 
 def test_stale_reporting_releases_are_not_listed() -> None:
@@ -108,7 +111,7 @@ def test_unlisted_versions_are_unverified_even_when_close(version: str) -> None:
 
 
 def test_versions_for_generation() -> None:
-    assert versions_for_generation("gen2") == ["7.0.1", "7.1.0", "7.2.0", "7.3.0"]
+    assert versions_for_generation("gen3") == ["7.0.1", "7.1.0", "7.2.0", "7.3.0"]
     assert versions_for_generation("nope") == []
 
 
