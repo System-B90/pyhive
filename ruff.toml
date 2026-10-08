@@ -1,0 +1,19 @@
+# Org-wide baseline (System-B90): keep the shared section identical in every repo.
+# Rules = ruff's default set for the pinned version + I, W, B, UP. The ruff pin
+# (requirements / pyproject `lint` extra / CI) is what keeps the default set stable;
+# bump it deliberately and fix what the new version flags in the same change.
+line-length = 88
+target-version = "py310"
+# datamodel-code-generator owns everything under _generated/ and rewrites it on
+# every Hive release. Linting it produces findings nobody may fix by hand, and
+# `ruff check --fix` will happily edit it and have the change silently reverted
+# by the next codegen run. Pylint already excludes these paths.
+exclude = ["pyhive/src/types/_generated", "pyhive/src/_generated_versions.py"]
+
+[lint]
+extend-select = ["I", "W", "B", "UP"]
+ignore = [
+    "BLE001", # broad-exception-caught
+    "RET504", # unnecessary-assign
+    "ARG001", # unused-argument
+]
