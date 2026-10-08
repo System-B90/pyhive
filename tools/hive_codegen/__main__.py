@@ -81,6 +81,7 @@ def _cmd_sync(args: argparse.Namespace) -> int:
         Path(args.drift_out).write_text(report.to_markdown() + "\n", encoding="utf-8")
 
     project_changed = False
+    new_generation = ""
     if not args.check:
         (output_dir / "enums.py").write_text(
             render_enums_module(spec), encoding="utf-8"
@@ -98,8 +99,11 @@ def _cmd_sync(args: argparse.Namespace) -> int:
                 bump = "patch"
             else:
                 bump = "minor"
-            summary = apply_release_to_project(repo_root, version, bump)
+            summary = apply_release_to_project(
+                repo_root, version, bump, breaking=report.has_breaking
+            )
             project_changed = summary.get("supported_added") == "True"
+            new_generation = summary.get("generation", "")
             print("\nProject files:", summary)
 
     if args.github_output:
@@ -107,6 +111,7 @@ def _cmd_sync(args: argparse.Namespace) -> int:
             Path(args.github_output),
             {
                 "api_version": version,
+                "new_generation": new_generation,
                 "has_breaking": "true" if report.has_breaking else "false",
                 "has_changes": "true"
                 if (not report.is_empty or project_changed)

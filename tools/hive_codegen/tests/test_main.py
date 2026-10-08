@@ -62,9 +62,11 @@ def patched_pipeline(monkeypatch, tmp_path: Path):
 
     applied: dict[str, object] = {}
 
-    def _fake_apply(repo_root, version, bump):
+    def _fake_apply(repo_root, version, bump, *, breaking=False):
         applied["bump"] = bump
-        return {"supported_added": "False"}
+        applied["breaking"] = breaking
+        generation = {"generation": "gen9"} if breaking else {}
+        return {"supported_added": "False", **generation}
 
     monkeypatch.setattr(main_module, "apply_release_to_project", _fake_apply)
     return {"config": config, "applied": applied}
@@ -96,6 +98,7 @@ def test_breaking_change_selects_major_bump_and_exit_2(
 
     assert rc == main_module.EXIT_BREAKING
     assert patched_pipeline["applied"]["bump"] == "major"
+    assert patched_pipeline["applied"]["breaking"] is True
 
 
 def test_empty_diff_selects_patch_bump_and_exit_0(
@@ -184,3 +187,4 @@ def test_github_output_written(monkeypatch, tmp_path, patched_pipeline):
     assert "api_version=7.2.0" in content
     assert "has_breaking=true" in content
     assert "has_changes=true" in content
+    assert "new_generation=gen9" in content

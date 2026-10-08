@@ -31,6 +31,18 @@ def parse_supported(table_text: str) -> list[str]:
     return sorted(parse_version_table(table_text), key=semver_key)
 
 
+_GENERATION_RE = re.compile(r"^gen(\d+)$")
+
+
+def next_generation(table: dict[str, str]) -> str:
+    """The name for a new API generation: one past the highest ``genN`` in use."""
+
+    numbers = [
+        int(m.group(1)) for g in table.values() if (m := _GENERATION_RE.match(g))
+    ]
+    return f"gen{max(numbers, default=0) + 1}"
+
+
 def add_supported_version(
     table_text: str, version: str, generation: str | None = None
 ) -> tuple[str, bool]:
@@ -88,15 +100,26 @@ def update_readme_versions(readme_text: str, versions: list[str]) -> str:
 
 
 def apply_release_to_project(
-    repo_root: Path, api_version: str, package_bump: str
+    repo_root: Path, api_version: str, package_bump: str, *, breaking: bool = False
 ) -> dict[str, str]:
-    """Apply all project-file edits for a synced Hive release. Returns a summary."""
+    """Apply all project-file edits for a synced Hive release. Returns a summary.
+
+    A ``breaking`` release (decided by the spec drift, never by the version
+    number) is mapped to a brand-new generation rather than the newest one:
+    serving it from the previous generation's code is exactly what breaks
+    (#53). The summary's ``generation`` names it so the sync PR can flag it.
+    """
 
     summary: dict[str, str] = {}
     table_path = repo_root / "hive_versions.toml"
-    table_text, added = add_supported_version(
-        table_path.read_text(encoding="utf-8"), api_version
-    )
+    current = table_path.read_text(encoding="utf-8")
+    table = parse_version_table(current)
+    generation = None
+    if breaking and api_version not in table:
+        generation = next_generation(table)
+        summary["generation"] = generation
+        summary["new_generation"] = "True"
+    table_text, added = add_supported_version(current, api_version, generation)
     summary["supported_added"] = str(added)
     if added:
         table_path.write_text(table_text, encoding="utf-8")
