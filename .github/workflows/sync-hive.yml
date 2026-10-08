@@ -33,7 +33,9 @@ env:
 jobs:
   sync:
     name: Sync Hive Release
-    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux", "python"]') }}
+    runs-on: ${{ (inputs.runner == 'github-hosted' || vars.CI_RUNNER == 'github-hosted') && 'ubuntu-latest' || fromJSON('["self-hosted", "Linux"]') }}
+    # Generating a release's spec builds its Hive backend image.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
         with:
@@ -64,32 +66,34 @@ jobs:
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
           echo "Resolved Hive tag: $TAG"
 
-      - name: Fetch api/core.yaml at tag
-        env:
-          HIVE_REPO_TOKEN: ${{ secrets.HIVE_REPO_TOKEN }}
-        run: |
-          set -euo pipefail
-          curl -sSL --fail \
-            -H "Authorization: Bearer ${HIVE_REPO_TOKEN}" \
-            -H "Accept: application/vnd.github.raw" \
-            "https://api.github.com/repos/${HIVE_REPO}/contents/api/core.yaml?ref=${{ steps.tag.outputs.tag }}" \
-            -o core.yaml
-          test -s core.yaml
+      # Hive's committed api/core.yaml lags its backend at some tags (v7.3.0's
+      # still has integer ids), so the spec is generated from the tag's own
+      # backend instead, and cached in System-B90/hive-specs with every other
+      # release's, which the rebuild below needs too.
+      - name: Hive specs
+        id: specs
+        uses: ./.github/actions/hive-specs
+        with:
+          hive-token: ${{ secrets.HIVE_REPO_TOKEN }}
+          specs-token: ${{ secrets.HIVE_SPECS_TOKEN || secrets.ACCESS_TOKEN }}
+          versions: ${{ steps.tag.outputs.version }}
 
-      - name: Regenerate core layer + classify drift
+      - name: Classify drift + rebuild every generation
         id: sync
         env:
           PYTHONIOENCODING: utf-8
           PYTHONPATH: tools
+          SPECS: ${{ steps.specs.outputs.specs-dir }}
         run: |
           set -euo pipefail
           python -m hive_codegen sync \
-            --spec core.yaml --repo-root . \
+            --spec "$SPECS/${{ steps.tag.outputs.version }}/core.yaml" \
+            --version "${{ steps.tag.outputs.version }}" \
+            --specs-dir "$SPECS" --repo-root . \
             --drift-out drift.md \
             --github-output "$GITHUB_OUTPUT" || true
           # Regenerate the supported-versions module from the updated hive_versions.toml.
           python scripts/generate_versions.py
-          rm -f core.yaml
 
       - name: Stop if no changes
         if: steps.sync.outputs.has_changes != 'true'

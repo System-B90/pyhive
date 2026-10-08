@@ -1,0 +1,115 @@
+name: Generate Hive Bindings
+
+# Rebuilds every API generation's bindings (pyhive/src/types/_generated/genN/)
+# from the specs of every Hive release in hive_versions.toml, so the committed
+# bindings can never drift from the table or from tools/hive_codegen.
+#
+# Specs come from the private System-B90/hive-specs cache; a release missing
+# from it is generated first by building that Hive tag's backend (see the
+# hive-specs action). On a PR the job only checks that the committed bindings
+# are current; on master or a manual run it opens a PR with the regenerated
+# bindings when they changed.
+
+on:
+  pull_request:
+    paths:
+      - hive_versions.toml
+      - tools/hive_codegen/**
+      - pyhive/src/types/_generated/**
+      - .github/actions/hive-specs/**
+      - .github/workflows/bindings.yml
+  push:
+    branches: [master]
+    paths:
+      - hive_versions.toml
+      - tools/hive_codegen/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bindings:
+    name: Generate Hive Bindings
+    # Extraction builds Hive images, so this needs the self-hosted box's docker.
+    runs-on: [self-hosted, Linux]
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,lint,codegen]"
+
+      - name: Hive specs
+        id: specs
+        uses: ./.github/actions/hive-specs
+        with:
+          hive-token: ${{ secrets.HIVE_REPO_TOKEN }}
+          specs-token: ${{ secrets.HIVE_SPECS_TOKEN || secrets.ACCESS_TOKEN }}
+
+      - name: Build every generation
+        env:
+          PYTHONPATH: tools
+          PYTHONIOENCODING: utf-8
+        run: python -m hive_codegen build --specs-dir "${{ steps.specs.outputs.specs-dir }}"
+
+      - name: Quality gates
+        run: |
+          set -e
+          ruff check pyhive/ tools/
+          mypy pyhive/src/types/_generated/
+          pytest tools/hive_codegen/tests -q
+          python -c "import pyhive, pyhive.types as t; assert t.__all__"
+
+      - name: Check the committed bindings are current
+        id: diff
+        run: |
+          git add -A pyhive/src/types/_generated
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Bindings are current."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --cached --stat
+          fi
+
+      - name: Fail a PR whose bindings are stale
+        if: github.event_name == 'pull_request' && steps.diff.outputs.changed == 'true'
+        run: |
+          echo "::error::Committed bindings differ from what hive_codegen builds. Run 'python -m hive_codegen build --specs-dir <hive-specs>/specs' and commit the result."
+          exit 1
+
+      - name: Open / update bindings PR
+        if: github.event_name != 'pull_request' && steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH="auto/hive-bindings"
+          git config user.name "hive-sync[bot]"
+          git config user.email "hive-sync@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git commit -m "Vibe-Regenerated Hive bindings for every generation"
+          git push -f origin "$BRANCH"
+          {
+            echo "Regenerated \`pyhive/src/types/_generated/\` from the specs of every release in \`hive_versions.toml\`."
+            echo
+            echo '```'
+            git diff --stat HEAD~1
+            echo '```'
+          } > pr-body.md
+          gh pr create --base master --head "$BRANCH" \
+            --title "Regenerate Hive bindings" --body-file pr-body.md \
+            || gh pr edit "$BRANCH" --body-file pr-body.md

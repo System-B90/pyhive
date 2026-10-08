@@ -124,6 +124,11 @@ models = [
     "Queue",
     "QueueItem",
     "HelpResponseSegelNested",
+    # SSO ships on Hive's untagged feature/hive-idp branch, not in any release
+    # spec, so the curated layer (sso_application.py, client_info.py) owns it.
+    "SSOApplication",
+    "SSOTokenExchangeResponse",
+    "ClientInfoResponse",
 ]
 # Enums present in PyHive but no longer in the spec (kept hand-written).
 enums = ["EventTypeEnum"]

@@ -13,7 +13,9 @@ from .spec import Spec
 MANIFEST_NAME = "manifest.json"
 
 
-def _type_of(prop: dict[str, Any]) -> str:
+def field_type(prop: dict[str, Any]) -> str:
+    """The drift-relevant type of a schema property (``$ref`` name, ``list[...]``, …)."""
+
     if "$ref" in prop:
         return prop["$ref"].rsplit("/", 1)[-1]
     for combinator in ("allOf", "oneOf", "anyOf"):
@@ -24,7 +26,7 @@ def _type_of(prop: dict[str, Any]) -> str:
     t = prop.get("type", "any")
     if t == "array":
         items = prop.get("items", {})
-        return f"list[{_type_of(items)}]"
+        return f"list[{field_type(items)}]"
     return t
 
 
@@ -49,7 +51,7 @@ def build_manifest(spec: Spec, config: Config) -> dict[str, Any]:
             py_name = config.aliases.get(wire, wire)
             fields[py_name] = {
                 "wire": wire,
-                "type": _type_of(prop),
+                "type": field_type(prop),
                 "required": wire in required,
                 "nullable": bool(prop.get("nullable", False)),
             }
@@ -73,7 +75,9 @@ def build_manifest(spec: Spec, config: Config) -> dict[str, Any]:
 def write_manifest(manifest: dict[str, Any], output_dir: Path) -> Path:
     path = output_dir / MANIFEST_NAME
     path.write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
     return path
 

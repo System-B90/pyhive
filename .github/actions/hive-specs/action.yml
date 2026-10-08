@@ -1,0 +1,84 @@
+name: Hive specs
+description: >-
+  Generate Hive's core.yaml for every release in hive_versions.toml (plus any
+  extra versions) that the private System-B90/hive-specs cache lacks, by
+  building that tag's backend and running spectacular, then push the new specs
+  back to the cache. Expects pyhive checked out and its codegen extra installed.
+
+inputs:
+  hive-token:
+    description: Token that can read HiveLMS/Hive.
+    required: true
+  specs-token:
+    description: Token that can push to System-B90/hive-specs.
+    required: true
+  versions:
+    description: Space-separated Hive versions to make sure of, on top of the table's.
+    required: false
+    default: ""
+
+outputs:
+  specs-dir:
+    description: Directory holding <version>/core.yaml for every requested version.
+    value: ${{ steps.dirs.outputs.specs }}
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout Hive
+      uses: actions/checkout@v7
+      with:
+        repository: HiveLMS/Hive
+        token: ${{ inputs.hive-token }}
+        path: .hive
+        # Every release tag, but blobs only on demand: `git archive` of one tag
+        # fetches just that tag's files.
+        fetch-depth: 0
+        filter: blob:none
+
+    - name: Checkout spec cache
+      uses: actions/checkout@v7
+      with:
+        repository: System-B90/hive-specs
+        token: ${{ inputs.specs-token }}
+        path: .hive-specs
+
+    - id: dirs
+      shell: bash
+      run: echo "specs=${GITHUB_WORKSPACE}/.hive-specs/specs" >> "$GITHUB_OUTPUT"
+
+    - name: Generate missing specs
+      shell: bash
+      env:
+        PYTHONPATH: tools
+        PYTHONIOENCODING: utf-8
+        EXTRA_VERSIONS: ${{ inputs.versions }}
+      run: |
+        set -euo pipefail
+        python -m hive_codegen extract --hive-repo .hive --specs-dir "${{ steps.dirs.outputs.specs }}"
+        for version in $EXTRA_VERSIONS; do
+          python -m hive_codegen extract --hive-repo .hive \
+            --specs-dir "${{ steps.dirs.outputs.specs }}" --version "$version"
+        done
+
+    - name: Push new specs to the cache
+      shell: bash
+      working-directory: .hive-specs
+      run: |
+        set -euo pipefail
+        git add -A specs
+        if git diff --cached --quiet; then
+          echo "Spec cache already complete."
+          exit 0
+        fi
+        git config user.name "hive-sync[bot]"
+        git config user.email "hive-sync@users.noreply.github.com"
+        git commit -m "Vibe-Generated specs for $(git diff --cached --name-only | cut -d/ -f2 | sort -u | tr '\n' ' ')"
+        git push origin HEAD
+
+    # Our spectacular images are only needed while extracting; keep the
+    # self-hosted box's disk from filling one Hive release at a time.
+    - name: Remove extraction images
+      if: always()
+      shell: bash
+      run: docker images --format '{{.Repository}}:{{.Tag}}' | grep '^pyhive-spec/' | xargs -r docker rmi -f >/dev/null || true
